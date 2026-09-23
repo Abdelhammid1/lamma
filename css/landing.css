@@ -1,0 +1,139 @@
+/* ============================================================================
+   LAMMA landing page — minimalist welcome card with a call-to-action
+   linking to the admin panel.
+   ========================================================================== */
+
+:root {
+  --bg-1: #fdeef2;
+  --bg-2: #f7d9e1;
+  --plum: #4a1f2e;
+  --plum-2: #6b2b3f;
+  --rose: #a13b58;
+  --gold: #c9a86a;
+  --cream: #fbf7f1;
+  --ink: #2a1520;
+  --muted: #7a5765;
+  --line: rgba(74, 31, 46, 0.15);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  min-height: 100%;
+  background:
+    radial-gradient(circle at 15% 10%, rgba(255,255,255,0.7), transparent 45%),
+    radial-gradient(circle at 85% 90%, rgba(239,200,210,0.55), transparent 45%),
+    linear-gradient(180deg, var(--bg-1), var(--bg-2));
+  color: var(--ink);
+  font-family: 'Cormorant Garamond', 'Cairo', serif;
+}
+
+.landing {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.landing-card {
+  width: 100%;
+  max-width: 460px;
+  padding: 56px 40px 44px;
+  border-radius: 32px;
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 40px 80px -30px rgba(74, 31, 46, 0.35);
+  text-align: center;
+  animation: landingIn 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes landingIn {
+  from { opacity: 0; transform: translateY(20px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)   scale(1);    }
+}
+
+.landing-logo {
+  width: 132px;
+  height: 132px;
+  margin: 0 auto 26px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  box-shadow:
+    0 0 0 6px rgba(255, 255, 255, 0.6),
+    0 16px 40px -14px rgba(74, 31, 46, 0.35);
+}
+
+.landing-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 12px;
+  line-height: 1;
+  margin-bottom: 16px;
+}
+.landing-title-ar {
+  font-family: 'Cairo', sans-serif;
+  font-weight: 700;
+  font-size: 44px;
+  color: var(--plum);
+}
+.landing-title-en {
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  font-size: 22px;
+  letter-spacing: 0.32em;
+  color: var(--muted);
+}
+
+.landing-tagline {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 18px;
+  line-height: 1.55;
+  color: var(--muted);
+  margin-bottom: 40px;
+  max-width: 320px;
+  margin-inline: auto;
+}
+
+.landing-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 36px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--plum), var(--plum-2));
+  color: #fff;
+  font-family: 'Playfair Display', serif;
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  text-decoration: none;
+  box-shadow: 0 14px 30px -12px rgba(74, 31, 46, 0.55);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.landing-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 40px -14px rgba(74, 31, 46, 0.65);
+}
+.landing-btn-arrow {
+  font-size: 16px;
+  transition: transform 0.2s ease;
+}
+.landing-btn:hover .landing-btn-arrow {
+  transform: translateX(3px);
+}
+
+.landing-footnote {
+  margin-top: 32px;
+  font-family: 'Cormorant Garamond', 'Cairo', serif;
+  font-style: italic;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  opacity: 0.7;
+}
