@@ -49,21 +49,66 @@
         </div>
         <div class="dash-topbar-actions">
           <span class="who" id="whoami"></span>
-          <button id="signout-btn" type="button" class="btn btn-ghost">Sign out</button>
+          <button id="codes-tab-btn" type="button" class="btn btn-outline">Codes</button>
+          <button id="signout-btn"   type="button" class="btn btn-ghost">Sign out</button>
         </div>
       </header>
 
-      <section class="dash-hero">
-        <div>
-          <h1 class="dash-title">Birthdays</h1>
-          <p class="dash-subtitle" id="dash-note">Loading…</p>
-        </div>
-        <button id="new-btn" type="button" class="btn btn-primary dash-new-btn">
-          <span aria-hidden="true">＋</span> New birthday
-        </button>
-      </section>
+      <div data-admin-panel>
+        <section class="dash-hero">
+          <div>
+            <h1 class="dash-title">Birthdays</h1>
+            <p class="dash-subtitle" id="dash-note">Loading…</p>
+          </div>
+          <button id="new-btn" type="button" class="btn btn-primary dash-new-btn">
+            <span aria-hidden="true">＋</span> New birthday
+          </button>
+        </section>
 
-      <ul class="dash-grid" id="dash-list"></ul>
+        <ul class="dash-grid" id="dash-list"></ul>
+      </div>
+
+      <!-- Codes panel — toggled by the "Codes" button in the topbar -->
+      <div id="codes-panel" data-admin-panel hidden>
+        <section class="dash-hero">
+          <div>
+            <h1 class="dash-title">Activation codes</h1>
+            <p class="dash-subtitle">Generate one-time codes for the /create self-serve flow.</p>
+          </div>
+        </section>
+
+        <div class="card" style="max-width: 720px; margin-bottom: 24px;">
+          <h2 style="font-family: 'Playfair Display', serif; color: var(--plum); margin-bottom: 10px;">New code</h2>
+          <div class="field">
+            <label for="gen-code-slug">Bind to slug (optional)</label>
+            <input type="text" id="gen-code-slug" placeholder="medo (leave blank = works for any slug)">
+          </div>
+          <div class="field">
+            <label for="gen-code-hours">Expires after (hours, optional)</label>
+            <input type="number" id="gen-code-hours" min="1" max="720" placeholder="48">
+          </div>
+          <div class="field">
+            <label for="gen-code-notes">Notes (optional)</label>
+            <input type="text" id="gen-code-notes" placeholder="Instapay txn 1234 – mona">
+          </div>
+          <span class="error" id="gen-code-error"></span>
+          <button id="gen-code-btn" type="button" class="btn btn-primary" style="margin-top: 8px;">
+            + Generate code
+          </button>
+
+          <div id="gen-code-output" hidden style="margin-top: 20px; padding: 16px; background: var(--bg-1); border-radius: 12px; border: 2px dashed var(--rose); text-align: center;">
+            <p style="font-family: 'Playfair Display', serif; color: var(--muted); margin-bottom: 8px;">
+              Copy this and send to the customer:
+            </p>
+            <p id="gen-code-value"
+               style="font-family: 'SF Mono', Consolas, monospace; font-size: 22px; font-weight: 700; color: var(--plum); letter-spacing: 0.12em; margin-bottom: 12px; user-select: all;"></p>
+            <button id="copy-code-btn" type="button" class="btn btn-outline btn-sm">Copy</button>
+          </div>
+        </div>
+
+        <h2 style="font-family: 'Playfair Display', serif; color: var(--plum); margin: 20px 0 12px;">All codes</h2>
+        <ul id="codes-list" class="codes-list"></ul>
+      </div>
     </div>
 
     <!-- Editor screen -->
@@ -185,6 +230,7 @@
   <script type="module" src="js/admin-auth.js?v=3"></script>
   <script type="module" src="js/admin-list.js?v=3"></script>
   <script type="module" src="js/admin-form.js?v=3"></script>
+  <script type="module" src="js/admin-codes.js?v=1"></script>
 
 </body>
 </html>
