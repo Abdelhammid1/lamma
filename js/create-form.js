@@ -52,6 +52,11 @@ function applyType(t) {
   });
   $("birthday-fields").hidden = t !== "birthday";
   $("wedding-fields").hidden  = t !== "wedding";
+  const title = $("cx-title");
+  if (title) {
+    title.textContent = t === "wedding" ? "Create your wedding invitation"
+                                        : "Create your birthday invitation";
+  }
   const src = t === "wedding" ? "wedding/index.html?preview=1"
                               : "birthday.html?preview=1";
   $("preview-frame").src = src;
@@ -61,9 +66,7 @@ function applyType(t) {
 
 // Honor ?type=birthday|wedding on first load (linked from the landing).
 const initialType = new URLSearchParams(location.search).get("type");
-if (initialType === "wedding" || initialType === "birthday") {
-  applyType(initialType);
-}
+applyType(initialType === "wedding" ? "wedding" : "birthday");
 
 document.querySelectorAll('input[name="event_type"]').forEach((r) =>
   r.addEventListener("change", () => applyType(r.value))
