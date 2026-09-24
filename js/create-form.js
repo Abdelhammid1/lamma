@@ -30,9 +30,22 @@ const state = {
   codeChecked:   false,       // becomes true only right before publish
 };
 
-const MAX_MB      = 50;
-const WARN_MB     = 25;
+const MAX_MB       = 50;
+const WARN_MB      = 25;
 const MAX_TOTAL_MB = 300;
+const MAX_AUDIO_MB = 20;
+
+function guardFileSize(input, maxMb, label) {
+  const f = input.files?.[0];
+  if (!f) return null;
+  const mb = f.size / 1024 / 1024;
+  if (mb > maxMb) {
+    alert(`${label} too large (${mb.toFixed(1)} MB). Max ${maxMb} MB.`);
+    input.value = "";
+    return null;
+  }
+  return f;
+}
 
 const RESERVED_SLUGS = new Set([
   "admin", "www", "api", "lamma", "mail", "ftp", "create", "wedding",
@@ -245,6 +258,59 @@ function renumberMemories() {
 }
 addMemoryRow();  // seed one row
 
+/* ================= Birthday video + music guards ================= */
+
+$("f-video-file").addEventListener("change", (e) => {
+  if (guardFileSize(e.target, MAX_MB, "Video")) schedulePreview();
+});
+$("f-music-file").addEventListener("change", (e) => {
+  if (guardFileSize(e.target, MAX_AUDIO_MB, "Audio")) schedulePreview();
+});
+
+/* ================= Wedding gallery builder ================= */
+
+const galleryBuilder = $("gallery-builder");
+$("add-gallery-btn").addEventListener("click", () => { addGalleryRow(); schedulePreview(); });
+
+function addGalleryRow() {
+  const rows = galleryBuilder.querySelectorAll(".mem-row").length;
+  if (rows >= 8) { alert("Up to 8 gallery photos."); return; }
+  const row = document.createElement("div");
+  row.className = "mem-row";
+  row.innerHTML = `
+    <div class="mem-thumb"><div class="mem-thumb-num">#${rows + 1}</div></div>
+    <div class="mem-fields">
+      <div class="cx-field">
+        <label>Photo${rows === 0 ? " (hero)" : ""}</label>
+        <input type="file" class="mem-file" accept="image/*">
+      </div>
+    </div>
+    <button type="button" class="mem-remove" title="Remove">×</button>
+  `;
+  const fileInput = row.querySelector(".mem-file");
+  const thumb = row.querySelector(".mem-thumb");
+  fileInput.addEventListener("change", (e) => {
+    const f = guardFileSize(e.target, MAX_MB, "Photo");
+    if (!f) return;
+    thumb.innerHTML = `<img src="${URL.createObjectURL(f)}" alt="">`;
+    schedulePreview();
+  });
+  row.querySelector(".mem-remove").addEventListener("click", () => {
+    row.remove();
+    galleryBuilder.querySelectorAll(".mem-row .mem-thumb-num").forEach((el, i) => {
+      el.textContent = `#${i + 1}`;
+    });
+    schedulePreview();
+  });
+  galleryBuilder.appendChild(row);
+}
+
+$("f-wedding-music").addEventListener("change", (e) => {
+  if (guardFileSize(e.target, MAX_AUDIO_MB, "Audio")) schedulePreview();
+});
+
+addGalleryRow();
+
 /* ================= Live preview ================= */
 
 let previewTimer;
@@ -279,12 +345,14 @@ $("preview-open").addEventListener("click", () => {
 function collectFormForPreview() {
   const name = $("f-name").value.trim();
   if (state.type === "birthday") {
+    const videoFile = $("f-video-file").files?.[0];
+    const musicFile = $("f-music-file").files?.[0];
     return {
       slug:        $("f-slug").value,
       event_type:  "birthday",
       name,
       quiz:        readQuiz(),
-      memories:    [...memBuilder.querySelectorAll(".mem-row")].map((row, i) => {
+      memories:    [...memBuilder.querySelectorAll(".mem-row")].map((row) => {
         const file = row.querySelector(".mem-file").files?.[0];
         return {
           url:       file ? URL.createObjectURL(file) : "",
@@ -295,7 +363,8 @@ function collectFormForPreview() {
       letterEn:    $("f-letterEn").value,
       signatureEn: $("f-signatureEn").value,
       signatureAr: $("f-signatureAr").value,
-      videoUrl:    $("f-video-url").value.trim(),
+      videoUrl:    videoFile ? URL.createObjectURL(videoFile) : $("f-video-url").value.trim(),
+      musicUrl:    musicFile ? URL.createObjectURL(musicFile) : "",
     };
   }
   // wedding
@@ -321,8 +390,14 @@ function collectFormForPreview() {
     blessing:  $("f-blessing").value,
     dressCode: { label: $("f-dress-code").value,
                  colors: ["#f7d9e1", "#efc8d2", "#a13b58", "#c9a86a"] },
-    gallery:   [],
-    music:     "",
+    gallery:   [...galleryBuilder.querySelectorAll(".mem-row")].map((row) => {
+      const file = row.querySelector(".mem-file").files?.[0];
+      return file ? URL.createObjectURL(file) : "";
+    }).filter(Boolean),
+    music:     (() => {
+      const f = $("f-wedding-music").files?.[0];
+      return f ? URL.createObjectURL(f) : "";
+    })(),
   };
 }
 
@@ -414,7 +489,9 @@ async function publish() {
 
     for (const f of files) {
       done++;
-      setProgress((done / total) * 100, `Uploading photo ${done}/${files.length}…`);
+      const label = f.field.startsWith("photo") || f.field.startsWith("gallery")
+        ? "photo" : f.field;
+      setProgress((done / total) * 100, `Uploading ${label} ${done}/${files.length}…`);
       const path = `invitations/${slug}/${Date.now()}-${f.field}-${safeName(f.file.name)}`;
       const uploadRef = ref(storage, path);
       await uploadBytes(uploadRef, f.file, { contentType: f.file.type });
@@ -467,12 +544,49 @@ function collectFiles() {
         files.push({
           file: f,
           field: `photo-${i + 1}`,
-          assign: (cfg, url) => { cfg.memories[i].url = url; delete cfg.memories[i]._file; },
+          assign: (cfg, url) => { cfg.memories[i].url = url; },
         });
       }
     });
+    const vFile = $("f-video-file").files?.[0];
+    if (vFile) {
+      files.push({
+        file: vFile,
+        field: "video",
+        assign: (cfg, url) => { cfg.videoUrl = url; },
+      });
+    }
+    const mFile = $("f-music-file").files?.[0];
+    if (mFile) {
+      files.push({
+        file: mFile,
+        field: "music",
+        assign: (cfg, url) => { cfg.musicUrl = url; },
+      });
+    }
+  } else {
+    // wedding: gallery photos + music
+    const rows = [...galleryBuilder.querySelectorAll(".mem-row")];
+    const withFiles = rows.map((row) => row.querySelector(".mem-file").files?.[0]).filter(Boolean);
+    withFiles.forEach((f, i) => {
+      files.push({
+        file: f,
+        field: `gallery-${i + 1}`,
+        assign: (cfg, url) => {
+          cfg.gallery = cfg.gallery || [];
+          cfg.gallery[i] = url;
+        },
+      });
+    });
+    const wm = $("f-wedding-music").files?.[0];
+    if (wm) {
+      files.push({
+        file: wm,
+        field: "music",
+        assign: (cfg, url) => { cfg.music = url; },
+      });
+    }
   }
-  // wedding gallery TBD in Stage E follow-up (form has no wedding photo inputs yet)
   return files;
 }
 

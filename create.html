@@ -76,8 +76,20 @@
 
         <h2 class="cx-section">Video (optional)</h2>
         <div class="cx-field">
-          <label for="f-video-url">YouTube or direct video URL</label>
+          <label for="f-video-file">Upload a video file</label>
+          <input id="f-video-file" type="file" accept="video/*" />
+          <span class="cx-hint">MP4 / MOV / WebM. Max 50 MB.</span>
+        </div>
+        <div class="cx-field">
+          <label for="f-video-url">…or paste a YouTube / direct video URL</label>
           <input id="f-video-url" type="url" placeholder="https://youtube.com/watch?v=…" />
+        </div>
+
+        <h2 class="cx-section">Background music (optional)</h2>
+        <div class="cx-field">
+          <label for="f-music-file">Upload an audio file</label>
+          <input id="f-music-file" type="file" accept="audio/*" />
+          <span class="cx-hint">MP3 / M4A / OGG. Max 20 MB. Plays after the guest presses Start.</span>
         </div>
       </div>
 
@@ -128,6 +140,18 @@
         <div class="cx-field">
           <label for="f-dress-code">Dress code label</label>
           <input id="f-dress-code" type="text" placeholder="Pink dresses" />
+        </div>
+
+        <h2 class="cx-section">Gallery photos</h2>
+        <p class="cx-hint">Up to 8 photos. First photo becomes the hero. Max 50 MB each.</p>
+        <div id="gallery-builder"></div>
+        <button type="button" id="add-gallery-btn" class="cx-btn cx-btn-ghost">+ Add photo</button>
+
+        <h2 class="cx-section">Background music (optional)</h2>
+        <div class="cx-field">
+          <label for="f-wedding-music">Upload an audio file</label>
+          <input id="f-wedding-music" type="file" accept="audio/*" />
+          <span class="cx-hint">MP3 / M4A / OGG. Max 20 MB. Plays after the guest presses Open Invitation.</span>
         </div>
       </div>
 
@@ -181,6 +205,6 @@
 
 </main>
 
-<script type="module" src="js/create-form.js?v=2"></script>
+<script type="module" src="js/create-form.js?v=3"></script>
 </body>
 </html>
