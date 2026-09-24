@@ -1,5 +1,5 @@
 // ============================================================================
-//  Loader — figures out which birthday to render and fetches its JSON.
+//  Loader — figures out which invitation to render and fetches its JSON.
 //
 //  Slug resolution priority:
 //    1. ?for=<slug> in query string (works on localhost + previews)
@@ -8,17 +8,29 @@
 //         /sara   → sara
 //         /       → null (landing)
 //         /admin  → null (admin panel, handled by _redirects)
-//    3. First DNS label of the hostname (subdomain fallback, if a wildcard
-//         DNS record is later added)
+//    3. First DNS label of the hostname (subdomain fallback)
+//
+//  Data-source waterfall for load:
+//    1. Firestore  invitations/{slug}      ← self-serve created via /create
+//    2. GitHub raw birthday-media/data/…    ← legacy admin-created invitations
+//         (raw is tried before jsdelivr; the CDN had 12–24h stale-cache issues)
 // ============================================================================
 
 import { CONFIG } from "../config.js";
+import { db }     from "./firebase-init.js";
+import { doc, getDoc } from
+  "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const RESERVED_PATHS   = new Set(["", "admin", "index.html", "admin.html", "birthday.html", "logo.jpg", "favicon.ico"]);
+const RESERVED_PATHS   = new Set([
+  "", "admin", "create", "wedding",
+  "index.html", "admin.html", "birthday.html", "create.html",
+  "logo.jpg", "favicon.ico",
+]);
 const RESERVED_LABELS  = new Set(["admin", "www", "api", "lamma"]);
 
+
 export function getSlug() {
-  // 1. Query string (dev / preview)
+  // 1. Query string (dev / preview / explicit override)
   const params = new URLSearchParams(location.search);
   const queryFor = params.get("for");
   if (queryFor) return queryFor.toLowerCase().trim();
@@ -39,13 +51,23 @@ export function getSlug() {
   return null;
 }
 
-/** Fetch the birthday JSON.
- *  RAW is tried first because jsdelivr caches for up to 12–24 h and a
- *  freshly published birthday won't show through the CDN. If raw is ever
- *  down/rate-limited, we fall through to the CDN copy (may be stale but
- *  keeps the page working). Append a cache-buster to defeat the browser
- *  cache too. */
+
+/**
+ * Fetch the invitation JSON for a slug.
+ * Firestore is authoritative for anything created via /create; the
+ * legacy GitHub path is a fallback for old admin-created invitations
+ * (Ranon, etc.). Returns null if not found in either.
+ */
 export async function loadBirthday(slug) {
+  // 1. Firestore
+  try {
+    const snap = await getDoc(doc(db, "invitations", slug));
+    if (snap.exists()) return _mapFirestoreDoc(snap.data());
+  } catch (e) {
+    console.warn("[loader] Firestore lookup failed, trying GitHub:", e);
+  }
+
+  // 2. Legacy GitHub — raw first (fresh), CDN as safety net
   const bust = Date.now();
   const paths = [
     `${CONFIG.rawBase}/data/${slug}.json?nc=${bust}`,
@@ -57,10 +79,23 @@ export async function loadBirthday(slug) {
       if (res.ok) return await res.json();
     } catch (_) { /* try next */ }
   }
+
   return null;
 }
 
-/** Convert repo-relative `path` fields to absolute CDN URLs. */
+
+/** Firestore stores an invitation with full media URLs already resolved
+ *  (Firebase Storage download URLs). Just pass through. */
+function _mapFirestoreDoc(data) {
+  return data;
+}
+
+
+/**
+ * For GitHub-legacy invitations, memories/video have repo-relative
+ * `path` fields that need turning into absolute CDN URLs. Firestore
+ * docs already store full URLs so this is a no-op there.
+ */
 export function mapPathsToUrls(cfg) {
   const cdn = CONFIG.cdnBase;
   if (Array.isArray(cfg.memories)) {

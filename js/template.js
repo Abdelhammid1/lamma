@@ -314,7 +314,40 @@ function showNotFound(slug) {
     </section>`;
 }
 
+// ------------------------------------------------------------------
+// Preview mode — used by /create for the live iframe on the right.
+// If ?preview=1, we DON'T load from Firestore/GitHub. Instead we:
+//   1. Optionally decode `?data=<base64 json>` for a shareable preview
+//   2. Listen for postMessage from the parent create.html
+// Each message replaces the config and re-renders.
+// ------------------------------------------------------------------
+function isPreviewMode() {
+  return new URLSearchParams(location.search).get("preview") === "1";
+}
+
+function decodeInitialPreview() {
+  const data = new URLSearchParams(location.search).get("data");
+  if (!data) return null;
+  try {
+    return JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(data)))));
+  } catch (_) { return null; }
+}
+
 async function bootstrap() {
+  if (isPreviewMode()) {
+    const initial = decodeInitialPreview() || { ...DEMO_CONFIG, slug: "preview" };
+    hideLoading();
+    renderTemplate(initial);
+    initPageFlow();
+    window.addEventListener("message", (e) => {
+      if (!e.data || e.data.type !== "lamma:preview") return;
+      const cfg = e.data.cfg || {};
+      renderTemplate(cfg);
+      initPageFlow();
+    });
+    return;
+  }
+
   showLoading("Loading birthday…");
   const slug = getSlug();
 

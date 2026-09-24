@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Create — لمّة · LAMMA</title>
+<link rel="icon" href="logo.jpg" type="image/jpeg" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,600&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Cairo:wght@400;600;700&family=Manrope:wght@400;500;600;700&display=swap"
+      rel="stylesheet" />
+<link rel="stylesheet" href="create.css" />
+</head>
+<body>
+
+<header class="cx-topbar">
+  <a href="/" class="cx-brand">
+    <img src="logo.jpg" alt="LAMMA" />
+    <span class="cx-brand-name">لمّة · LAMMA</span>
+  </a>
+  <a href="/admin" class="cx-admin-link">Admin →</a>
+</header>
+
+<main class="cx-shell">
+
+  <!-- Screen 1: form + preview -->
+  <div id="editor-screen" class="cx-editor">
+    <section class="cx-form">
+      <h1 class="cx-title">Create your invitation</h1>
+      <p class="cx-lede">Fill in your details. The preview updates as you type. When you're happy, enter your activation code and publish.</p>
+
+      <!-- Type picker -->
+      <fieldset class="cx-field">
+        <legend>Occasion</legend>
+        <div class="cx-radio-row">
+          <label class="cx-radio">
+            <input type="radio" name="event_type" value="birthday" checked>
+            <span>🎂 Birthday</span>
+          </label>
+          <label class="cx-radio">
+            <input type="radio" name="event_type" value="wedding">
+            <span>💍 Wedding</span>
+          </label>
+        </div>
+      </fieldset>
+
+      <!-- Basics: shared -->
+      <div class="cx-field">
+        <label for="f-name">Name (or couple)</label>
+        <input id="f-name" type="text" autocomplete="off" dir="auto" />
+        <span class="cx-hint">e.g. "Medo" or "Ahmed & Sara"</span>
+      </div>
+      <div class="cx-field">
+        <label for="f-slug">URL slug</label>
+        <input id="f-slug" type="text" autocomplete="off" spellcheck="false" />
+        <span class="cx-hint">Your page will live at <code id="slug-preview">lamma.manasety.ai/&lt;slug&gt;</code></span>
+        <span class="cx-error" id="slug-error"></span>
+      </div>
+
+      <!-- ─────────── BIRTHDAY FIELDS ─────────── -->
+      <div id="birthday-fields">
+        <h2 class="cx-section">Quiz</h2>
+        <p class="cx-hint">Wrong answers show a playful modal. Correct answers stay selected.</p>
+        <div id="quiz-builder"></div>
+        <button type="button" id="add-question-btn" class="cx-btn cx-btn-ghost">+ Add question</button>
+
+        <h2 class="cx-section">Memories (photos)</h2>
+        <p class="cx-hint">Up to 6 photos. Warned above 25 MB, refused above 50 MB each.</p>
+        <div id="memories-builder"></div>
+        <button type="button" id="add-memory-btn" class="cx-btn cx-btn-ghost">+ Add photo</button>
+
+        <h2 class="cx-section">Letter</h2>
+        <div class="cx-field">
+          <label for="f-letterAr">Arabic body</label>
+          <textarea id="f-letterAr" rows="4" dir="rtl"></textarea>
+        </div>
+        <div class="cx-field">
+          <label for="f-letterEn">English body</label>
+          <textarea id="f-letterEn" rows="4"></textarea>
+        </div>
+        <div class="cx-field-row">
+          <div class="cx-field">
+            <label for="f-signatureEn">Signature (English)</label>
+            <input id="f-signatureEn" type="text" placeholder="Your girl ❤️" />
+          </div>
+          <div class="cx-field">
+            <label for="f-signatureAr">Signature (Arabic)</label>
+            <input id="f-signatureAr" type="text" dir="auto" />
+          </div>
+        </div>
+
+        <h2 class="cx-section">Video (optional)</h2>
+        <div class="cx-field">
+          <label for="f-video-url">YouTube or direct video URL</label>
+          <input id="f-video-url" type="url" placeholder="https://youtube.com/watch?v=…" />
+        </div>
+      </div>
+
+      <!-- ─────────── WEDDING FIELDS ─────────── -->
+      <div id="wedding-fields" hidden>
+        <div class="cx-field-row">
+          <div class="cx-field">
+            <label for="f-groom">Groom name</label>
+            <input id="f-groom" type="text" dir="auto" />
+          </div>
+          <div class="cx-field">
+            <label for="f-bride">Bride name</label>
+            <input id="f-bride" type="text" dir="auto" />
+          </div>
+        </div>
+        <div class="cx-field">
+          <label for="f-event-datetime">Event date &amp; time</label>
+          <input id="f-event-datetime" type="datetime-local" />
+        </div>
+        <div class="cx-field-row">
+          <div class="cx-field">
+            <label for="f-welcome-time">Welcome time</label>
+            <input id="f-welcome-time" type="text" placeholder="5:30 PM" />
+          </div>
+          <div class="cx-field">
+            <label for="f-reception-time">Reception time</label>
+            <input id="f-reception-time" type="text" placeholder="7:00 PM" />
+          </div>
+        </div>
+        <div class="cx-field">
+          <label for="f-venue-name">Venue name</label>
+          <input id="f-venue-name" type="text" dir="auto" />
+        </div>
+        <div class="cx-field">
+          <label for="f-venue-address">Venue address</label>
+          <input id="f-venue-address" type="text" dir="auto" />
+        </div>
+        <div class="cx-field">
+          <label for="f-venue-maps">Google Maps embed URL</label>
+          <input id="f-venue-maps" type="url"
+                 placeholder="https://www.google.com/maps/embed?pb=…" />
+          <span class="cx-hint">Google Maps → Share → Embed a map → copy the src</span>
+        </div>
+        <div class="cx-field">
+          <label for="f-blessing">Blessing / short message</label>
+          <textarea id="f-blessing" rows="3" dir="auto"></textarea>
+        </div>
+        <div class="cx-field">
+          <label for="f-dress-code">Dress code label</label>
+          <input id="f-dress-code" type="text" placeholder="Pink dresses" />
+        </div>
+      </div>
+
+      <!-- Publish gate -->
+      <div class="cx-publish-card">
+        <h2 class="cx-section">Publish</h2>
+        <p class="cx-hint">
+          You'll receive an activation code from us after payment (WhatsApp / Instapay).
+          Enter it below to publish your page.
+        </p>
+        <div class="cx-field">
+          <label for="f-code">Activation code</label>
+          <input id="f-code" type="text" autocomplete="off" spellcheck="false"
+                 placeholder="AH3F-9K2P-XZLB" />
+          <span class="cx-error" id="code-error"></span>
+        </div>
+        <div class="cx-progress" id="publish-progress" hidden>
+          <div class="cx-progress-bar"><div id="progress-fill"></div></div>
+          <p class="cx-progress-text" id="progress-text">Working…</p>
+        </div>
+        <button type="button" id="publish-btn" class="cx-btn cx-btn-primary" disabled>
+          Publish
+        </button>
+        <p class="cx-hint" id="publish-hint">Fill in a name, slug, and activation code to enable.</p>
+      </div>
+    </section>
+
+    <!-- Live preview panel -->
+    <aside class="cx-preview">
+      <div class="cx-preview-head">
+        <span>Live preview</span>
+        <button type="button" id="preview-open" class="cx-btn cx-btn-ghost">Open in new tab</button>
+      </div>
+      <iframe id="preview-frame" title="Preview" src="birthday.html?preview=1"></iframe>
+    </aside>
+  </div>
+
+  <!-- Screen 2: success -->
+  <div id="success-screen" hidden>
+    <div class="cx-success">
+      <div class="cx-success-mark">🎉</div>
+      <h1 class="cx-title">Published!</h1>
+      <p class="cx-lede">Your invitation is live at:</p>
+      <p><a id="success-url" class="cx-success-url" target="_blank" rel="noopener"></a></p>
+      <div class="cx-success-buttons">
+        <button type="button" id="copy-url-btn"    class="cx-btn cx-btn-primary">Copy link</button>
+        <a href="/create" class="cx-btn cx-btn-ghost">Create another</a>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script type="module" src="js/create-form.js?v=1"></script>
+</body>
+</html>

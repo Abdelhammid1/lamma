@@ -1,0 +1,244 @@
+/* ============================================================================
+   /create — self-serve invitation builder
+   ========================================================================== */
+
+:root {
+  --plum:   #310b1e;
+  --rose:   #a13b58;
+  --plum-2: #4a2033;
+  --gold:   #c9a86a;
+  --cream:  #fbf9f6;
+  --ink:    #1b1c1a;
+  --muted:  #504347;
+  --line:   rgba(74, 31, 46, 0.15);
+  --danger: #ba1a1a;
+  --success:#2e6b3e;
+  --bg-1:   #fdeef2;
+  --bg-2:   #f7d9e1;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  min-height: 100%;
+  background: linear-gradient(180deg, var(--cream), #f7dfea 500px, #f7dfea);
+  color: var(--ink);
+  font-family: 'Cormorant Garamond', 'Cairo', serif;
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+/* --- topbar -------------------------------------------------------------- */
+.cx-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 20px;
+  background: #fff;
+  border-bottom: 1px solid var(--line);
+  position: sticky; top: 0; z-index: 20;
+}
+.cx-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit; }
+.cx-brand img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
+.cx-brand-name { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; color: var(--plum); }
+.cx-admin-link { font-family: 'Manrope', sans-serif; font-size: 12px; letter-spacing: 0.14em; color: var(--muted); text-transform: uppercase; text-decoration: none; }
+.cx-admin-link:hover { color: var(--plum); }
+
+/* --- shell + editor layout ---------------------------------------------- */
+.cx-shell { max-width: 1280px; margin: 0 auto; padding: 24px 20px 80px; }
+
+.cx-editor {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+@media (min-width: 980px) {
+  .cx-editor { grid-template-columns: minmax(0, 1fr) 400px; }
+  .cx-preview { position: sticky; top: 90px; align-self: start; max-height: calc(100vh - 110px); }
+}
+
+.cx-form {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 28px 28px 20px;
+  box-shadow: 0 8px 24px -18px rgba(74, 31, 46, 0.25);
+}
+
+.cx-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(24px, 5vw, 32px);
+  color: var(--plum);
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.cx-lede {
+  font-style: italic;
+  color: var(--muted);
+  margin-bottom: 24px;
+}
+
+/* --- sections ------------------------------------------------------------ */
+.cx-section {
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  color: var(--plum);
+  font-size: 18px;
+  margin: 28px 0 8px;
+  padding-top: 18px;
+  border-top: 1px dashed var(--line);
+}
+.cx-section:first-of-type { border-top: none; padding-top: 0; }
+
+/* --- fields --------------------------------------------------------------- */
+.cx-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+.cx-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 4px; }
+@media (max-width: 640px) { .cx-field-row { grid-template-columns: 1fr; } }
+
+.cx-field label, .cx-field legend, fieldset.cx-field legend {
+  font-family: 'Manrope', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 600;
+}
+.cx-field input[type="text"],
+.cx-field input[type="url"],
+.cx-field input[type="datetime-local"],
+.cx-field input[type="file"],
+.cx-field textarea {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg-1);
+  font-family: inherit;
+  font-size: 15px;
+  color: var(--ink);
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+}
+.cx-field input:focus, .cx-field textarea:focus {
+  outline: none;
+  border-color: var(--rose);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(161, 59, 88, 0.12);
+}
+.cx-field input.invalid { border-color: var(--danger); background: #fff5f6; }
+.cx-hint { font-style: italic; color: var(--muted); font-size: 12px; }
+.cx-hint code { background: var(--bg-1); padding: 1px 6px; border-radius: 4px; font-family: 'SF Mono', Consolas, monospace; font-size: 11px; color: var(--plum); }
+.cx-error { font-style: italic; color: var(--danger); font-size: 13px; min-height: 16px; }
+
+/* --- radio pills --------------------------------------------------------- */
+fieldset.cx-field { border: none; }
+.cx-radio-row { display: flex; gap: 10px; margin-top: 8px; flex-wrap: wrap; }
+.cx-radio {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  border: 1.5px solid var(--line);
+  background: #fff;
+  cursor: pointer;
+  font-size: 15px;
+}
+.cx-radio input { accent-color: var(--rose); }
+.cx-radio:has(input:checked) { border-color: var(--rose); background: var(--bg-1); color: var(--plum); font-weight: 600; }
+
+/* --- buttons ------------------------------------------------------------- */
+.cx-btn {
+  appearance: none; border: none; cursor: pointer;
+  font-family: 'Manrope', sans-serif; font-weight: 600;
+  padding: 12px 24px; border-radius: 999px;
+  font-size: 14px; letter-spacing: 0.06em;
+  transition: transform 0.15s, background 0.15s, box-shadow 0.15s;
+  text-decoration: none;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+}
+.cx-btn-primary { background: var(--plum-2); color: #fff; }
+.cx-btn-primary:hover:not(:disabled) { background: var(--plum); transform: translateY(-1px); }
+.cx-btn-primary:disabled { background: #ccc; cursor: not-allowed; }
+.cx-btn-ghost { background: transparent; color: var(--plum); border: 1px solid var(--plum); padding: 8px 16px; font-size: 13px; }
+.cx-btn-ghost:hover { background: var(--plum); color: #fff; }
+
+/* --- quiz + memory rows -------------------------------------------------- */
+.q-row, .mem-row {
+  background: var(--bg-1);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 12px;
+}
+.q-row-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.q-num { font-family: 'Manrope', sans-serif; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+.q-text { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; font-family: inherit; font-size: 14px; resize: vertical; min-height: 44px; background: #fff; }
+.q-options { display: flex; flex-direction: column; gap: 6px; margin: 10px 0 4px; }
+.q-option-row { display: flex; align-items: center; gap: 8px; }
+.q-option-row input[type="radio"] { accent-color: var(--rose); width: 18px; height: 18px; }
+.q-option-row input[type="text"] { flex: 1; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; background: #fff; }
+.q-opt-remove { padding: 4px 10px; color: var(--muted); background: transparent; border: none; cursor: pointer; font-size: 16px; }
+
+.mem-row { display: flex; gap: 12px; align-items: flex-start; }
+.mem-thumb { width: 70px; height: 70px; border-radius: 10px; overflow: hidden; flex-shrink: 0; background: linear-gradient(135deg, var(--bg-1), var(--bg-2)); display: flex; align-items: center; justify-content: center; }
+.mem-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.mem-thumb-num { font-family: 'Playfair Display', serif; font-style: italic; color: var(--plum); font-size: 20px; }
+.mem-fields { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.mem-fields .cx-field { margin: 0; }
+.mem-remove { align-self: flex-start; background: transparent; border: none; color: var(--muted); cursor: pointer; font-size: 18px; padding: 4px 8px; }
+.mem-remove:hover { color: var(--danger); }
+
+/* --- publish card -------------------------------------------------------- */
+.cx-publish-card {
+  margin-top: 28px;
+  padding: 24px;
+  background: linear-gradient(135deg, var(--bg-1), var(--bg-2));
+  border: 1px solid var(--rose);
+  border-radius: 16px;
+}
+.cx-publish-card .cx-section { border-top: none; padding-top: 0; margin-top: 0; }
+.cx-publish-card #publish-btn { width: 100%; margin-top: 8px; padding: 16px; font-size: 15px; letter-spacing: 0.16em; text-transform: uppercase; }
+
+.cx-progress { margin: 10px 0; }
+.cx-progress-bar { width: 100%; height: 6px; background: rgba(255,255,255,0.6); border-radius: 999px; overflow: hidden; }
+.cx-progress-bar > div { height: 100%; background: linear-gradient(90deg, var(--rose), var(--plum)); width: 0%; transition: width 0.3s; }
+.cx-progress-text { font-style: italic; color: var(--plum); font-size: 13px; margin-top: 6px; text-align: center; }
+
+/* --- preview panel ------------------------------------------------------- */
+.cx-preview {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px -18px rgba(74, 31, 46, 0.25);
+  display: flex;
+  flex-direction: column;
+}
+.cx-preview-head {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 16px; border-bottom: 1px solid var(--line);
+  font-family: 'Manrope', sans-serif; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); font-weight: 700;
+}
+#preview-frame {
+  border: 0;
+  width: 100%;
+  height: 640px;
+  background: var(--bg-1);
+}
+@media (min-width: 980px) {
+  #preview-frame { height: calc(100vh - 180px); }
+}
+
+/* --- success screen ------------------------------------------------------ */
+.cx-success {
+  max-width: 480px;
+  margin: 60px auto;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 40px 32px;
+  text-align: center;
+  box-shadow: 0 20px 60px -20px rgba(74, 31, 46, 0.25);
+}
+.cx-success-mark { font-size: 56px; margin-bottom: 12px; }
+.cx-success-url { display: inline-block; padding: 14px 20px; background: var(--bg-1); border-radius: 10px; color: var(--plum); font-family: 'SF Mono', Consolas, monospace; font-size: 15px; word-break: break-all; text-decoration: none; margin: 12px 0; }
+.cx-success-buttons { display: flex; gap: 12px; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
