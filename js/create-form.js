@@ -44,18 +44,29 @@ const RESERVED_SLUGS = new Set([
 
 /* ================= Type toggle ================= */
 
+function applyType(t) {
+  if (t !== "birthday" && t !== "wedding") return;
+  state.type = t;
+  document.querySelectorAll('input[name="event_type"]').forEach((r) => {
+    r.checked = (r.value === t);
+  });
+  $("birthday-fields").hidden = t !== "birthday";
+  $("wedding-fields").hidden  = t !== "wedding";
+  const src = t === "wedding" ? "wedding/index.html?preview=1"
+                              : "birthday.html?preview=1";
+  $("preview-frame").src = src;
+  schedulePreview();
+  updatePublishGate();
+}
+
+// Honor ?type=birthday|wedding on first load (linked from the landing).
+const initialType = new URLSearchParams(location.search).get("type");
+if (initialType === "wedding" || initialType === "birthday") {
+  applyType(initialType);
+}
+
 document.querySelectorAll('input[name="event_type"]').forEach((r) =>
-  r.addEventListener("change", () => {
-    state.type = r.value;
-    $("birthday-fields").hidden = state.type !== "birthday";
-    $("wedding-fields").hidden  = state.type !== "wedding";
-    // Reload the preview iframe with the right template
-    const src = state.type === "wedding" ? "wedding/index.html?preview=1"
-                                         : "birthday.html?preview=1";
-    $("preview-frame").src = src;
-    schedulePreview();
-    updatePublishGate();
-  })
+  r.addEventListener("change", () => applyType(r.value))
 );
 
 /* ================= Slug helpers ================= */
