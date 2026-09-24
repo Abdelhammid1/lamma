@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 240" width="180" height="240" role="img" aria-label="Lotus bud">
+  <defs>
+    <linearGradient id="bp" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0%"  stop-color="#e18aa4"/>
+      <stop offset="55%" stop-color="#f5b1c3"/>
+      <stop offset="100%" stop-color="#ffd8e1"/>
+    </linearGradient>
+    <linearGradient id="bp2" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0%"  stop-color="#c56d84"/>
+      <stop offset="60%" stop-color="#e895ac"/>
+      <stop offset="100%" stop-color="#f9c9d5"/>
+    </linearGradient>
+    <linearGradient id="stem" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0%"  stop-color="#7a8e56"/>
+      <stop offset="100%" stop-color="#a5b672"/>
+    </linearGradient>
+  </defs>
+  <path d="M92,240 C95,180 95,140 92,100" stroke="url(#stem)" stroke-width="3" fill="none"/>
+  <path d="M92,180 C110,178 128,168 130,152 C114,152 100,164 92,180 Z" fill="url(#stem)" opacity="0.85"/>
+  <g stroke="#a04862" stroke-width="0.8" stroke-linejoin="round">
+    <path d="M90,110 C50,90 44,50 90,15 C100,50 100,85 90,110 Z" fill="url(#bp2)"/>
+    <path d="M90,110 C130,90 136,50 90,15 C80,50 80,85 90,110 Z" fill="url(#bp)" opacity="0.95"/>
+    <path d="M90,110 C74,88 74,44 90,18 C106,44 106,88 90,110 Z" fill="url(#bp)"/>
+  </g>
+</svg>

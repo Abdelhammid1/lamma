@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Wedding Invitation</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Great+Vibes&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,600&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- Music toggle (persists across cover + invitation) -->
+  <button
+    id="music-toggle"
+    class="music-toggle"
+    type="button"
+    aria-label="Toggle background music"
+    title="Toggle music"
+  >
+    <span class="off" aria-hidden="true">🔇</span>
+    <span class="on"  aria-hidden="true">🔊</span>
+  </button>
+  <audio id="bg-audio" loop preload="metadata"></audio>
+
+  <!-- ============ COVER / LANDING ============ -->
+  <div id="cover">
+    <!-- Floral decorations (positioned outside the card) -->
+    <img class="floral floral-tl" src="images/lotus.png"      alt="" aria-hidden="true" />
+    <img class="floral floral-br" src="images/lotus-buds.png" alt="" aria-hidden="true" />
+
+    <div class="cover-card">
+      <!-- Four gold corner flourishes -->
+      <img class="cover-corner cover-corner-tl" src="images/corner.png" alt="" aria-hidden="true" />
+      <img class="cover-corner cover-corner-tr" src="images/corner.png" alt="" aria-hidden="true" />
+      <img class="cover-corner cover-corner-bl" src="images/corner.png" alt="" aria-hidden="true" />
+      <img class="cover-corner cover-corner-br" src="images/corner.png" alt="" aria-hidden="true" />
+
+      <!-- Heart monogram -->
+      <svg class="monogram" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path
+          d="M32 54s-20-11.5-20-27a11 11 0 0 1 20-6.3A11 11 0 0 1 52 27c0 15.5-20 27-20 27z"
+          stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round"
+        />
+      </svg>
+
+      <div class="cover-names">
+        <span id="cover-groom">Groom</span>
+        <span class="cover-amp">&amp;</span>
+        <span id="cover-bride">Bride</span>
+      </div>
+
+      <div class="cover-invites">Cordially Invites</div>
+      <div class="cover-date" id="cover-date">— — —</div>
+
+      <button id="open-btn" class="btn btn-primary" type="button">Open</button>
+    </div>
+  </div>
+
+  <!-- ============ INVITATION (revealed after Open) ============ -->
+  <main id="invitation">
+
+    <!-- Stage 2 · Announcement -->
+    <section class="section announcement reveal" id="announcement" aria-labelledby="ann-header">
+      <!-- Lotus decorations (outside the card, absolute positioned) -->
+      <img class="floral floral-ann-tr" src="images/lotus.svg"     alt="" aria-hidden="true" />
+      <img class="floral floral-ann-bl" src="images/lotus-bud.svg" alt="" aria-hidden="true" />
+
+      <!-- Gold ornate corner flourishes -->
+      <svg class="ornate-corner corner-tl" viewBox="0 0 60 60" aria-hidden="true">
+        <path d="M2 30 C 2 14, 14 2, 30 2" stroke="currentColor" stroke-width="1.2" fill="none"/>
+        <path d="M8 30 C 8 18, 18 8, 30 8" stroke="currentColor" stroke-width="0.8" fill="none"/>
+        <circle cx="10" cy="10" r="1.6" fill="currentColor"/>
+      </svg>
+      <svg class="ornate-corner corner-tr" viewBox="0 0 60 60" aria-hidden="true">
+        <path d="M58 30 C 58 14, 46 2, 30 2" stroke="currentColor" stroke-width="1.2" fill="none"/>
+        <path d="M52 30 C 52 18, 42 8, 30 8" stroke="currentColor" stroke-width="0.8" fill="none"/>
+        <circle cx="50" cy="10" r="1.6" fill="currentColor"/>
+      </svg>
+      <svg class="ornate-corner corner-bl" viewBox="0 0 60 60" aria-hidden="true">
+        <path d="M2 30 C 2 46, 14 58, 30 58" stroke="currentColor" stroke-width="1.2" fill="none"/>
+        <path d="M8 30 C 8 42, 18 52, 30 52" stroke="currentColor" stroke-width="0.8" fill="none"/>
+        <circle cx="10" cy="50" r="1.6" fill="currentColor"/>
+      </svg>
+      <svg class="ornate-corner corner-br" viewBox="0 0 60 60" aria-hidden="true">
+        <path d="M58 30 C 58 46, 46 58, 30 58" stroke="currentColor" stroke-width="1.2" fill="none"/>
+        <path d="M52 30 C 52 42, 42 52, 30 52" stroke="currentColor" stroke-width="0.8" fill="none"/>
+        <circle cx="50" cy="50" r="1.6" fill="currentColor"/>
+      </svg>
+
+      <p class="event-header section-title-caps" id="ann-header">The Wedding of</p>
+
+      <div class="couple">
+        <div class="person">
+          <div class="name-script" id="ann-groom">Groom</div>
+          <div class="name-label"  id="ann-groom-label">The Groom</div>
+        </div>
+
+        <div class="amp" aria-hidden="true">&amp;</div>
+
+        <div class="person">
+          <div class="name-script" id="ann-bride">Bride</div>
+          <div class="name-label"  id="ann-bride-label">The Bride</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stage 3 · Gallery -->
+    <section class="section gallery reveal" id="gallery" aria-labelledby="gallery-title">
+      <img class="divider" src="images/divider.png" alt="" aria-hidden="true" />
+      <h2 id="gallery-title" class="section-title-caps">Photo Gallery</h2>
+      <div class="gallery-grid" id="gallery-grid"></div>
+    </section>
+
+    <!-- Stage 4 · Event Info + Countdown + Calendar + Add-to-Calendar + RSVP -->
+    <section class="section event-info reveal" id="event-info" aria-labelledby="event-title">
+      <img class="divider" src="images/divider.png" alt="" aria-hidden="true" />
+      <h2 id="event-title" class="section-title-caps">Engagement Party Info</h2>
+
+      <p class="event-lead">The engagement party will take place at:</p>
+
+      <p class="event-time-big" id="event-time-big">—</p>
+
+      <div class="event-date-bar">
+        <span class="dow"  id="event-dow">—</span>
+        <span class="sep"  aria-hidden="true">|</span>
+        <span class="day"  id="event-day">—</span>
+        <span class="sep"  aria-hidden="true">|</span>
+        <span class="mon"  id="event-mon">—</span>
+      </div>
+      <p class="event-year" id="event-year">—</p>
+
+      <div class="event-times">
+        <div class="event-time">
+          <span class="time-label">Welcome</span>
+          <span class="time-value" id="welcome-time">—</span>
+        </div>
+        <div class="event-time">
+          <span class="time-label">Reception</span>
+          <span class="time-value" id="reception-time">—</span>
+        </div>
+      </div>
+
+      <p class="countdown-title">Countdown</p>
+      <p class="countdown-line" id="countdown" aria-live="polite">
+        <span data-unit="days">--</span> days
+        <span data-unit="hours">--</span> hours
+        <span data-unit="minutes">--</span> min
+        <span data-unit="seconds">--</span> sec
+      </p>
+
+      <div class="calendar-frame">
+        <img class="calendar-frame-img" src="images/calendar-frame.png" alt="" aria-hidden="true" />
+        <div class="calendar" id="calendar"></div>
+      </div>
+
+      <div class="event-actions">
+        <a href="#" id="ics-btn" class="btn btn-outline">
+          <span aria-hidden="true">📅</span> Add to Calendar
+        </a>
+        <button id="rsvp-open" class="btn btn-primary" type="button">Confirm Attendance</button>
+      </div>
+
+      <form id="rsvp-form" class="rsvp-form" hidden>
+        <div class="field">
+          <label for="rsvp-name">Your name</label>
+          <input id="rsvp-name" name="name" type="text" autocomplete="name" dir="auto" />
+          <span class="error" data-for="rsvp-name"></span>
+        </div>
+
+        <fieldset class="field radio-group">
+          <legend>Will you attend?</legend>
+          <label class="radio-opt">
+            <input type="radio" name="attending" value="yes" checked />
+            <span>Yes, joyfully</span>
+          </label>
+          <label class="radio-opt">
+            <input type="radio" name="attending" value="no" />
+            <span>Sadly, no</span>
+          </label>
+        </fieldset>
+
+        <div class="field" id="guest-count-field">
+          <label for="rsvp-guests">Number of guests (including you)</label>
+          <input id="rsvp-guests" name="guestCount" type="number" min="1" max="10" value="1" />
+        </div>
+
+        <button type="submit" class="btn btn-primary">Send RSVP</button>
+        <p class="rsvp-status" id="rsvp-status" role="status"></p>
+      </form>
+    </section>
+
+    <!-- Stage 5 · Venue Map -->
+    <section class="section venue reveal" id="venue" aria-labelledby="venue-title">
+      <img class="divider" src="images/divider.png" alt="" aria-hidden="true" />
+      <h2 id="venue-title" class="section-title-caps">Engagement Party Venue</h2>
+
+      <div class="venue-details">
+        <p class="venue-name" id="venue-name">—</p>
+        <p class="venue-address" id="venue-address">—</p>
+      </div>
+
+      <div class="venue-map">
+        <iframe
+          id="venue-iframe"
+          title="Venue location on Google Maps"
+          src=""
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+          allowfullscreen
+        ></iframe>
+      </div>
+
+      <a
+        id="venue-open"
+        class="btn btn-outline"
+        href="#"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <span aria-hidden="true">📍</span> Open in Maps
+      </a>
+    </section>
+
+    <!-- Stage 6 · Dress Code -->
+    <section class="section dress-code reveal" id="dress-code" aria-labelledby="dress-code-title">
+      <img class="divider" src="images/divider.png" alt="" aria-hidden="true" />
+      <h2 id="dress-code-title" class="section-title-caps">Dress Code</h2>
+      <p class="dress-code-label" id="dress-code-label">—</p>
+      <div class="dress-code-swatches" id="dress-code-swatches"></div>
+    </section>
+
+    <!-- Stage 7 · Guestbook (real-time) -->
+    <section class="section guestbook reveal" id="guestbook" aria-labelledby="guestbook-title">
+      <img class="divider" src="images/divider.png" alt="" aria-hidden="true" />
+      <h2 id="guestbook-title" class="section-title-caps">Guestbook</h2>
+
+      <form id="gb-form" class="pill-form">
+        <div class="field">
+          <input id="gb-name" name="name" type="text" placeholder="Enter your name*" autocomplete="name" dir="auto" />
+          <span class="error" data-for="gb-name"></span>
+        </div>
+        <div class="field">
+          <textarea id="gb-message" name="message" rows="4" placeholder="Enter your wishes*" dir="auto"></textarea>
+          <span class="error" data-for="gb-message"></span>
+        </div>
+        <button type="submit" class="btn btn-primary">Send Wishes</button>
+        <p class="rsvp-status" id="gb-status" role="status"></p>
+      </form>
+
+      <ul id="gb-list" class="wish-list" aria-live="polite"></ul>
+      <p id="gb-empty" class="gb-empty">Be the first to leave a wish 💌</p>
+    </section>
+
+  </main>
+
+  <!-- Lightbox overlay (populated by gallery.js) -->
+  <div id="lightbox" class="lightbox" role="dialog" aria-modal="true" aria-label="Photo viewer">
+    <button type="button" class="lightbox-btn lightbox-close" id="lightbox-close" aria-label="Close">✕</button>
+    <button type="button" class="lightbox-btn lightbox-prev"  id="lightbox-prev"  aria-label="Previous photo">‹</button>
+    <img id="lightbox-image" alt="" />
+    <button type="button" class="lightbox-btn lightbox-next"  id="lightbox-next"  aria-label="Next photo">›</button>
+    <div class="lightbox-counter" id="lightbox-counter" aria-live="polite">1 / 1</div>
+  </div>
+
+  <!-- Firebase must load before feature scripts that use `db`. -->
+  <script type="module" src="js/firebase-init.js?v=2"></script>
+  <script type="module" src="js/cover.js?v=2"></script>
+  <script type="module" src="js/announcement.js?v=2"></script>
+  <script type="module" src="js/gallery.js?v=2"></script>
+  <script type="module" src="js/event-info.js?v=2"></script>
+  <script type="module" src="js/countdown.js?v=2"></script>
+  <script type="module" src="js/calendar.js?v=3"></script>
+  <script type="module" src="js/ics.js?v=2"></script>
+  <script type="module" src="js/rsvp.js?v=2"></script>
+  <script type="module" src="js/venue.js?v=2"></script>
+  <script type="module" src="js/dress-code.js?v=2"></script>
+  <script type="module" src="js/guestbook.js?v=2"></script>
+  <script type="module" src="js/reveal.js?v=2"></script>
+
+</body>
+</html>
