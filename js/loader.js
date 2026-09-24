@@ -39,11 +39,17 @@ export function getSlug() {
   return null;
 }
 
-/** Fetch the birthday JSON from the CDN, falling back to raw on 404. */
+/** Fetch the birthday JSON.
+ *  RAW is tried first because jsdelivr caches for up to 12–24 h and a
+ *  freshly published birthday won't show through the CDN. If raw is ever
+ *  down/rate-limited, we fall through to the CDN copy (may be stale but
+ *  keeps the page working). Append a cache-buster to defeat the browser
+ *  cache too. */
 export async function loadBirthday(slug) {
+  const bust = Date.now();
   const paths = [
-    `${CONFIG.cdnBase}/data/${slug}.json`,
-    `${CONFIG.rawBase}/data/${slug}.json`,
+    `${CONFIG.rawBase}/data/${slug}.json?nc=${bust}`,
+    `${CONFIG.cdnBase}/data/${slug}.json?nc=${bust}`,
   ];
   for (const url of paths) {
     try {
