@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Birthday cake">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"  stop-color="#e0b674"/>
+      <stop offset="50%" stop-color="#c9a86a"/>
+      <stop offset="100%" stop-color="#a08144"/>
+    </linearGradient>
+  </defs>
+  <g fill="none" stroke="url(#g)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Plate / base -->
+    <ellipse cx="60" cy="98" rx="40" ry="4"/>
+    <!-- Bottom tier -->
+    <path d="M22 78 h76 v18 c0 3 -17 5 -38 5 s-38 -2 -38 -5 z"/>
+    <ellipse cx="60" cy="78" rx="38" ry="4"/>
+    <!-- Middle scallop icing -->
+    <path d="M22 82 q6 4 12 0 t12 0 t12 0 t12 0 t12 0 t12 0"/>
+    <!-- Top tier -->
+    <path d="M35 55 h50 v20 c0 2 -11 3 -25 3 s-25 -1 -25 -3 z"/>
+    <ellipse cx="60" cy="55" rx="25" ry="3"/>
+    <!-- Top icing scallop -->
+    <path d="M35 60 q4 3 8 0 t8 0 t8 0 t8 0 t8 0 t8 0"/>
+    <!-- Three candles on top -->
+    <path d="M46 40 v14"/>
+    <path d="M60 34 v20"/>
+    <path d="M74 40 v14"/>
+    <!-- Flames -->
+    <path d="M46 40 c-2 -3 0 -6 0 -8 c0 2 2 5 0 8 z" fill="url(#g)"/>
+    <path d="M60 34 c-2 -3 0 -6 0 -8 c0 2 2 5 0 8 z" fill="url(#g)"/>
+    <path d="M74 40 c-2 -3 0 -6 0 -8 c0 2 2 5 0 8 z" fill="url(#g)"/>
+    <!-- Small decorative dots -->
+    <circle cx="35" cy="88"  r="1" fill="url(#g)"/>
+    <circle cx="60" cy="88"  r="1" fill="url(#g)"/>
+    <circle cx="85" cy="88"  r="1" fill="url(#g)"/>
+    <circle cx="45" cy="66"  r="1" fill="url(#g)"/>
+    <circle cx="60" cy="66"  r="1" fill="url(#g)"/>
+    <circle cx="75" cy="66"  r="1" fill="url(#g)"/>
+  </g>
+</svg>

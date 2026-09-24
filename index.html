@@ -1,43 +1,198 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>لمة · LAMMA — Birthday celebrations</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>لمّة · LAMMA — Digital Invitations</title>
 <link rel="icon" href="logo.jpg" type="image/jpeg" />
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link
-  href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Playfair+Display:ital,wght@0,400;0,600;0,700&family=Cairo:wght@400;600;700&display=swap"
-  rel="stylesheet"
-/>
-<link rel="stylesheet" href="css/landing.css" />
+<link rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Manrope:wght@400;500;600;700&family=Newsreader:ital,wght@0,400;1,400&family=Cairo:wght@400;600;700&display=swap" />
+<link rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,300,0,0" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = { theme: { extend: {
+    colors: {
+      "primary":            "#310b1e",
+      "primary-container":  "#4a2033",
+      "secondary":          "#755a24",
+      "secondary-fixed":    "#ffdea4",
+      "primary-container-light": "#67384c",
+      "on-surface":         "#1b1c1a",
+      "on-surface-variant": "#504347",
+      "outline":            "#827378",
+      "surface":            "#fbf9f6",
+      "surface-container-lowest": "#ffffff",
+      "surface-container-low":    "#f5f3f0",
+      "surface-container":        "#efeeeb",
+    },
+    fontFamily: {
+      display: ["Playfair Display", "serif"],
+      body:    ["Newsreader", "serif"],
+      label:   ["Manrope", "sans-serif"],
+      arabic:  ["Cairo", "sans-serif"],
+    },
+  } } };
+</script>
+<style>
+  body { background: #fbf9f6; }
+  ::-webkit-scrollbar { display: none; }
+</style>
 </head>
-<body>
+<body class="min-h-screen text-on-surface font-body">
 
-  <main class="landing">
-    <div class="landing-card">
-      <img class="landing-logo" src="logo.jpg" alt="لمة · LAMMA" />
+<main class="max-w-md mx-auto px-4 pb-16 flex flex-col">
 
-      <h1 class="landing-title">
-        <span class="landing-title-ar">لمة</span>
-        <span class="landing-title-en">LAMMA</span>
-      </h1>
+  <!-- Top bar: language toggle placeholder -->
+  <div class="w-full flex justify-end pt-3 pb-2">
+    <button type="button"
+            class="flex items-center gap-1.5 px-3 py-1 bg-surface-container-low rounded-full shadow-sm"
+            aria-label="Toggle language">
+      <span class="material-symbols-outlined text-secondary text-[16px]">language</span>
+      <span class="font-label text-[10px] font-semibold tracking-widest text-primary">العربية · English</span>
+    </button>
+  </div>
 
-      <p class="landing-tagline">
-        A place to celebrate every special moment together.
-      </p>
-
-      <a href="/admin" class="landing-btn">
-        Admin Login
-        <span class="landing-btn-arrow" aria-hidden="true">→</span>
-      </a>
-
-      <p class="landing-footnote">
-        Made with love · ‎صنع بحب
-      </p>
+  <!-- Hero -->
+  <header class="flex flex-col items-center text-center mt-2 mb-8">
+    <div class="relative w-24 h-24 mb-4 flex items-center justify-center">
+      <div class="absolute inset-0 rounded-full bg-secondary-fixed/40 blur-md scale-95"></div>
+      <img src="logo.jpg" alt="LAMMA logo"
+           class="relative w-24 h-24 object-contain rounded-full drop-shadow-md transition-transform duration-700 hover:scale-105" />
     </div>
-  </main>
 
+    <h1 class="font-display text-[28px] leading-9 text-primary tracking-wide flex items-center gap-3">
+      <span>LAMMA</span>
+      <span class="text-secondary text-sm opacity-60">·</span>
+      <span class="font-arabic" dir="rtl">لمّة</span>
+    </h1>
+
+    <img src="images/divider.png" alt=""
+         class="w-36 h-6 my-1.5 object-contain opacity-85" />
+
+    <p class="italic text-[16px] leading-snug text-primary-container-light max-w-xs px-2">
+      Create beautiful invitations for the moments that matter
+    </p>
+    <p class="font-arabic text-[13px] tracking-widest text-secondary mt-1" dir="rtl">
+      دعوات رقمية فاخرة لأجمل لحظات العمر
+    </p>
+  </header>
+
+  <!-- Product cards -->
+  <div class="w-full flex flex-col gap-7">
+
+    <!-- Wedding & Engagement -->
+    <article class="relative bg-surface-container-low rounded-xl p-6 shadow-md flex flex-col items-center text-center overflow-hidden">
+      <img src="images/corner.png" alt="" class="absolute top-1.5 left-1.5  w-8 h-8 pointer-events-none opacity-80"/>
+      <img src="images/corner.png" alt="" class="absolute top-1.5 right-1.5 w-8 h-8 pointer-events-none opacity-80 -scale-x-100"/>
+      <img src="images/corner.png" alt="" class="absolute bottom-1.5 left-1.5  w-8 h-8 pointer-events-none opacity-80 -scale-y-100"/>
+      <img src="images/corner.png" alt="" class="absolute bottom-1.5 right-1.5 w-8 h-8 pointer-events-none opacity-80 -scale-x-100 -scale-y-100"/>
+
+      <div class="w-full bg-surface-container-lowest/80 rounded-lg p-5 flex flex-col items-center shadow-sm">
+        <img src="images/lotus.png" alt="Lotus ornament"
+             class="w-14 h-14 mb-2 object-contain drop-shadow-sm" />
+
+        <h2 class="font-display text-[22px] leading-8 font-semibold text-primary">Wedding &amp; Engagement</h2>
+        <div class="font-display font-arabic text-[22px] leading-8 text-secondary mt-0.5" dir="rtl">
+          حفلات الزفاف والخطوبة
+        </div>
+
+        <img src="images/divider.png" alt="" class="w-28 h-5 my-1 object-contain opacity-75"/>
+
+        <p class="text-[14px] leading-relaxed text-on-surface-variant max-w-xs my-2.5">
+          Immerse your guests in timeless romance with bespoke digital folios,
+          animated wax seals, bilingual RSVP tracking, and live guest concierge.
+        </p>
+
+        <div class="mt-1 mb-5 px-3 py-1 rounded-full bg-surface-container">
+          <span class="font-label text-[10px] font-medium tracking-wide text-on-surface-variant">
+            Bespoke Calligraphy · RSVP &amp; Guestlist · Maps
+          </span>
+        </div>
+
+        <a href="/admin"
+           class="group w-full py-3.5 px-6 rounded-lg bg-primary-container flex items-center justify-center gap-2 shadow-sm transition active:scale-[0.98]">
+          <span class="font-label text-[14px] font-semibold tracking-wider text-secondary-fixed">Create your invitation</span>
+          <span class="material-symbols-outlined text-[18px] text-secondary-fixed transition-transform group-hover:translate-x-1">arrow_forward</span>
+        </a>
+      </div>
+    </article>
+
+    <!-- Birthday Celebrations -->
+    <article class="relative bg-surface-container-low rounded-xl p-6 shadow-md flex flex-col items-center text-center overflow-hidden">
+      <img src="images/corner.png" alt="" class="absolute top-1.5 left-1.5  w-8 h-8 pointer-events-none opacity-80"/>
+      <img src="images/corner.png" alt="" class="absolute top-1.5 right-1.5 w-8 h-8 pointer-events-none opacity-80 -scale-x-100"/>
+      <img src="images/corner.png" alt="" class="absolute bottom-1.5 left-1.5  w-8 h-8 pointer-events-none opacity-80 -scale-y-100"/>
+      <img src="images/corner.png" alt="" class="absolute bottom-1.5 right-1.5 w-8 h-8 pointer-events-none opacity-80 -scale-x-100 -scale-y-100"/>
+
+      <div class="w-full bg-surface-container-lowest/80 rounded-lg p-5 flex flex-col items-center shadow-sm">
+        <img src="images/cake.svg" alt="Birthday cake ornament"
+             class="w-14 h-14 mb-2 object-contain drop-shadow-sm" />
+
+        <h2 class="font-display text-[22px] leading-8 font-semibold text-primary">Birthday Celebrations</h2>
+        <div class="font-display font-arabic text-[22px] leading-8 text-secondary mt-0.5" dir="rtl">
+          أعياد الميلاد والمناسبات السعيدة
+        </div>
+
+        <img src="images/divider.png" alt="" class="w-28 h-5 my-1 object-contain opacity-75"/>
+
+        <p class="text-[14px] leading-relaxed text-on-surface-variant max-w-xs my-2.5">
+          Celebrate cherished milestones with radiant personalized invitations,
+          interactive countdown timers, wish registries, and seamless instant guest messaging.
+        </p>
+
+        <div class="mt-1 mb-5 px-3 py-1 rounded-full bg-surface-container">
+          <span class="font-label text-[10px] font-medium tracking-wide text-on-surface-variant">
+            Milestone Themes · Live Countdown · Interactive Wishes
+          </span>
+        </div>
+
+        <a href="/admin"
+           class="group w-full py-3.5 px-6 rounded-lg bg-primary-container flex items-center justify-center gap-2 shadow-sm transition active:scale-[0.98]">
+          <span class="font-label text-[14px] font-semibold tracking-wider text-secondary-fixed">Create your birthday</span>
+          <span class="material-symbols-outlined text-[18px] text-secondary-fixed transition-transform group-hover:translate-x-1">arrow_forward</span>
+        </a>
+      </div>
+    </article>
+  </div>
+
+  <!-- Trust footer -->
+  <footer class="max-w-md mt-10 mb-2 flex flex-col items-center">
+    <div class="relative w-full bg-surface-container-low rounded-xl p-5 flex flex-col items-center text-center shadow-sm">
+      <img src="images/calendar-frame.png" alt=""
+           class="w-20 h-16 mb-2 object-contain opacity-90 drop-shadow-sm" />
+
+      <p class="font-label text-[12px] font-semibold uppercase tracking-widest text-secondary">
+        A Legacy of Ceremonial Excellence
+      </p>
+      <p class="text-[19px] leading-8 font-medium text-primary mt-1">
+        Over 50,000 Memorable Gatherings Crafted
+      </p>
+      <p class="font-arabic text-[14px] text-on-surface-variant mt-0.5" dir="rtl">
+        صُنعت بشغف لأرقى الاحتفالات حول العالم
+      </p>
+
+      <div class="grid grid-cols-3 gap-2 w-full mt-4 pt-3">
+        <div class="flex flex-col items-center">
+          <span class="material-symbols-outlined text-secondary text-[20px]">drafts</span>
+          <span class="font-label text-[10px] mt-1">Instant RSVP</span>
+        </div>
+        <div class="flex flex-col items-center">
+          <span class="material-symbols-outlined text-secondary text-[20px]">verified</span>
+          <span class="font-label text-[10px] mt-1">Custom Seals</span>
+        </div>
+        <div class="flex flex-col items-center">
+          <span class="material-symbols-outlined text-secondary text-[20px]">translate</span>
+          <span class="font-label text-[10px] mt-1">Dual Script</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-6 flex flex-col items-center text-center">
+      <span class="text-[14px] italic text-outline">LAMMA Invitation Atelier · Paris &amp; Riyadh</span>
+    </div>
+  </footer>
+
+</main>
 </body>
 </html>
