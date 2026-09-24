@@ -77,10 +77,6 @@ function applyType(t) {
   updatePublishGate();
 }
 
-// Honor ?type=birthday|wedding on first load (linked from the landing).
-const initialType = new URLSearchParams(location.search).get("type");
-applyType(initialType === "wedding" ? "wedding" : "birthday");
-
 document.querySelectorAll('input[name="event_type"]').forEach((r) =>
   r.addEventListener("change", () => applyType(r.value))
 );
@@ -612,3 +608,8 @@ function debounce(fn, ms) {
   let t;
   return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
 }
+
+/* ================= boot (last: all `let` bindings are alive) ================= */
+
+const initialType = new URLSearchParams(location.search).get("type");
+applyType(initialType === "wedding" ? "wedding" : "birthday");
