@@ -1,38 +1,48 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Birthday cake">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" fill="none">
   <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%"  stop-color="#e0b674"/>
-      <stop offset="50%" stop-color="#c9a86a"/>
-      <stop offset="100%" stop-color="#a08144"/>
+    <linearGradient id="cakeGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#EADBBA"/>
+      <stop offset="50%" stop-color="#C9A86A"/>
+      <stop offset="100%" stop-color="#A68042"/>
+    </linearGradient>
+    <linearGradient id="cakeBlush" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFF5F5" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#F2D2D6" stop-opacity="0.5"/>
+    </linearGradient>
+    <linearGradient id="flameGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#E89F67"/>
+      <stop offset="60%" stop-color="#EFC67B"/>
+      <stop offset="100%" stop-color="#FFF8E7"/>
     </linearGradient>
   </defs>
-  <g fill="none" stroke="url(#g)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
-    <!-- Plate / base -->
-    <ellipse cx="60" cy="98" rx="40" ry="4"/>
-    <!-- Bottom tier -->
-    <path d="M22 78 h76 v18 c0 3 -17 5 -38 5 s-38 -2 -38 -5 z"/>
-    <ellipse cx="60" cy="78" rx="38" ry="4"/>
-    <!-- Middle scallop icing -->
-    <path d="M22 82 q6 4 12 0 t12 0 t12 0 t12 0 t12 0 t12 0"/>
-    <!-- Top tier -->
-    <path d="M35 55 h50 v20 c0 2 -11 3 -25 3 s-25 -1 -25 -3 z"/>
-    <ellipse cx="60" cy="55" rx="25" ry="3"/>
-    <!-- Top icing scallop -->
-    <path d="M35 60 q4 3 8 0 t8 0 t8 0 t8 0 t8 0 t8 0"/>
-    <!-- Three candles on top -->
-    <path d="M46 40 v14"/>
-    <path d="M60 34 v20"/>
-    <path d="M74 40 v14"/>
-    <!-- Flames -->
-    <path d="M46 40 c-2 -3 0 -6 0 -8 c0 2 2 5 0 8 z" fill="url(#g)"/>
-    <path d="M60 34 c-2 -3 0 -6 0 -8 c0 2 2 5 0 8 z" fill="url(#g)"/>
-    <path d="M74 40 c-2 -3 0 -6 0 -8 c0 2 2 5 0 8 z" fill="url(#g)"/>
-    <!-- Small decorative dots -->
-    <circle cx="35" cy="88"  r="1" fill="url(#g)"/>
-    <circle cx="60" cy="88"  r="1" fill="url(#g)"/>
-    <circle cx="85" cy="88"  r="1" fill="url(#g)"/>
-    <circle cx="45" cy="66"  r="1" fill="url(#g)"/>
-    <circle cx="60" cy="66"  r="1" fill="url(#g)"/>
-    <circle cx="75" cy="66"  r="1" fill="url(#g)"/>
+  <g transform="translate(100, 110)">
+    <!-- Cake Stand -->
+    <path d="M -45 42 L 45 42 C 45 42, 30 46, 12 50 L 16 60 L -16 60 L -12 50 C -30 46, -45 42, -45 42 Z" fill="none" stroke="url(#cakeGold)" stroke-width="1.2"/>
+    <line x1="-30" y1="60" x2="30" y2="60" stroke="url(#cakeGold)" stroke-width="1.4"/>
+
+    <!-- Tier 1 (Bottom cake tier) -->
+    <rect x="-38" y="14" width="76" height="26" rx="4" fill="url(#cakeBlush)" stroke="url(#cakeGold)" stroke-width="1.2"/>
+    <path d="M -38 20 C -25 24, -15 20, 0 24 C 15 20, 25 24, 38 20" stroke="url(#cakeGold)" stroke-width="0.8" stroke-dasharray="2, 2"/>
+
+    <!-- Tier 2 (Top cake tier) -->
+    <rect x="-26" y="-12" width="52" height="26" rx="3" fill="#FFF9F8" stroke="url(#cakeGold)" stroke-width="1.2"/>
+    <path d="M -26 -6 C -15 -3, -5 -6, 0 -4 C 5 -6, 15 -3, 26 -6" stroke="url(#cakeGold)" stroke-width="0.8" stroke-dasharray="2, 2"/>
+
+    <!-- Three slender candles -->
+    <line x1="0" y1="-12" x2="0" y2="-28" stroke="url(#cakeGold)" stroke-width="1.6" stroke-linecap="round"/>
+    <path d="M 0 -30 C -2.5 -34, -2.5 -38, 0 -43 C 2.5 -38, 2.5 -34, 0 -30 Z" fill="url(#flameGrad)" stroke="url(#cakeGold)" stroke-width="0.5"/>
+    <circle cx="0" cy="-36" r="1" fill="#FFF"/>
+
+    <line x1="-14" y1="-12" x2="-14" y2="-25" stroke="url(#cakeGold)" stroke-width="1.4" stroke-linecap="round"/>
+    <path d="M -14 -27 C -16 -30, -16 -34, -14 -38 C -12 -34, -12 -30, -14 -27 Z" fill="url(#flameGrad)" stroke="url(#cakeGold)" stroke-width="0.5"/>
+
+    <line x1="14" y1="-12" x2="14" y2="-25" stroke="url(#cakeGold)" stroke-width="1.4" stroke-linecap="round"/>
+    <path d="M 14 -27 C 12 -30, 12 -34, 14 -38 C 16 -34, 16 -30, 14 -27 Z" fill="url(#flameGrad)" stroke-width="0.5"/>
+
+    <!-- Delicate sparkles / petal droplets -->
+    <circle cx="-32" cy="-22" r="1.2" fill="url(#cakeGold)"/>
+    <circle cx="32" cy="-22" r="1.2" fill="url(#cakeGold)"/>
+    <path d="M -28 -35 L -26 -35 M -27 -36 L -27 -34" stroke="url(#cakeGold)" stroke-width="0.8"/>
+    <path d="M 28 -35 L 26 -35 M 27 -36 L 27 -34" stroke="url(#cakeGold)" stroke-width="0.8"/>
   </g>
 </svg>
