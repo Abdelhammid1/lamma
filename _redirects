@@ -1,12 +1,13 @@
 # Cloudflare Pages URL routing for lamma.manasety.ai
 #
-# / (root)          → index.html   (landing, default behavior — no rule needed)
-# /admin, /admin/   → admin.html   (admin panel)
-# /<slug>           → birthday.html (public template resolves slug from URL path)
+# / (root)         → index.html   (landing, default behavior)
+# /admin, /admin/  → admin.html   (admin panel)
+# /<slug>          → birthday.html (public template resolves slug from URL path)
 #
 # Static assets (logo.jpg, css/*, js/*, favicon) are served directly BEFORE
 # these rewrites are checked, so they always work as normal files.
 
-/admin        /admin.html      200
-/admin/       /admin.html      200
-/*            /birthday.html   200
+/                /index.html     200
+/admin           /admin.html     200
+/admin/          /admin.html     200
+/*               /birthday.html  200
