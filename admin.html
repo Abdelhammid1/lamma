@@ -73,11 +73,38 @@
         <section class="dash-hero">
           <div>
             <h1 class="dash-title">Activation codes</h1>
-            <p class="dash-subtitle">Generate one-time codes for the /create self-serve flow.</p>
+            <p class="dash-subtitle">
+              Generate one-time codes for the /create self-serve flow.
+              <span id="codes-whoami" class="hint"></span>
+            </p>
           </div>
+          <button id="codes-signout-btn" type="button" class="btn btn-ghost" hidden>Sign out of codes</button>
         </section>
 
-        <div class="card" style="max-width: 720px; margin-bottom: 24px;">
+        <!-- Firebase Auth sign-in: required before generating or listing codes.
+             The Firestore rules on activation_codes require request.auth != null,
+             so an unauthed client can't mint codes even if it POSTs directly. -->
+        <div id="codes-signin" class="card" style="max-width: 480px; margin-bottom: 24px;">
+          <h2 style="font-family: 'Playfair Display', serif; color: var(--plum); margin-bottom: 6px;">Sign in required</h2>
+          <p class="hint" style="margin-bottom: 14px;">
+            Codes are minted server-side against a signed-in admin. Use the
+            Firebase Auth email/password you created in the Firebase console.
+          </p>
+          <div class="field">
+            <label for="codes-email">Email</label>
+            <input type="email" id="codes-email" autocomplete="email" />
+          </div>
+          <div class="field">
+            <label for="codes-password">Password</label>
+            <input type="password" id="codes-password" autocomplete="current-password" />
+          </div>
+          <span class="error" id="codes-signin-error"></span>
+          <button id="codes-signin-btn" type="button" class="btn btn-primary" style="margin-top: 8px;">
+            Sign in
+          </button>
+        </div>
+
+        <div class="card" data-codes-authed style="max-width: 720px; margin-bottom: 24px;" hidden>
           <h2 style="font-family: 'Playfair Display', serif; color: var(--plum); margin-bottom: 10px;">New code</h2>
           <div class="field">
             <label for="gen-code-slug">Bind to slug (optional)</label>
@@ -106,8 +133,8 @@
           </div>
         </div>
 
-        <h2 style="font-family: 'Playfair Display', serif; color: var(--plum); margin: 20px 0 12px;">All codes</h2>
-        <ul id="codes-list" class="codes-list"></ul>
+        <h2 data-codes-authed hidden style="font-family: 'Playfair Display', serif; color: var(--plum); margin: 20px 0 12px;">All codes</h2>
+        <ul id="codes-list" class="codes-list" data-codes-authed hidden></ul>
       </div>
     </div>
 
@@ -230,7 +257,7 @@
   <script type="module" src="js/admin-auth.js?v=3"></script>
   <script type="module" src="js/admin-list.js?v=3"></script>
   <script type="module" src="js/admin-form.js?v=3"></script>
-  <script type="module" src="js/admin-codes.js?v=1"></script>
+  <script type="module" src="js/admin-codes.js?v=2"></script>
 
 </body>
 </html>

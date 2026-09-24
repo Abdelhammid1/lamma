@@ -15,6 +15,14 @@
 </head>
 <body>
 
+<!-- Background music (source set by renderMusic; playback starts inside
+     the Start-button user gesture, so autoplay is not blocked). -->
+<audio id="bg-audio" loop preload="metadata"></audio>
+<button id="music-toggle" type="button" aria-label="Toggle background music" title="Music" hidden>
+  <span class="off" aria-hidden="true">🔇</span>
+  <span class="on"  aria-hidden="true">🔊</span>
+</button>
+
 <div class="petals" id="petals"></div>
 
 <main>
@@ -114,7 +122,7 @@
   </div>
 </div>
 
-<script type="module" src="js/template.js?v=3"></script>
+<script type="module" src="js/template.js?v=5"></script>
 
 </body>
 </html>

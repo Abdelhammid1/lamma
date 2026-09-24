@@ -459,3 +459,25 @@ section.page.active > .container { margin: auto; }
   .memories-grid { grid-template-columns: 1fr; }
   .quiz-card { padding: 24px 18px; }
 }
+
+/* ---------- Background music toggle ---------- */
+#music-toggle {
+  position: fixed;
+  top: 14px; right: 14px;
+  z-index: 60;
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,0,0,.08);
+  background: rgba(255,255,255,.92);
+  box-shadow: 0 6px 16px rgba(0,0,0,.10);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: transform .15s ease;
+  font-size: 18px;
+  line-height: 1;
+}
+#music-toggle:hover { transform: scale(1.05); }
+#music-toggle .on  { display: none; }
+#music-toggle .off { display: inline; }
+#music-toggle.playing .on  { display: inline; }
+#music-toggle.playing .off { display: none; }

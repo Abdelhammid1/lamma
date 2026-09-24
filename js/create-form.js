@@ -13,6 +13,7 @@
 // ============================================================================
 
 import { db, storage } from "./firebase-init.js";
+import { RESERVED_SLUGS } from "./reserved-slugs.js";
 import {
   doc, getDoc, setDoc, updateDoc, serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
@@ -47,13 +48,7 @@ function guardFileSize(input, maxMb, label) {
   return f;
 }
 
-const RESERVED_SLUGS = new Set([
-  "admin", "www", "api", "lamma", "mail", "ftp", "create", "wedding",
-  "birthday", "invitation", "about", "contact", "terms", "privacy",
-  "marsoud", "lexoffice", "almustashar", "activefit", "school",
-  "elyasmin", "chatwoot", "n8n", "qaffer", "blog", "support", "help",
-  "status",
-]);
+// RESERVED_SLUGS imported from ./reserved-slugs.js
 
 /* ================= Type toggle ================= */
 

@@ -3,11 +3,7 @@
 //
 //  Slug resolution priority:
 //    1. ?for=<slug> in query string (works on localhost + previews)
-//    2. First path segment of location.pathname
-//         /medo   → medo
-//         /sara   → sara
-//         /       → null (landing)
-//         /admin  → null (admin panel, handled by _redirects)
+//    2. Path segments — /medo → medo,  /wedding/sara → sara
 //    3. First DNS label of the hostname (subdomain fallback)
 //
 //  Data-source waterfall for load:
@@ -16,16 +12,12 @@
 //         (raw is tried before jsdelivr; the CDN had 12–24h stale-cache issues)
 // ============================================================================
 
-import { CONFIG } from "../config.js";
-import { db }     from "./firebase-init.js";
+import { CONFIG }      from "../config.js";
+import { db }          from "./firebase-init.js";
+import { RESERVED_SLUGS } from "./reserved-slugs.js";
 import { doc, getDoc } from
   "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const RESERVED_PATHS   = new Set([
-  "", "admin", "create", "wedding",
-  "index.html", "admin.html", "birthday.html", "create.html",
-  "logo.jpg", "favicon.ico",
-]);
 const RESERVED_LABELS  = new Set(["admin", "www", "api", "lamma"]);
 
 
@@ -35,9 +27,16 @@ export function getSlug() {
   const queryFor = params.get("for");
   if (queryFor) return queryFor.toLowerCase().trim();
 
-  // 2. Path — /medo → "medo"
-  const seg = location.pathname.replace(/^\/+|\/+$/g, "").split("/")[0].toLowerCase();
-  if (seg && !RESERVED_PATHS.has(seg) && !seg.includes(".")) {
+  // 2. Path — walk segments so /wedding/sara resolves to "sara".
+  const segs = location.pathname
+    .replace(/^\/+|\/+$/g, "")
+    .split("/")
+    .map((s) => s.toLowerCase())
+    .filter(Boolean);
+
+  for (const seg of segs) {
+    if (!seg || seg.includes(".")) continue;
+    if (RESERVED_SLUGS.has(seg))   continue;
     return seg;
   }
 
@@ -95,17 +94,20 @@ function _mapFirestoreDoc(data) {
  * For GitHub-legacy invitations, memories/video have repo-relative
  * `path` fields that need turning into absolute CDN URLs. Firestore
  * docs already store full URLs so this is a no-op there.
+ *
+ * Returns a shallow copy — never mutates the caller's object.
  */
 export function mapPathsToUrls(cfg) {
   const cdn = CONFIG.cdnBase;
+  const out = { ...cfg };
   if (Array.isArray(cfg.memories)) {
-    cfg.memories = cfg.memories.map((m) => ({
+    out.memories = cfg.memories.map((m) => ({
       ...m,
       url: m.url || (m.path ? `${cdn}/${m.path}` : ""),
     }));
   }
-  if (!cfg.videoUrl && cfg.videoPath) {
-    cfg.videoUrl = `${cdn}/${cfg.videoPath}`;
+  if (!out.videoUrl && out.videoPath) {
+    out.videoUrl = `${cdn}/${out.videoPath}`;
   }
-  return cfg;
+  return out;
 }

@@ -11,6 +11,12 @@ import {
   addDoc, collection, onSnapshot, query, orderBy, serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 import { db, isConfigured } from "./firebase-init.js";
+import { CONFIG } from "../config.js";
+
+// Scoped per invitation: invitations/<slug>/guestbook — so each wedding
+// has its own private wishes and none leak across paying customers.
+const SLUG = CONFIG.slug || "demo";
+const COLLECTION = `invitations/${SLUG}/guestbook`;
 
 const form       = document.getElementById("gb-form");
 const nameEl     = document.getElementById("gb-name");
@@ -63,7 +69,7 @@ if (form) {
     }
 
     try {
-      await addDoc(collection(db, "guestbook"), {
+      await addDoc(collection(db, COLLECTION), {
         name,
         message,
         createdAt: serverTimestamp(),
@@ -131,7 +137,7 @@ function renderEntries(entries) {
 }
 
 if (isConfigured() && db && listEl) {
-  const q = query(collection(db, "guestbook"), orderBy("createdAt", "desc"));
+  const q = query(collection(db, COLLECTION), orderBy("createdAt", "desc"));
   onSnapshot(
     q,
     (snap) => {

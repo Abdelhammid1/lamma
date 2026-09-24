@@ -270,20 +270,9 @@
     <div class="lightbox-counter" id="lightbox-counter" aria-live="polite">1 / 1</div>
   </div>
 
-  <!-- Firebase must load before feature scripts that use `db`. -->
-  <script type="module" src="js/firebase-init.js?v=2"></script>
-  <script type="module" src="js/cover.js?v=2"></script>
-  <script type="module" src="js/announcement.js?v=2"></script>
-  <script type="module" src="js/gallery.js?v=2"></script>
-  <script type="module" src="js/event-info.js?v=2"></script>
-  <script type="module" src="js/countdown.js?v=2"></script>
-  <script type="module" src="js/calendar.js?v=3"></script>
-  <script type="module" src="js/ics.js?v=2"></script>
-  <script type="module" src="js/rsvp.js?v=2"></script>
-  <script type="module" src="js/venue.js?v=2"></script>
-  <script type="module" src="js/dress-code.js?v=2"></script>
-  <script type="module" src="js/guestbook.js?v=2"></script>
-  <script type="module" src="js/reveal.js?v=2"></script>
+  <!-- One entry point: bootstrap.js resolves the slug, fetches Firestore,
+       merges into CONFIG, then dynamically imports every renderer. -->
+  <script type="module" src="js/bootstrap.js?v=1"></script>
 
 </body>
 </html>

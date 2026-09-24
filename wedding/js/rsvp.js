@@ -7,6 +7,11 @@
 import { addDoc, collection, serverTimestamp } from
   "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 import { db, isConfigured } from "./firebase-init.js";
+import { CONFIG } from "../config.js";
+
+// Scoped per invitation: invitations/<slug>/rsvps
+const SLUG = CONFIG.slug || "demo";
+const COLLECTION = `invitations/${SLUG}/rsvps`;
 
 const openBtn     = document.getElementById("rsvp-open");
 const form        = document.getElementById("rsvp-form");
@@ -84,7 +89,7 @@ if (form) {
     }
 
     try {
-      await addDoc(collection(db, "rsvps"), {
+      await addDoc(collection(db, COLLECTION), {
         name,
         attending,
         guestCount,

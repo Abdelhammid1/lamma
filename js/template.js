@@ -35,6 +35,7 @@ export const DEFAULTS = {
   videoEyebrow: "✦ A Message ✦",
   videoTitle: "🎬 Watch This",
   videoUrl: "",
+  musicUrl: "",
 };
 
 /* ---------- Stage-A demo config — mirrors the original hard-coded page ---------- */
@@ -256,6 +257,49 @@ function renderWrongModal(cfg) {
   set("wrong-close-btn", cfg.wrongButtonText);
 }
 
+/* Music: attach an audio source and wire the Start button to start
+ * playback inside the user gesture (so browsers don't block autoplay).
+ * Idempotent — safe to call on every re-render during preview mode. */
+function renderMusic(cfg) {
+  const audio = $("bg-audio");
+  const toggle = $("music-toggle");
+  const startBtn = $("start-btn");
+  if (!audio) return;
+
+  const src = cfg.musicUrl || "";
+  if (src && audio.getAttribute("src") !== src) {
+    audio.src = src;
+    audio.loop = true;
+    audio.volume = 0.6;
+  }
+
+  if (!src) {
+    if (toggle) toggle.hidden = true;
+    return;
+  }
+  if (toggle) toggle.hidden = false;
+
+  if (startBtn && !startBtn.dataset.musicWired) {
+    startBtn.dataset.musicWired = "1";
+    startBtn.addEventListener("click", () => {
+      audio.muted = false;
+      audio.play().catch((err) => console.warn("[music] blocked:", err));
+      if (toggle) toggle.classList.add("playing");
+    });
+  }
+
+  if (toggle && !toggle.dataset.wired) {
+    toggle.dataset.wired = "1";
+    toggle.addEventListener("click", async () => {
+      audio.muted = !audio.muted;
+      toggle.classList.toggle("playing", !audio.muted);
+      if (!audio.muted) {
+        try { await audio.play(); } catch (_) { /* ignore */ }
+      }
+    });
+  }
+}
+
 /* ------------------------------ Entry point ------------------------------ */
 
 export function renderTemplate(rawConfig) {
@@ -271,6 +315,7 @@ export function renderTemplate(rawConfig) {
   renderLetter(cfg);
   renderVideo(cfg);
   renderWrongModal(cfg);
+  renderMusic(cfg);
 
   document.title = `Happy Birthday, ${cfg.name}`;
 }
