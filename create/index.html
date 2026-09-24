@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Redirecting… — لمّة · LAMMA</title>
+<meta http-equiv="refresh" content="0; url=/create.html" />
+<script>
+  (function () {
+    var target = "/create.html" + (location.search || "") + (location.hash || "");
+    location.replace(target);
+  })();
+</script>
+</head>
+<body>
+<p>Redirecting to <a id="link" href="/create.html">/create.html</a>…</p>
+<script>
+  document.getElementById("link").href = "/create.html" + (location.search || "") + (location.hash || "");
+</script>
+</body>
+</html>
