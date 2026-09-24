@@ -397,6 +397,8 @@ async function uploadFileTo(path, file, commitMsg) {
 async function publishFlow(cfg) {
   const slug = cfg.slug;
   const now = new Date().toISOString();
+  console.log("[publishFlow] slug=" + slug + " memories=" + cfg.memoriesDraft.length +
+              " videoFile=" + !!cfg._videoDraft.file + " videoUrl=" + !!cfg._videoDraft.url);
 
   // Compute total steps for progress
   const memsToUpload = cfg.memoriesDraft.filter((m) => m.file).length;
@@ -413,10 +415,14 @@ async function publishFlow(cfg) {
       const ext = extOf(m.file.name);
       const path = `media/${slug}/photo-${Date.now()}-${i + 1}.${ext}`;
       setProgress((done / total) * 100, `Uploading photo ${i + 1}/${cfg.memoriesDraft.length}…`);
+      console.log("[publishFlow] step 1 photo " + (i + 1) + ": PUT " + path +
+                  " (" + m.file.size + " bytes, " + m.file.type + ")");
       await uploadFileTo(path, m.file, `Add photo ${i + 1} for ${slug}`);
+      console.log("[publishFlow] photo " + (i + 1) + " uploaded");
       finalMemories.push({ path, dateLabel: m.dateLabel });
       bump(`Photo ${i + 1} uploaded`);
     } else if (m.existingPath) {
+      console.log("[publishFlow] photo " + (i + 1) + ": kept existing " + m.existingPath);
       finalMemories.push({ path: m.existingPath, dateLabel: m.dateLabel });
     }
     // else: empty row, skip
@@ -429,11 +435,17 @@ async function publishFlow(cfg) {
     const ext = extOf(cfg._videoDraft.file.name);
     videoPath = `media/${slug}/video-${Date.now()}.${ext}`;
     setProgress((done / total) * 100, "Uploading video…");
+    console.log("[publishFlow] step 2 video: PUT " + videoPath +
+                " (" + cfg._videoDraft.file.size + " bytes, " + cfg._videoDraft.file.type + ")");
     await uploadFileTo(videoPath, cfg._videoDraft.file, `Add video for ${slug}`);
+    console.log("[publishFlow] video uploaded");
     bump("Video uploaded");
   } else if (!cfg._videoDraft.removed && editing?.cfg?.videoPath) {
     // Keep the previously-attached path
     videoPath = editing.cfg.videoPath;
+    console.log("[publishFlow] step 2 video: kept existing " + videoPath);
+  } else {
+    console.log("[publishFlow] step 2 video: none");
   }
   if (cfg._videoDraft.url) videoUrl = cfg._videoDraft.url;
 
@@ -461,18 +473,28 @@ async function publishFlow(cfg) {
   // 4. PUT data/<slug>.json
   setProgress((done / total) * 100, "Saving birthday…");
   const path = `data/${slug}.json`;
+  console.log("[publishFlow] step 4: PUT " + path);
   let sha;
   if (editing?.sha) {
     sha = editing.sha;
   } else {
     // Might already exist (creating with existing slug) — grab sha if so
-    try { const existing = await gh.getFile(path); if (existing?.sha) sha = existing.sha; } catch(_) {}
+    try {
+      const existing = await gh.getFile(path);
+      if (existing?.sha) sha = existing.sha;
+      console.log("[publishFlow] existing sha for JSON:", sha || "(none — creating)");
+    } catch (e) {
+      console.warn("[publishFlow] getFile threw non-404, ignoring:", e);
+    }
   }
+  const jsonBodyStr = JSON.stringify(jsonBody, null, 2);
+  console.log("[publishFlow] JSON body size:", jsonBodyStr.length, "bytes");
   const putRes = await gh.putFile(path, {
-    content: JSON.stringify(jsonBody, null, 2),
+    content: jsonBodyStr,
     message: (editing ? "Update" : "Add") + ` birthday ${slug}`,
     sha,
   });
+  console.log("[publishFlow] JSON PUT OK, commit sha:", putRes?.commit?.sha);
   bump("Saved");
   editing = { slug, sha: putRes.content?.sha || null, cfg: jsonBody };
   return jsonBody;
@@ -483,28 +505,57 @@ async function publishFlow(cfg) {
 const form = $("editor-form");
 form?.addEventListener("submit", async (e) => {
   e.preventDefault();
+  console.log("[publish] submit fired");
   const errEl = $("publish-error");
   errEl.textContent = "";
+  // Also install a big top-of-page banner so errors are impossible to miss.
+  let banner = document.getElementById("publish-debug-banner");
+  if (!banner) {
+    banner = document.createElement("div");
+    banner.id = "publish-debug-banner";
+    banner.style.cssText =
+      "position:fixed;top:0;left:0;right:0;z-index:9999;padding:14px 20px;" +
+      "background:#7a1f28;color:#fff;font:14px/1.5 monospace;white-space:pre-wrap;display:none";
+    document.body.prepend(banner);
+  }
+  const showBanner = (msg, ok = false) => {
+    banner.style.display = "block";
+    banner.style.background = ok ? "#2e6b3e" : "#7a1f28";
+    banner.textContent = msg;
+  };
 
   const cfg = collectForm();
-  if (!validate(cfg)) return;
+  console.log("[publish] collected cfg:", cfg);
+  if (!validate(cfg)) {
+    console.warn("[publish] validate() returned false — see field errors");
+    showBanner("Fix the highlighted fields (name / slug / quiz) and try again.");
+    return;
+  }
 
   const btn = $("publish-btn");
   btn.disabled = true;
   btn.textContent = "Publishing…";
 
   try {
+    console.log("[publish] starting publishFlow for slug=" + cfg.slug);
     const finalCfg = await publishFlow(cfg);
+    console.log("[publish] publishFlow OK", finalCfg);
     markClean();
-    // Success screen
     const url = publicUrlFor(finalCfg.slug);
     $("success-url").textContent = url;
     $("success-link").href = url;
     showScreen("success");
     hideProgress();
+    banner.style.display = "none";
   } catch (err) {
-    console.error(err);
-    errEl.textContent = err.message || "Could not publish. Check the console for details.";
+    console.error("[publish] FAILED", err);
+    const msg =
+      "PUBLISH FAILED\n" +
+      "name: " + (err?.name || "?") + "\n" +
+      "message: " + (err?.message || String(err)) + "\n" +
+      "stack: " + (err?.stack || "(no stack)").split("\n").slice(0, 4).join("\n");
+    errEl.textContent = err.message || "Could not publish. See red banner at top.";
+    showBanner(msg);
     hideProgress();
   } finally {
     btn.disabled = false;
