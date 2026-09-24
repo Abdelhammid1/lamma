@@ -10,7 +10,7 @@ export const CONFIG = {
   mediaBranch: "main",
 
   // Public domain the birthday site lives on. Slugs render at /<slug>.
-  domain:      "lamma.manasety.ai",
+  domain:      "manasety.ai",
 
   // Public read path — jsdelivr CDN is fast, cached, and has no rate limit.
   // It lags fresh commits by ~5–15 min; the loader falls back to rawBase.
