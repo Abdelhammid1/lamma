@@ -85,7 +85,9 @@ function set(id, value) {
 function videoTypeFor(url) {
   if (!url) return "none";
   const lc = url.toLowerCase();
-  if (lc.endsWith(".mp4") || lc.endsWith(".webm") || lc.endsWith(".mov")) return "file";
+  const p = lc.split("?")[0].split("#")[0];
+  if (p.endsWith(".mp4") || p.endsWith(".webm") || p.endsWith(".mov")) return "file";
+  if (/firebasestorage\.googleapis\.com|storage\.googleapis\.com/.test(lc)) return "file";
   if (/youtube\.com|youtu\.be/.test(lc)) return "youtube";
   return "iframe";
 }
@@ -411,6 +413,11 @@ async function bootstrap() {
 
   if (!cfg) {
     showNotFound(slug);
+    return;
+  }
+
+  if (cfg.event_type === "wedding" && !location.pathname.startsWith("/wedding/")) {
+    location.replace(`/wedding/${slug}`);
     return;
   }
 
