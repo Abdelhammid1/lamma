@@ -542,6 +542,10 @@ details.section-block > .field:first-of-type { margin-top: 16px; }
   margin-bottom: 12px;
   gap: 10px;
 }
+/* `display: flex` above outranks the UA `[hidden] { display: none }`
+   rule, so an explicit override is needed for the Remove button to
+   actually hide the row. */
+.video-existing[hidden] { display: none !important; }
 
 /* ---------- Publish progress ---------- */
 .progress { margin-top: 20px; }

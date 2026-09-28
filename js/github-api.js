@@ -66,12 +66,12 @@ export async function listDir(path) {
  * ArrayBuffer (for binary). `sha` is required for updates and must be
  * omitted for creates.
  */
-export async function putFile(path, { content, message, sha }) {
+export async function putFile(path, { content, contentBase64, message, sha }) {
   const url = `${API}/repos/${CONFIG.mediaOwner}/${CONFIG.mediaRepo}/contents/${encodeURI(path)}`;
   const body = {
     message: message || `Update ${path}`,
     branch: CONFIG.mediaBranch,
-    content: encodeContent(content),
+    content: contentBase64 != null ? contentBase64 : encodeContent(content),
   };
   if (sha) body.sha = sha;
 
@@ -105,9 +105,15 @@ function encodeContent(content) {
     return btoa(unescape(encodeURIComponent(content)));
   }
   if (content instanceof ArrayBuffer) {
+    // Build in 32 KiB chunks — building a 50 MB string one char at a
+    // time with `+=` is O(n²) on many engines and locks up mobile Safari
+    // for tens of seconds on a typical phone photo.
     const bytes = new Uint8Array(content);
+    const chunkSize = 0x8000;
     let bin = "";
-    for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      bin += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
+    }
     return btoa(bin);
   }
   throw new Error("encodeContent: unsupported content type");

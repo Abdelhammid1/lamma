@@ -18,7 +18,7 @@ import {
   doc, getDoc, setDoc, updateDoc, serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 import {
-  ref, uploadBytes, getDownloadURL,
+  ref, uploadBytesResumable, getDownloadURL,
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
 
 const $ = (id) => document.getElementById(id);
@@ -482,10 +482,31 @@ async function publish() {
       done++;
       const label = f.field.startsWith("photo") || f.field.startsWith("gallery")
         ? "photo" : f.field;
-      setProgress((done / total) * 100, `Uploading ${label} ${done}/${files.length}…`);
       const path = `invitations/${slug}/${Date.now()}-${f.field}-${safeName(f.file.name)}`;
       const uploadRef = ref(storage, path);
-      await uploadBytes(uploadRef, f.file, { contentType: f.file.type });
+      // Resumable upload — surfaces real bytes-transferred progress and
+      // recovers from mobile network hiccups instead of quietly stalling.
+      const task = uploadBytesResumable(uploadRef, f.file, { contentType: f.file.type });
+      const baseFilePct = ((done - 1) / total) * 100;
+      const slice       = (1 / total) * 100;
+      await new Promise((resolve, reject) => {
+        task.on(
+          "state_changed",
+          (snap) => {
+            const pct = snap.totalBytes
+              ? snap.bytesTransferred / snap.totalBytes
+              : 0;
+            const mbSent  = (snap.bytesTransferred / 1024 / 1024).toFixed(1);
+            const mbTotal = (snap.totalBytes       / 1024 / 1024).toFixed(1);
+            setProgress(
+              baseFilePct + pct * slice,
+              `Uploading ${label} ${done}/${files.length} — ${mbSent} / ${mbTotal} MB`
+            );
+          },
+          reject,
+          resolve
+        );
+      });
       const url = await getDownloadURL(uploadRef);
       f.assign(cfg, url);
     }

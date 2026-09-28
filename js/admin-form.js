@@ -382,15 +382,18 @@ function setProgress(pct, text) {
 function hideProgress() { $("publish-progress").hidden = true; }
 
 async function uploadFileTo(path, file, commitMsg) {
-  const buffer = await file.arrayBuffer();
-  // Detect if a file already exists at this exact path so we send `sha`.
+  // Encode via FileReader.readAsDataURL — the browser does the base64
+  // work off the main thread, which is critical on mobile Safari where
+  // an in-JS byte loop over a 40 MB video freezes the page for so long
+  // the publish appears to hang.
+  const contentBase64 = await gh.fileToBase64(file);
   let sha;
   try {
     const existing = await gh.getFile(path);
     if (existing?.sha) sha = existing.sha;
   } catch (_) { /* 404 is expected */ }
 
-  await gh.putFile(path, { content: buffer, message: commitMsg, sha });
+  await gh.putFile(path, { contentBase64, message: commitMsg, sha });
   return path;
 }
 
