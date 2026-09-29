@@ -1,0 +1,172 @@
+#!/usr/bin/env bash
+# One-shot installer for the lamma-backend Flask app.
+#
+# Prereqs on the target VM (Ubuntu/Debian assumed):
+#   - Python 3.10+
+#   - nginx already serving lamma.manasety.ai
+#   - Root (sudo) access
+#   - A fine-grained GitHub PAT with Contents: R/W on zyadwael/birthday-media
+#
+# Usage:
+#   curl -fsSL https://raw.githubusercontent.com/Abdelhammid1/lamma/main/lamma-backend/deploy/install.sh | sudo bash
+#   # or clone first, then: sudo bash lamma-backend/deploy/install.sh
+#
+# Safe to re-run — updates the code + restarts the service.
+
+set -euo pipefail
+
+REPO_URL="https://github.com/Abdelhammid1/lamma.git"
+REPO_DIR="/opt/lamma"
+BACKEND_DIR="$REPO_DIR/lamma-backend"
+STATE_DIR="/var/lib/lamma-backend"
+ENV_FILE="/etc/lamma-backend.env"
+SERVICE_NAME="lamma-backend"
+NGINX_SITE="/etc/nginx/sites-available/lamma.manasety.ai"  # adjust if named differently
+
+if [[ $EUID -ne 0 ]]; then
+  echo "This script must run as root (use sudo)." >&2
+  exit 1
+fi
+
+echo "==> 1/8  Installing OS packages"
+apt-get update -qq
+apt-get install -y --no-install-recommends \
+  git python3 python3-venv python3-pip
+
+echo "==> 2/8  Creating 'lamma' service user"
+if ! id lamma >/dev/null 2>&1; then
+  useradd --system --home-dir "$REPO_DIR" --shell /usr/sbin/nologin lamma
+fi
+
+echo "==> 3/8  Cloning / updating source at $REPO_DIR"
+if [[ -d "$REPO_DIR/.git" ]]; then
+  git -C "$REPO_DIR" fetch --depth=1 origin main
+  git -C "$REPO_DIR" reset --hard origin/main
+else
+  rm -rf "$REPO_DIR"
+  git clone --depth=1 "$REPO_URL" "$REPO_DIR"
+fi
+chown -R lamma:lamma "$REPO_DIR"
+
+echo "==> 4/8  Creating Python venv + installing requirements"
+sudo -u lamma python3 -m venv "$BACKEND_DIR/.venv"
+sudo -u lamma "$BACKEND_DIR/.venv/bin/pip" install --upgrade pip
+sudo -u lamma "$BACKEND_DIR/.venv/bin/pip" install -r "$BACKEND_DIR/requirements.txt"
+
+echo "==> 5/8  Creating state dir $STATE_DIR"
+install -d -o lamma -g lamma -m 0755 "$STATE_DIR" "$STATE_DIR/uploads"
+
+echo "==> 6/8  Environment file $ENV_FILE"
+if [[ ! -f "$ENV_FILE" ]]; then
+  read -r -p "  GitHub PAT (github_pat_...): " GH_TOKEN
+  read -r -p "  Flask SECRET_KEY (leave blank to auto-generate): " SECRET
+  if [[ -z "$SECRET" ]]; then
+    SECRET="$(python3 -c 'import secrets; print(secrets.token_urlsafe(48))')"
+  fi
+  cat > "$ENV_FILE" <<ENV
+SECRET_KEY=$SECRET
+DATABASE_URL=sqlite:///$STATE_DIR/app.db
+GITHUB_TOKEN=$GH_TOKEN
+MEDIA_OWNER=zyadwael
+MEDIA_REPO=birthday-media
+MEDIA_BRANCH=main
+PUBLIC_DOMAIN=manasety.ai
+UPLOAD_STAGING_DIR=$STATE_DIR/uploads
+RATELIMIT_STORAGE_URI=memory://
+SCHEDULER_ENABLED=1
+ENV
+  chown root:lamma "$ENV_FILE"
+  chmod 640 "$ENV_FILE"
+  echo "  wrote $ENV_FILE"
+else
+  echo "  $ENV_FILE already exists — leaving untouched"
+fi
+
+echo "==> 7/8  Installing systemd unit"
+cat > "/etc/systemd/system/${SERVICE_NAME}.service" <<UNIT
+[Unit]
+Description=LAMMA backend (Flask + gunicorn)
+After=network.target
+
+[Service]
+Type=simple
+User=lamma
+Group=lamma
+WorkingDirectory=$BACKEND_DIR
+EnvironmentFile=$ENV_FILE
+ExecStart=$BACKEND_DIR/.venv/bin/gunicorn \\
+    --bind 127.0.0.1:8010 \\
+    --workers 2 \\
+    --access-logfile - \\
+    --error-logfile - \\
+    wsgi:app
+Restart=on-failure
+RestartSec=5
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=$STATE_DIR
+ProtectHome=read-only
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+
+systemctl daemon-reload
+systemctl enable --now "${SERVICE_NAME}.service"
+systemctl restart "${SERVICE_NAME}.service"
+sleep 1
+systemctl --no-pager --lines=10 status "${SERVICE_NAME}.service" || true
+
+echo "==> 8/8  Sanity check — Flask should be answering on 127.0.0.1:8010"
+if curl -fsS -X POST http://127.0.0.1:8010/api/check-slug \
+     -H 'content-type: application/json' \
+     -d '{"slug":"ping"}' >/dev/null; then
+  echo "  Flask OK ✓"
+else
+  echo "  Flask is NOT answering. Check: journalctl -u ${SERVICE_NAME} -f" >&2
+  exit 1
+fi
+
+cat <<'NGINX_HINT'
+
+===============================================================================
+Last step (manual — I don't touch your nginx config automatically):
+
+Add these blocks INSIDE the `server { ... }` for lamma.manasety.ai
+(usually /etc/nginx/sites-available/lamma.manasety.ai), BEFORE the
+static `location /` catch-all:
+
+    client_max_body_size 55m;
+
+    location /api/ {
+        proxy_pass         http://127.0.0.1:8010;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_read_timeout 60s;
+        proxy_request_buffering off;
+    }
+
+    location /admin  { proxy_pass http://127.0.0.1:8010; proxy_set_header Host $host; }
+    location /admin/ { proxy_pass http://127.0.0.1:8010; proxy_set_header Host $host; }
+
+Then:
+    sudo nginx -t && sudo systemctl reload nginx
+
+Verify from any machine:
+    curl -X POST https://lamma.manasety.ai/api/check-slug \
+         -H 'content-type: application/json' \
+         -d '{"slug":"test"}'
+    # → expect: {"available":true,"slug":"test"}
+
+Create an admin user for the codes panel:
+    sudo -u lamma $BACKEND_DIR/.venv/bin/flask --app app \
+        create-admin --email you@example.com --password 'ChangeMe!'
+
+Updating later (safe to run any time):
+    curl -fsSL https://raw.githubusercontent.com/Abdelhammid1/lamma/main/lamma-backend/deploy/install.sh | sudo bash
+===============================================================================
+NGINX_HINT

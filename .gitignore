@@ -1,0 +1,18 @@
+# Python (lamma-backend/)
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+*.egg-info/
+.venv/
+venv/
+
+# Backend runtime state — SQLite DB + uploaded media staging live here
+# and must NEVER be committed.
+lamma-backend/instance/
+lamma-backend/.env
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp

@@ -1,0 +1,40 @@
+# systemd unit sample — copy to /etc/systemd/system/lamma-backend.service
+# and adjust the four variables at the top for your VPS layout.
+#
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now lamma-backend
+#   sudo systemctl status lamma-backend
+#   sudo journalctl -u lamma-backend -f
+
+[Unit]
+Description=LAMMA backend (Flask + gunicorn)
+After=network.target
+
+[Service]
+Type=simple
+User=lamma
+Group=lamma
+WorkingDirectory=/opt/lamma-backend
+EnvironmentFile=/etc/lamma-backend.env
+
+# Gunicorn — 2 sync workers is fine for a low-traffic admin/self-serve
+# backend. Bump to `-w 4 -k gthread --threads 4` if traffic warrants.
+ExecStart=/opt/lamma-backend/.venv/bin/gunicorn \
+    --bind 127.0.0.1:8010 \
+    --workers 2 \
+    --access-logfile - \
+    --error-logfile - \
+    wsgi:app
+
+Restart=on-failure
+RestartSec=5
+
+# Hardening (safe defaults; ProtectHome=yes if you don't need /home)
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/lamma-backend
+ProtectHome=read-only
+
+[Install]
+WantedBy=multi-user.target

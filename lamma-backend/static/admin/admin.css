@@ -1,0 +1,206 @@
+/* ============================================================================
+   Internal admin panel styles — kept minimal and utilitarian. Not the
+   flashy public template style; this is a Basecamp-esque interface for
+   the team.
+   ========================================================================== */
+
+:root {
+  --plum:   #4a1f2e;
+  --rose:   #a13b58;
+  --gold:   #c9a86a;
+  --ink:    #2a1520;
+  --muted:  #7a5765;
+  --line:   rgba(74, 31, 46, 0.15);
+  --bg-1:   #fdeef2;
+  --bg-2:   #f7d9e1;
+  --danger: #b83a4b;
+  --success:#2e6b3e;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  min-height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  background: linear-gradient(180deg, #fbf7f5, #f7dfea 400px, #f7dfea);
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+a { color: var(--rose); }
+
+/* --- topbar ------------------------------------------------------------ */
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 14px 24px;
+  background: #fff;
+  border-bottom: 1px solid var(--line);
+  box-shadow: 0 1px 0 rgba(74, 31, 46, 0.03);
+}
+.brand { display: flex; align-items: baseline; gap: 8px; }
+.brand-mark { font-size: 20px; }
+.brand-name { font-family: 'Playfair Display', Georgia, serif; font-size: 20px; font-weight: 700; color: var(--plum); }
+.brand-sub  { font-size: 11px; letter-spacing: 0.24em; text-transform: uppercase; color: var(--muted); }
+
+.topbar nav { flex: 1; display: flex; gap: 14px; }
+.topbar nav a {
+  padding: 6px 10px; border-radius: 6px; text-decoration: none; color: var(--muted); font-weight: 500;
+}
+.topbar nav a.on, .topbar nav a:hover { background: var(--bg-1); color: var(--plum); }
+
+.topbar .who { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--muted); }
+
+/* --- main shell -------------------------------------------------------- */
+.shell {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 28px 24px 60px;
+}
+.page-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 28px;
+  color: var(--plum);
+  margin-bottom: 20px;
+}
+
+/* --- cards + primitives ----------------------------------------------- */
+.card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 20px 22px;
+  margin-bottom: 20px;
+  box-shadow: 0 8px 24px -18px rgba(74, 31, 46, 0.25);
+}
+.card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.card h2 { font-family: 'Playfair Display', Georgia, serif; font-size: 18px; color: var(--plum); }
+
+.empty  { color: var(--muted); font-style: italic; padding: 14px 0; }
+.hint   { color: var(--muted); font-size: 14px; margin-bottom: 12px; }
+
+/* --- buttons ---------------------------------------------------------- */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  appearance: none; border: none; cursor: pointer;
+  font-family: inherit; font-size: 13px; font-weight: 600;
+  padding: 8px 14px; border-radius: 999px;
+  letter-spacing: 0.06em;
+  transition: transform 0.15s ease, background 0.15s;
+  text-decoration: none;
+}
+.btn-primary { background: var(--plum); color: #fff; }
+.btn-primary:hover { background: #3a1524; }
+.btn-outline { background: transparent; color: var(--plum); border: 1px solid var(--plum); }
+.btn-outline:hover { background: var(--plum); color: #fff; }
+.btn-ghost   { background: transparent; color: var(--muted); }
+.btn-ghost:hover { color: var(--plum); }
+.btn-danger  { background: var(--danger); color: #fff; }
+.btn-danger:hover { background: #922e3d; }
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+
+/* --- stat grid (dashboard) -------------------------------------------- */
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 22px; }
+.stat {
+  background: #fff; border: 1px solid var(--line); border-radius: 12px;
+  padding: 18px 20px; text-align: center;
+}
+.stat-value {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 34px; color: var(--plum); line-height: 1; font-weight: 700;
+}
+.stat-label {
+  font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--muted); margin-top: 6px;
+}
+
+/* --- event list + table ----------------------------------------------- */
+.event-list { list-style: none; padding: 0; }
+.event-list li {
+  display: grid;
+  grid-template-columns: 1fr 100px 120px 140px;
+  gap: 12px;
+  padding: 10px 4px;
+  border-top: 1px solid var(--line);
+  align-items: center;
+  font-size: 14px;
+}
+.event-list li:first-child { border-top: none; }
+.slug code, code { background: var(--bg-1); padding: 2px 6px; border-radius: 4px; font-family: 'SF Mono', Consolas, monospace; font-size: 12px; color: var(--plum); }
+.etype { color: var(--muted); font-size: 13px; }
+.when  { color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+
+.status {
+  display: inline-block; padding: 2px 10px; border-radius: 999px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+}
+.status-draft         { background: #efe6e9; color: var(--muted); }
+.status-awaiting_code { background: #fce7c3; color: #7a5222; }
+.status-published     { background: #d6ecd6; color: var(--success); }
+.status-expired       { background: #ebe1e4; color: var(--muted); }
+.status-deleted       { background: #f4d5da; color: var(--danger); }
+
+/* --- events table ----------------------------------------------------- */
+.event-table {
+  width: 100%; border-collapse: collapse; background: #fff;
+  border: 1px solid var(--line); border-radius: 12px; overflow: hidden;
+  box-shadow: 0 8px 24px -18px rgba(74, 31, 46, 0.25);
+}
+.event-table th, .event-table td { padding: 10px 12px; text-align: left; font-size: 14px; border-top: 1px solid var(--line); }
+.event-table thead th { background: var(--bg-1); font-weight: 600; color: var(--plum); border-top: none; }
+.event-table .actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.event-table form.inline { display: inline-flex; gap: 6px; align-items: center; }
+.event-table input[type="number"], .event-table input[type="text"] {
+  padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px; font-size: 12px;
+}
+
+/* --- filter bar ------------------------------------------------------- */
+.filter-bar { display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
+.filter-bar input, .filter-bar select {
+  padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px;
+  font-size: 14px; background: #fff;
+}
+
+/* --- flash messages --------------------------------------------------- */
+.flash { padding: 10px 14px; border-radius: 8px; margin-bottom: 16px; font-size: 14px; }
+.flash-info { background: #eaf3fb; color: #285a7a; }
+.flash-warn { background: #fdefd5; color: #7a5222; }
+
+/* --- login gate ------------------------------------------------------- */
+.gate {
+  min-height: 90vh; display: flex; align-items: center; justify-content: center; padding: 32px 20px;
+}
+.gate-card {
+  max-width: 380px; width: 100%; padding: 40px 32px; background: #fff;
+  border-radius: 16px; border: 1px solid var(--line); box-shadow: 0 20px 60px -20px rgba(74, 31, 46, 0.25);
+  text-align: center;
+}
+.gate-brand { font-family: 'Playfair Display', Georgia, serif; font-size: 24px; color: var(--plum); font-weight: 700; }
+.gate-sub   { font-size: 11px; letter-spacing: 0.28em; text-transform: uppercase; color: var(--muted); margin: 6px 0 22px; }
+.gate-form  { display: flex; flex-direction: column; gap: 12px; text-align: left; }
+.gate-form .field { display: flex; flex-direction: column; gap: 4px; }
+.gate-form label { font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
+.gate-form input {
+  padding: 11px 14px; border: 1px solid var(--line); border-radius: 8px;
+  font-size: 15px; background: #fbf7f5;
+}
+.gate-form input:focus { outline: none; border-color: var(--rose); background: #fff; }
+.gate .error { color: var(--danger); font-size: 13px; text-align: center; margin: 4px 0; }
+
+/* --- code generated screen -------------------------------------------- */
+.success-card { text-align: center; }
+.big-code {
+  font-family: 'SF Mono', Consolas, monospace;
+  font-size: 34px; font-weight: 700;
+  letter-spacing: 0.12em;
+  padding: 22px; margin: 16px auto;
+  background: var(--bg-1); color: var(--plum);
+  border: 2px dashed var(--rose); border-radius: 12px;
+  max-width: 460px;
+  user-select: all;
+}
+.meta { display: grid; grid-template-columns: 100px 1fr; gap: 6px 14px; max-width: 460px; margin: 12px auto 20px; text-align: left; font-size: 13px; }
+.meta dt { color: var(--muted); font-weight: 600; }
+.meta dd { color: var(--ink); }

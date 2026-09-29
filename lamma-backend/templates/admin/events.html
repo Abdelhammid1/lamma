@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Events · Admin{% endblock %}
+{% block content %}
+<h1 class="page-title">Events</h1>
+
+<form class="filter-bar" method="get">
+  <input name="q" type="search" placeholder="Search slug…" value="{{ q or '' }}">
+  <select name="status">
+    <option value="">All statuses</option>
+    {% for s in ['draft','awaiting_code','published','expired','deleted'] %}
+      <option value="{{ s }}" {% if s == status %}selected{% endif %}>{{ s }}</option>
+    {% endfor %}
+  </select>
+  <button type="submit" class="btn btn-outline">Filter</button>
+</form>
+
+{% if events %}
+<table class="event-table">
+  <thead>
+    <tr>
+      <th>Slug</th>
+      <th>Type</th>
+      <th>Status</th>
+      <th>Contact</th>
+      <th>Created</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for ev in events %}
+    <tr>
+      <td><code>{{ ev.slug }}</code></td>
+      <td>{{ ev.event_type }}</td>
+      <td><span class="status status-{{ ev.status }}">{{ ev.status }}</span></td>
+      <td>{{ ev.contact or '—' }}</td>
+      <td class="when">{{ ev.created_at.strftime('%Y-%m-%d %H:%M') if ev.created_at else '' }}</td>
+      <td class="actions">
+        {% if ev.status in ('draft', 'awaiting_code') %}
+          <form method="post" action="{{ url_for('admin.generate_code_for_event', event_id=ev.id) }}" class="inline">
+            <input type="number" name="expires_hours" placeholder="hours" min="1" max="720" style="width:70px">
+            <input type="text" name="notes" placeholder="notes (payment ref)" style="width:180px">
+            <button type="submit" class="btn btn-primary btn-sm">Generate code</button>
+          </form>
+        {% endif %}
+        <form method="post" action="{{ url_for('admin.delete_event', event_id=ev.id) }}"
+              onsubmit="return confirm('Delete {{ ev.slug }}?')" class="inline">
+          <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="empty">No events match.</p>
+{% endif %}
+{% endblock %}

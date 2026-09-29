@@ -1,0 +1,45 @@
+# nginx location blocks for `lamma.manasety.ai`. Add these inside your
+# existing `server { … }` for the vhost. Same-origin means no CORS is
+# needed — the browser sees `/api/…` and `/admin/…` on the same host
+# as the static frontend.
+#
+# Reload after changes:
+#   sudo nginx -t && sudo systemctl reload nginx
+
+# 1. Upload cap. Files > 25MB warn client-side, 50MB refused server-side.
+#    Add ~5MB margin for base64 overhead / form envelope.
+client_max_body_size 55m;
+
+# 2. Public JSON API + admin panel proxied to gunicorn on 127.0.0.1:8010.
+location /api/ {
+    proxy_pass         http://127.0.0.1:8010;
+    proxy_set_header   Host              $host;
+    proxy_set_header   X-Real-IP         $remote_addr;
+    proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+    proxy_set_header   X-Forwarded-Proto $scheme;
+    proxy_read_timeout 60s;
+
+    # Uploads can be slow on mobile networks
+    proxy_request_buffering off;
+}
+
+location /admin {
+    proxy_pass         http://127.0.0.1:8010;
+    proxy_set_header   Host              $host;
+    proxy_set_header   X-Real-IP         $remote_addr;
+    proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+    proxy_set_header   X-Forwarded-Proto $scheme;
+}
+location /admin/ {
+    proxy_pass         http://127.0.0.1:8010;
+    proxy_set_header   Host              $host;
+    proxy_set_header   X-Real-IP         $remote_addr;
+    proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+    proxy_set_header   X-Forwarded-Proto $scheme;
+}
+
+# 3. Everything else = the static frontend (the lamma repo). Adjust path.
+location / {
+    root       /var/www/lamma-static;
+    try_files  $uri $uri/ /index.html;
+}
