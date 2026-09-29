@@ -66,11 +66,19 @@ export async function loadBirthday(slug) {
     console.warn("[loader] Firestore lookup failed, trying GitHub:", e);
   }
 
-  // 2. Legacy GitHub — raw first (fresh), CDN as safety net
+  // 2. GitHub — raw first (fresh), CDN as safety net. Two prefixes:
+  //    - `data/<slug>.json`          — legacy admin publishes (Ranon, etc.)
+  //    - `<type>/data/<slug>.json`   — backend-published /create invitations
+  //      (the backend commits per event_type; we probe both because at
+  //      this point we don't know the type yet).
   const bust = Date.now();
   const paths = [
     `${CONFIG.rawBase}/data/${slug}.json?nc=${bust}`,
+    `${CONFIG.rawBase}/birthday/data/${slug}.json?nc=${bust}`,
+    `${CONFIG.rawBase}/wedding/data/${slug}.json?nc=${bust}`,
     `${CONFIG.cdnBase}/data/${slug}.json?nc=${bust}`,
+    `${CONFIG.cdnBase}/birthday/data/${slug}.json?nc=${bust}`,
+    `${CONFIG.cdnBase}/wedding/data/${slug}.json?nc=${bust}`,
   ];
   for (const url of paths) {
     try {

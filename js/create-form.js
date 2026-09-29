@@ -3,23 +3,19 @@
 //    - Type picker (birthday / wedding)
 //    - Dynamic form (quiz + memories for birthday; venue/times for wedding)
 //    - Live preview via postMessage → iframe
-//    - Slug uniqueness check on Firestore
-//    - Activation code gate (single-use, Firestore-verified)
-//    - Publish flow: media → Firebase Storage → invitations doc + burn code
+//    - Slug uniqueness check via backend /api/check-slug
+//    - Activation code gate (single-use, verified by backend at activate time)
+//    - Publish flow: POST /api/events → POST /api/events/<id>/media (per file)
+//      → POST /api/events/<id>/activate. The backend commits everything to
+//      GitHub with a server-side PAT; the browser never sees a token.
 //
-//  Publish is designed so a failure at any step leaves the code UNUSED
-//  (we burn the code AFTER a successful invitation write, atomically
-//  from the user's perspective — the doc rule enforces one-shot creation).
+//  Requires the Flask backend from lamma-backend/ deployed behind /api on
+//  the same host (see lamma-backend/deploy/nginx.conf.sample). Without it,
+//  the slug check falls open and Publish surfaces the network error.
 // ============================================================================
 
-import { db, storage } from "./firebase-init.js";
+import { CONFIG } from "../config.js";
 import { RESERVED_SLUGS } from "./reserved-slugs.js";
-import {
-  doc, getDoc, setDoc, updateDoc, serverTimestamp,
-} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-import {
-  ref, uploadBytesResumable, getDownloadURL,
-} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -126,17 +122,19 @@ async function checkSlug(slug) {
     return;
   }
   try {
-    const snap = await getDoc(doc(db, "invitations", slug));
-    if (snap.exists()) {
-      errEl.textContent = "That name is already taken.";
+    const r = await apiJson("POST", "/api/check-slug", { slug });
+    if (r.available) {
+      state.slugAvailable = true;
+    } else {
+      errEl.textContent = r.message || "That name is already taken.";
       $("f-slug").classList.add("invalid");
       state.slugAvailable = false;
-    } else {
-      state.slugAvailable = true;
     }
   } catch (e) {
-    console.warn("[slug-check] Firestore lookup failed:", e);
-    state.slugAvailable = true;   // don't block on network hiccup
+    // Backend unreachable — don't block the button, but the eventual
+    // POST /api/events will surface the real error at publish time.
+    console.warn("[slug-check] backend unreachable:", e);
+    state.slugAvailable = true;
   }
 }
 
@@ -439,172 +437,223 @@ async function publish() {
 
   const slug = $("f-slug").value.trim();
   const code = normalizeCode(codeInput.value);
+  const type = state.type;
 
   try {
-    // 1. Re-check slug (race safety)
-    setProgress(5, "Checking your name…");
-    const existing = await getDoc(doc(db, "invitations", slug));
-    if (existing.exists()) {
-      $("slug-error").textContent = "That name was just taken. Pick another.";
-      $("f-slug").classList.add("invalid");
-      throw new Error("slug taken");
-    }
+    // 1. Rename each staged File so the backend commits it at a
+    //    predictable path (`<type>/media/<slug>/<name>`) and the payload
+    //    we send in step 2 can reference that URL directly.
+    const files = prepareFiles(slug, type);
+    const finalCfg = buildFinalConfig(files, slug, type);
 
-    // 2. Verify code up-front (fail fast, don't upload media yet)
-    setProgress(10, "Checking your activation code…");
-    const codeRef  = doc(db, "activation_codes", code);
-    const codeSnap = await getDoc(codeRef);
-    if (!codeSnap.exists()) {
-      showCodeErr("This code doesn't exist. Double-check with the admin.");
-      throw new Error("code not found");
-    }
-    const codeData = codeSnap.data();
-    if (codeData.used) {
-      showCodeErr("This code has already been used.");
-      throw new Error("code used");
-    }
-    if (codeData.event_id && codeData.event_id !== slug) {
-      showCodeErr("This code is bound to a different name.");
-      throw new Error("code wrong event");
-    }
-    if (codeData.expires_at && codeData.expires_at.toDate && codeData.expires_at.toDate() < new Date()) {
-      showCodeErr("This code has expired.");
-      throw new Error("code expired");
-    }
+    // 2. Create the event with the finalized payload. The backend
+    //    reserves the slug in its DB here (unique constraint) — this is
+    //    what supersedes the old Firestore slug-lock.
+    setProgress(5, "Reserving your name…");
+    const evt = await apiJson("POST", "/api/events", {
+      slug,
+      event_type: type,
+      payload_json: finalCfg,
+    });
+    const eventId = evt.event_id;
 
-    // 3. Collect final config + upload media
-    const cfg = collectFinalConfig();
-    const files = collectFiles();
-    let done = 0;
-    const total = files.length + 2;                    // media + doc + code
-
-    for (const f of files) {
-      done++;
+    // 3. Upload each file via multipart POST. XHR gives real byte-
+    //    progress; a genuine mobile stall now shows the exact byte
+    //    count instead of hiding behind a static "Uploading photo…".
+    for (let i = 0; i < files.length; i++) {
+      const f = files[i];
       const label = f.field.startsWith("photo") || f.field.startsWith("gallery")
         ? "photo" : f.field;
-      const path = `invitations/${slug}/${Date.now()}-${f.field}-${safeName(f.file.name)}`;
-      const uploadRef = ref(storage, path);
-      // Resumable upload — surfaces real bytes-transferred progress and
-      // recovers from mobile network hiccups instead of quietly stalling.
-      const task = uploadBytesResumable(uploadRef, f.file, { contentType: f.file.type });
-      const baseFilePct = ((done - 1) / total) * 100;
-      const slice       = (1 / total) * 100;
-      await new Promise((resolve, reject) => {
-        task.on(
-          "state_changed",
-          (snap) => {
-            const pct = snap.totalBytes
-              ? snap.bytesTransferred / snap.totalBytes
-              : 0;
-            const mbSent  = (snap.bytesTransferred / 1024 / 1024).toFixed(1);
-            const mbTotal = (snap.totalBytes       / 1024 / 1024).toFixed(1);
-            setProgress(
-              baseFilePct + pct * slice,
-              `Uploading ${label} ${done}/${files.length} — ${mbSent} / ${mbTotal} MB`
-            );
-          },
-          reject,
-          resolve
-        );
-      });
-      const url = await getDownloadURL(uploadRef);
-      f.assign(cfg, url);
+      const mbTotal = (f.file.size / 1024 / 1024).toFixed(1);
+      const base    = 10 + (i / (files.length + 1)) * 80;
+      const slice   = (1 / (files.length + 1)) * 80;
+      setProgress(base, `Uploading ${label} ${i + 1}/${files.length} — 0.0 / ${mbTotal} MB`);
+      await uploadFileWithProgress(
+        `/api/events/${eventId}/media`,
+        f.uploadFile,
+        (bytesSent) => {
+          const pct    = f.file.size ? bytesSent / f.file.size : 0;
+          const mbSent = (bytesSent / 1024 / 1024).toFixed(1);
+          setProgress(
+            base + pct * slice,
+            `Uploading ${label} ${i + 1}/${files.length} — ${mbSent} / ${mbTotal} MB`
+          );
+        }
+      );
     }
 
-    // 4. Write invitation doc — the rule enforces one-shot creation
-    setProgress(((done + 1) / total) * 100, "Saving your invitation…");
-    cfg.slug         = slug;
-    cfg.created_at   = serverTimestamp();
-    cfg.published_at = serverTimestamp();
-    await setDoc(doc(db, "invitations", slug), cfg);
+    // 4. Activate — the backend verifies the code, commits every staged
+    //    blob + the data JSON to GitHub, and burns the code, atomically.
+    setProgress(95, "Publishing your invitation…");
+    const act = await apiJson(
+      "POST",
+      `/api/events/${eventId}/activate`,
+      { code }
+    );
 
-    // 5. Burn the code
-    setProgress(((done + 2) / total) * 100, "Locking in…");
-    await updateDoc(codeRef, { used: true, used_at: serverTimestamp(), used_slug: slug });
-
-    // 6. Success
-    const url = `${location.origin}/${slug}`;
-    $("success-url").href = url;
-    $("success-url").textContent = url;
+    // 5. Success — backend returns the real public URL.
+    const publicUrl = act.public_url || `${location.origin}/${slug}`;
+    $("success-url").href = publicUrl;
+    $("success-url").textContent = publicUrl;
     $("editor-screen").hidden = true;
     $("success-screen").hidden = false;
     hideProgress();
 
   } catch (err) {
     console.error("[publish]", err);
-    if (!$("code-error").textContent && !$("slug-error").textContent) {
-      alert("Publish failed: " + (err.message || err) +
-            "\n\nYour code is still valid — please retry.");
+    const msg    = err?.data?.message || err.message || String(err);
+    const reason = err?.data?.reason || err?.data?.error;
+    if (reason === "used" || reason === "expired" ||
+        reason === "wrong_event" || reason === "missing_code" ||
+        reason === "not_found") {
+      showCodeErr(msg);
+    } else if (reason === "taken") {
+      $("slug-error").textContent = msg;
+      $("f-slug").classList.add("invalid");
+    } else if (!$("code-error").textContent && !$("slug-error").textContent) {
+      alert(
+        "Publish failed: " + msg +
+        "\n\nYour code is still valid — please retry."
+      );
     }
     hideProgress();
     btn.disabled = false;
   }
 }
 
-function safeName(n) {
-  return (n || "file").replace(/[^A-Za-z0-9._-]+/g, "-").slice(0, 60) || "file";
+/* ================= Backend API helpers ================= */
+
+// Same-origin — nginx proxies /api/ to the Flask backend
+// (see lamma-backend/deploy/nginx.conf.sample). If the backend isn't
+// running, these calls surface a network error at publish time.
+async function apiJson(method, path, body) {
+  const res  = await fetch(path, {
+    method,
+    headers: body ? { "Content-Type": "application/json" } : {},
+    body:    body ? JSON.stringify(body) : undefined,
+  });
+  const text = await res.text();
+  let data = null;
+  try { data = text ? JSON.parse(text) : null; } catch (_) { /* non-JSON body */ }
+  if (!res.ok) {
+    const err  = new Error(data?.message || `HTTP ${res.status}`);
+    err.status = res.status;
+    err.data   = data;
+    throw err;
+  }
+  return data;
 }
 
-/** Collect files that need uploading, with an "assign" callback that
- *  writes the resulting Firebase Storage URL back into the config. */
-function collectFiles() {
-  const files = [];
-  if (state.type === "birthday") {
+// Multipart file POST via XHR so `upload.onprogress` gives real bytes-
+// transferred numbers. `fetch` doesn't expose upload progress.
+function uploadFileWithProgress(url, file, onProgress) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", url);
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) onProgress(e.loaded);
+    };
+    xhr.onload = () => {
+      let body = null;
+      try { body = xhr.responseText ? JSON.parse(xhr.responseText) : null; } catch (_) {}
+      if (xhr.status >= 200 && xhr.status < 300) return resolve(body);
+      const err  = new Error(body?.message || `HTTP ${xhr.status}`);
+      err.status = xhr.status;
+      err.data   = body;
+      reject(err);
+    };
+    xhr.onerror = () => reject(new Error("Network error uploading file."));
+    const fd = new FormData();
+    fd.append("file", file, file.name);
+    xhr.send(fd);
+  });
+}
+
+// Mirrors lamma-backend/uploads.py:safe_filename so the URL we bake
+// into the payload matches the filename the backend commits to GitHub.
+function safeFilename(raw) {
+  if (!raw) return "file";
+  const base    = String(raw).split(/[\\/]/).pop();
+  const cleaned = base.replace(/[^A-Za-z0-9._-]+/g, "-").replace(/^[-._]+|[-._]+$/g, "");
+  return cleaned || "file";
+}
+
+/* ================= File collection + payload assembly ================= */
+
+// Rename each File up-front with a `<field>-` prefix, so two "IMG_0001.jpg"
+// files from the phone camera roll don't collide in the backend's per-event
+// staging dir (which would otherwise get a `-<hash8>` suffix we can't
+// predict client-side).
+function prepareFiles(slug, type) {
+  const list = [];
+  const seen = new Set();
+  const unique = (base) => {
+    let n = base, i = 2;
+    while (seen.has(n)) {
+      n = base.replace(/(\.[^.]+)?$/, `-${i}$1`);
+      i++;
+    }
+    seen.add(n);
+    return n;
+  };
+  const add = (file, field) => {
+    const prefixed = safeFilename(`${field}-${file.name}`);
+    const finalName = unique(prefixed);
+    list.push({
+      file,
+      uploadFile: new File([file], finalName, { type: file.type }),
+      field,
+      finalName,
+      cdnPath: `${type}/media/${slug}/${finalName}`,
+    });
+  };
+
+  if (type === "birthday") {
     memBuilder.querySelectorAll(".mem-row").forEach((row, i) => {
       const f = row.querySelector(".mem-file").files?.[0];
-      if (f) {
-        files.push({
-          file: f,
-          field: `photo-${i + 1}`,
-          assign: (cfg, url) => { cfg.memories[i].url = url; },
-        });
-      }
+      if (f) add(f, `photo-${i + 1}`);
     });
     const vFile = $("f-video-file").files?.[0];
-    if (vFile) {
-      files.push({
-        file: vFile,
-        field: "video",
-        assign: (cfg, url) => { cfg.videoUrl = url; },
-      });
-    }
+    if (vFile) add(vFile, "video");
     const mFile = $("f-music-file").files?.[0];
-    if (mFile) {
-      files.push({
-        file: mFile,
-        field: "music",
-        assign: (cfg, url) => { cfg.musicUrl = url; },
-      });
-    }
+    if (mFile) add(mFile, "music");
   } else {
-    // wedding: gallery photos + music
     const rows = [...galleryBuilder.querySelectorAll(".mem-row")];
-    const withFiles = rows.map((row) => row.querySelector(".mem-file").files?.[0]).filter(Boolean);
-    withFiles.forEach((f, i) => {
-      files.push({
-        file: f,
-        field: `gallery-${i + 1}`,
-        assign: (cfg, url) => {
-          cfg.gallery = cfg.gallery || [];
-          cfg.gallery[i] = url;
-        },
-      });
-    });
+    rows
+      .map((row) => row.querySelector(".mem-file").files?.[0])
+      .filter(Boolean)
+      .forEach((f, i) => add(f, `gallery-${i + 1}`));
     const wm = $("f-wedding-music").files?.[0];
-    if (wm) {
-      files.push({
-        file: wm,
-        field: "music",
-        assign: (cfg, url) => { cfg.music = url; },
-      });
-    }
+    if (wm) add(wm, "music");
   }
-  return files;
+  return list;
 }
 
-function collectFinalConfig() {
-  // Same shape the templates already understand.
-  return collectFormForPreview();
+// Take the preview cfg (which references files by blob: URLs) and swap
+// in the CDN URLs that the backend will publish each file at.
+function buildFinalConfig(files, slug, type) {
+  const cfg = collectFormForPreview();
+  const cdn = CONFIG.cdnBase;
+  const urlFor = (field) => {
+    const hit = files.find((x) => x.field === field);
+    return hit ? `${cdn}/${hit.cdnPath}` : "";
+  };
+
+  if (type === "birthday") {
+    cfg.memories = (cfg.memories || []).map((m, i) => {
+      const url = urlFor(`photo-${i + 1}`);
+      return { url: url || "", dateLabel: m.dateLabel || "" };
+    }).filter((m) => m.url);
+    const videoUrl = urlFor("video");
+    cfg.videoUrl = videoUrl || (cfg.videoUrl || "");
+    cfg.musicUrl = urlFor("music") || "";
+  } else {
+    cfg.gallery = files
+      .filter((f) => f.field.startsWith("gallery-"))
+      .map((f) => `${cdn}/${f.cdnPath}`);
+    cfg.music = urlFor("music") || "";
+  }
+  return cfg;
 }
 
 /* ================= Copy link ================= */
