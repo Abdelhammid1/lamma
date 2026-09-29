@@ -10,6 +10,7 @@ import os
 from pathlib import Path
 
 from flask import Flask, jsonify, redirect, url_for
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from auth import login_manager
 from cli import register_cli
@@ -22,6 +23,13 @@ from scheduler import init_scheduler
 def create_app(config_object: type = Config) -> Flask:
     app = Flask(__name__, instance_path=str(Path(__file__).parent / "instance"))
     app.config.from_object(config_object)
+
+    # Behind nginx (and Docker port-forward), every request hits Flask with
+    # request.remote_addr = 127.0.0.1. That makes Flask-Limiter bucket ALL
+    # clients into one shared quota — one busy tester exhausts /api/events
+    # for everyone. Trust X-Forwarded-For from nginx (one proxy hop) so
+    # remote_addr resolves to the real client IP.
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
     # Instance + uploads dirs need to exist before SQLite / staging writes.
     os.makedirs(app.instance_path, exist_ok=True)

@@ -55,7 +55,7 @@ def check_slug():
 # --------------------------------------------------------------------------
 
 @bp.post("/events")
-@limiter.limit("5/hour")
+@limiter.limit("20/hour")
 def create_event():
     """Body: `{ slug, event_type, contact?, payload_json? }` →
     `{ event_id, slug, status }`.
