@@ -142,6 +142,36 @@ def generate_code_for_event(event_id):
     return render_template("code_generated.html", event=event, code=code)
 
 
+@bp.post("/codes/generate-unbound")
+@login_required
+def generate_unbound_code():
+    """Mint a code with no event_id — the customer can then use it on
+    whatever slug they choose in /create. First activation binds it.
+
+    Necessary because the customer needs a code BEFORE they click
+    Publish (the button is gated on it), but events are only created
+    when Publish fires. Bound codes require the admin to conjure an
+    empty event first, which the UI can't do. Unbound codes break
+    that chicken-and-egg.
+    """
+    hours = request.form.get("expires_hours", type=int)
+    notes = (request.form.get("notes") or "").strip() or None
+
+    code = ActivationCode(
+        code=generate_code(),
+        event_id=None,
+        expires_at=make_expiry(hours),
+        generated_by=current_user.id,
+        notes=notes,
+    )
+    db.session.add(code)
+    db.session.commit()
+
+    _audit(current_user.id, "generate_unbound_code", None, {"code": code.code, "hours": hours})
+
+    return render_template("code_generated.html", event=None, code=code)
+
+
 @bp.post("/events/<event_id>/delete")
 @login_required
 def delete_event(event_id):

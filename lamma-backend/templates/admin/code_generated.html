@@ -4,17 +4,29 @@
 <h1 class="page-title">Activation code</h1>
 
 <div class="card success-card">
-  <p class="hint">Send this to the customer after you've received their payment.
-    It works exactly once, for event <code>{{ event.slug }}</code>.</p>
+  {% if event %}
+    <p class="hint">Send this to the customer after you've received their payment.
+      It works exactly once, for event <code>{{ event.slug }}</code>.</p>
+  {% else %}
+    <p class="hint">Send this to the customer after you've received their payment.
+      It works exactly once, on <strong>any</strong> slug they choose in <code>/create</code>.</p>
+  {% endif %}
 
   <p class="big-code" title="Click to select">{{ code.code }}</p>
 
   <dl class="meta">
-    <dt>Event</dt>       <dd><code>{{ event.slug }}</code> ({{ event.event_type }})</dd>
+    {% if event %}
+      <dt>Event</dt>     <dd><code>{{ event.slug }}</code> ({{ event.event_type }})</dd>
+    {% else %}
+      <dt>Event</dt>     <dd>unbound — usable for any /create submission</dd>
+    {% endif %}
     <dt>Expires</dt>     <dd>{{ code.expires_at.strftime('%Y-%m-%d %H:%M UTC') if code.expires_at else 'never (single-use only)' }}</dd>
     {% if code.notes %}<dt>Notes</dt><dd>{{ code.notes }}</dd>{% endif %}
   </dl>
 
-  <p><a href="{{ url_for('admin.events') }}" class="btn btn-outline">Back to events</a></p>
+  <p>
+    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline">Dashboard</a>
+    <a href="{{ url_for('admin.events') }}" class="btn btn-outline">Events</a>
+  </p>
 </div>
 {% endblock %}

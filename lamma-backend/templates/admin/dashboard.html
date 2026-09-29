@@ -3,6 +3,35 @@
 {% block content %}
 <h1 class="page-title">Dashboard</h1>
 
+<section class="card">
+  <div class="card-head">
+    <h2>Generate activation code</h2>
+  </div>
+  <p class="hint" style="margin-bottom:12px;">
+    Mint a code for a customer <em>before</em> they open <code>/create</code>.
+    Send it via WhatsApp/Instapay after payment. First activation binds
+    it to whatever slug they pick — single-use after that.
+  </p>
+  <form method="post" action="{{ url_for('admin.generate_unbound_code') }}"
+        style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
+    <div style="flex:1; min-width:120px;">
+      <label for="expires_hours" style="font-size:12px; color:#666; display:block;">
+        Expires (hours, blank = never)
+      </label>
+      <input id="expires_hours" name="expires_hours" type="number" min="1" placeholder="e.g. 48"
+             style="width:100%; padding:8px;" />
+    </div>
+    <div style="flex:2; min-width:200px;">
+      <label for="notes" style="font-size:12px; color:#666; display:block;">
+        Notes (payment ref, customer name, etc.)
+      </label>
+      <input id="notes" name="notes" type="text" placeholder="Instapay #12345 — Ahmed"
+             style="width:100%; padding:8px;" />
+    </div>
+    <button type="submit" class="btn btn-primary">Generate code</button>
+  </form>
+</section>
+
 <section class="stat-grid">
   <div class="stat">
     <div class="stat-value">{{ counts.get('published', 0) }}</div>
