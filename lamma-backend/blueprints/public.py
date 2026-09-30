@@ -299,5 +299,14 @@ def _cleanup_staging(event_id: str) -> None:
 
 
 def _build_public_url(event: Event) -> str:
+    """Where the guest actually opens the invitation.
+
+    The subdomain form (`<slug>.<domain>/`) that the original design
+    assumed would need wildcard DNS + an nginx server_name pattern
+    that isn't set up — those requests land on the marketing landing
+    page and never reach the invitation loader. The path form on the
+    existing lamma vhost does work: birthday.html reads the slug
+    from the URL and fetches the JSON from GitHub.
+    """
     domain = current_app.config["PUBLIC_DOMAIN"]
-    return f"https://{event.slug}.{domain}/"
+    return f"https://lamma.{domain}/{event.slug}"
