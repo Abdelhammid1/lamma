@@ -19,7 +19,16 @@ from flask import current_app
 # folder becoming a general file drop.
 ALLOWED_IMAGE_MIME = frozenset({"image/jpeg", "image/png", "image/webp", "image/gif"})
 ALLOWED_VIDEO_MIME = frozenset({"video/mp4", "video/webm", "video/quicktime"})
-ALLOWED_MIME       = ALLOWED_IMAGE_MIME | ALLOWED_VIDEO_MIME
+# iOS Safari sometimes reports m4a as `audio/x-m4a` or `audio/mp4`; cover
+# both so a user picking an mp3/m4a/ogg from the camera roll or Files app
+# doesn't fail the Publish step with a cryptic "bad_type".
+ALLOWED_AUDIO_MIME = frozenset({
+    "audio/mpeg", "audio/mp3",
+    "audio/mp4", "audio/x-m4a", "audio/aac",
+    "audio/ogg", "audio/webm",
+    "audio/wav", "audio/x-wav",
+})
+ALLOWED_MIME       = ALLOWED_IMAGE_MIME | ALLOWED_VIDEO_MIME | ALLOWED_AUDIO_MIME
 
 # Max any single file may be. Frontend warns above 25 MB; server refuses
 # above 50 MB. Nginx client_max_body_size should be >= 55 MB.
