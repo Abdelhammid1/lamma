@@ -30,15 +30,18 @@ ALLOWED_AUDIO_MIME = frozenset({
 })
 ALLOWED_MIME       = ALLOWED_IMAGE_MIME | ALLOWED_VIDEO_MIME | ALLOWED_AUDIO_MIME
 
-# Max any single file may be. Frontend warns above 25 MB; server refuses
-# above 100 MB. Nginx client_max_body_size should be >= 110 MB.
-# 100 MB is the GitHub Git Data API blob ceiling — above that we'd need
-# Git LFS (not wired).
-MAX_FILE_BYTES     = 100 * 1024 * 1024
+# Max any single file may be. Frontend warns above 25 MB; server
+# refuses above 35 MB. The REAL ceiling is GitHub's blob API, which
+# despite documenting 100 MB per blob returns 422 for base64 bodies
+# above ~35 MB — tested empirically across 40/45/50/60/70/80 MB. The
+# only paths above that are Git LFS or `git push` from the backend,
+# neither of which is wired.
+MAX_FILE_BYTES     = 35 * 1024 * 1024
 
-# Max sum of files per event. Prevents a single event exhausting the
+# Max sum of files per event. 6 photos × 35 MB + 1 video × 35 MB +
+# audio = ~260 MB; a 300 MB cap prevents one event eating the whole
 # staging disk.
-MAX_EVENT_BYTES    = 500 * 1024 * 1024
+MAX_EVENT_BYTES    = 300 * 1024 * 1024
 
 
 # Only keep basenames matching this — strips paths, weird chars, etc.
