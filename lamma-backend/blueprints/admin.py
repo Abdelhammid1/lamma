@@ -180,16 +180,25 @@ def delete_event(event_id):
     if event is None:
         abort(404)
 
-    # If it was published, also remove the JSON + media from local
-    # disk (the activate path writes them to MEDIA_SERVE_DIR /
-    # DATA_SERVE_DIR). storage.delete_event is idempotent so a
-    # retry does the right thing.
+    # If it was published, clean up the content wherever it was
+    # written. New events live on local disk (MEDIA_SERVE_DIR /
+    # DATA_SERVE_DIR); events published before commit 93df6bc still
+    # have their JSON + media on GitHub. Try both — each path is
+    # idempotent + best-effort, so a missing file in either backend
+    # doesn't block the DB status flip.
     if event.status == "published":
         from storage import delete_event as _delete_event_files
         try:
             _delete_event_files(event.slug)
         except Exception:   # noqa: BLE001 — best-effort cleanup
             current_app.logger.exception("local-disk cleanup failed for %s", event.slug)
+        # Only touch GitHub if we still have a token to do it with;
+        # the install script now treats GITHUB_TOKEN as optional.
+        if current_app.config.get("GITHUB_TOKEN"):
+            try:
+                _cascade_delete_on_github(event)
+            except Exception:   # noqa: BLE001
+                current_app.logger.exception("GitHub cleanup failed for %s", event.slug)
 
     event.status = "deleted"
     db.session.commit()

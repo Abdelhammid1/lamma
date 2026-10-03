@@ -47,6 +47,19 @@ MAX_EVENT_BYTES    = 300 * 1024 * 1024
 # Only keep basenames matching this — strips paths, weird chars, etc.
 _SAFE_NAME_RE      = re.compile(r"[^A-Za-z0-9._-]+")
 
+# Extensions we actually serve from /media/<slug>/<file>. The MIME
+# allowlist above gates the Content-Type the client claims, but a
+# determined bad actor can POST image/jpeg while naming the file
+# `pwn.html` — Werkzeug keeps the client-supplied name. Mapping over
+# a strict extension allowlist here means `pwn.html` never lands in
+# staging at all, so `commit_event` can't move it into the public
+# serve dir. Keep this in sync with _MEDIA_EXT_MIME in app.py.
+_SAFE_EXTS = frozenset({
+    "jpg", "jpeg", "png", "gif", "webp",
+    "mp4", "mov", "webm",
+    "mp3", "m4a", "aac", "ogg", "wav",
+})
+
 
 class UploadError(ValueError):
     """Raised on any staging failure. `reason` is a short code and
@@ -66,6 +79,14 @@ def safe_filename(raw: str) -> str:
     base = os.path.basename(raw)                  # remove any path
     cleaned = _SAFE_NAME_RE.sub("-", base).strip("-._")
     return cleaned or "file"
+
+
+def _ext_is_safe(filename: str) -> bool:
+    """True iff the lowercased final extension is in the serve allowlist.
+    Files without a recognizable extension (`image`, `foo.`) are rejected."""
+    if "." not in filename:
+        return False
+    return filename.rsplit(".", 1)[-1].lower() in _SAFE_EXTS
 
 
 def _staging_dir_for(event_id: str) -> str:
@@ -99,9 +120,19 @@ def stage_upload(event_id: str, file_storage) -> dict:
 
     mime = (file_storage.mimetype or "").lower()
     if mime not in ALLOWED_MIME:
-        raise UploadError("bad_type", "Only images and videos are allowed.")
+        raise UploadError("bad_type", "Only images, videos and audio are allowed.")
 
     filename = safe_filename(file_storage.filename)
+    # Second gate: the Content-Type is client-supplied, so a hostile
+    # caller can send image/jpeg with filename `pwn.html`. The serve
+    # route (app.py) also blocks this, but rejecting at staging means
+    # a bad extension can't even sit on disk waiting for a template
+    # bug or a nginx config regression to let it through.
+    if not _ext_is_safe(filename):
+        raise UploadError(
+            "bad_ext",
+            "File extension is not allowed. Use jpg, png, webp, gif, mp4, mov, webm, mp3, m4a or ogg.",
+        )
 
     # Read once to a temp buffer so we can measure + hash + reject
     # oversize files without leaving a half-written file behind.

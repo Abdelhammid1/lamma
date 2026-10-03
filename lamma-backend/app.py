@@ -27,6 +27,25 @@ from scheduler import init_scheduler
 _SAFE_SLUG = re.compile(r"^[a-z0-9][a-z0-9-]{0,38}[a-z0-9]$")
 _SAFE_NAME = re.compile(r"^[A-Za-z0-9._-]{1,200}$")
 
+# Extension → safe content-type for /media/<slug>/<file>. Anything
+# whose extension isn't in this map is 404'd before send_from_directory
+# can guess a mimetype from it. svg / html / xml / pdf / js are
+# deliberately excluded — serving them from this origin would be XSS.
+_MEDIA_EXT_MIME = {
+    "jpg":  "image/jpeg", "jpeg": "image/jpeg",
+    "png":  "image/png",
+    "gif":  "image/gif",
+    "webp": "image/webp",
+    "mp4":  "video/mp4",
+    "mov":  "video/quicktime",
+    "webm": "video/webm",
+    "mp3":  "audio/mpeg",
+    "m4a":  "audio/mp4",
+    "aac":  "audio/aac",
+    "ogg":  "audio/ogg",
+    "wav":  "audio/wav",
+}
+
 
 def create_app(config_object: type = Config) -> Flask:
     app = Flask(__name__, instance_path=str(Path(__file__).parent / "instance"))
@@ -83,23 +102,45 @@ def create_app(config_object: type = Config) -> Flask:
     # nginx to serve both prefixes directly with an `alias` block
     # (see install.sh's NGINX_HINT). The Flask routes exist so the
     # system works end-to-end even before the sysadmin updates nginx.
+    #
+    # Hardening against stored XSS: these routes serve customer-
+    # uploaded bytes from the same origin as /admin, so a bad actor
+    # could craft an .html / .svg / .xml file and pass it as
+    # Content-Type: image/* in multipart (uploads.py sniffs the
+    # multipart header, not the real contents). Three layers close that:
+    #   1. Hard extension allowlist — anything else 404s.
+    #   2. Content-Type set explicitly from the allowlist, never from
+    #      the on-disk filename sniffer, never text/html.
+    #   3. nosniff + sandbox CSP so even a mismatched extension can't
+    #      run script in this origin.
     @app.get("/data/<slug>.json")
     def serve_data(slug):
         if not _SAFE_SLUG.match(slug):
             abort(404)
-        return send_from_directory(
+        resp = send_from_directory(
             app.config["DATA_SERVE_DIR"], f"{slug}.json",
             mimetype="application/json", max_age=300,
         )
+        resp.headers["X-Content-Type-Options"] = "nosniff"
+        return resp
 
     @app.get("/media/<slug>/<filename>")
     def serve_media(slug, filename):
         if not _SAFE_SLUG.match(slug) or not _SAFE_NAME.match(filename):
             abort(404)
-        return send_from_directory(
+        ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
+        mimetype = _MEDIA_EXT_MIME.get(ext)
+        if mimetype is None:
+            abort(404)
+        resp = send_from_directory(
             os.path.join(app.config["MEDIA_SERVE_DIR"], slug),
-            filename, max_age=604800,
+            filename, mimetype=mimetype, max_age=604800,
         )
+        # Even if some bytes slip through claiming to be an image but
+        # containing HTML, the browser must not sniff + render it.
+        resp.headers["X-Content-Type-Options"] = "nosniff"
+        resp.headers["Content-Security-Policy"] = "sandbox; default-src 'none'"
+        return resp
 
     # Background cleanup — only under gunicorn / production, not under
     # pytest (TestConfig sets SCHEDULER_ENABLED = False).

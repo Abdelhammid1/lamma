@@ -62,13 +62,13 @@ export async function loadBirthday(slug) {
   //    writes here (nginx alias → MEDIA_SERVE_DIR). Fastest + fresh.
   try {
     const res = await fetch(`/data/${slug}.json`, { cache: "no-store" });
-    if (res.ok) return await res.json();
+    if (res.ok) return sanitizeConfigUrls(await res.json());
   } catch (_) { /* try next source */ }
 
   // 2. Firestore — invitations created via the old /create (pre-backend).
   try {
     const snap = await getDoc(doc(db, "invitations", slug));
-    if (snap.exists()) return _mapFirestoreDoc(snap.data());
+    if (snap.exists()) return sanitizeConfigUrls(_mapFirestoreDoc(snap.data()));
   } catch (e) {
     console.warn("[loader] Firestore lookup failed, trying GitHub:", e);
   }
@@ -88,7 +88,7 @@ export async function loadBirthday(slug) {
   for (const url of paths) {
     try {
       const res = await fetch(url, { cache: "no-store" });
-      if (res.ok) return await res.json();
+      if (res.ok) return sanitizeConfigUrls(await res.json());
     } catch (_) { /* try next */ }
   }
 
@@ -100,6 +100,32 @@ export async function loadBirthday(slug) {
  *  (Firebase Storage download URLs). Just pass through. */
 function _mapFirestoreDoc(data) {
   return data;
+}
+
+
+/* Sanitize every URL field in a loaded invitation BEFORE handing it to
+ * the template. The payload comes from local disk / Firestore / GitHub —
+ * any of those can be hostile if the uploader got creative (an attacker
+ * could publish an invitation whose `videoUrl` is `javascript:…` or
+ * `data:text/html,…` and have the template render it into an <iframe>).
+ * Allowlist: http, https, protocol-relative, and site-relative paths.
+ * Everything else is replaced with an empty string so the template
+ * silently skips it. */
+const _SAFE_URL_RE = /^(https?:|\/\/|\/)/i;
+export function sanitizeConfigUrls(cfg) {
+  if (!cfg || typeof cfg !== "object") return cfg;
+  const clean = (u) => (typeof u === "string" && _SAFE_URL_RE.test(u.trim())) ? u.trim() : "";
+  const out = { ...cfg };
+  if (Array.isArray(cfg.memories)) {
+    out.memories = cfg.memories.map((m) => ({ ...m, url: clean(m?.url) }));
+  }
+  if (Array.isArray(cfg.gallery)) {
+    out.gallery = cfg.gallery.map(clean).filter(Boolean);
+  }
+  if ("videoUrl" in cfg) out.videoUrl = clean(cfg.videoUrl);
+  if ("musicUrl" in cfg) out.musicUrl = clean(cfg.musicUrl);
+  if ("music"    in cfg) out.music    = clean(cfg.music);
+  return out;
 }
 
 

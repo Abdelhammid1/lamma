@@ -174,13 +174,41 @@ static `location /` catch-all:
     location /data/ {
         alias /var/lib/lamma-backend/data/;
         add_header Cache-Control "public, max-age=300";
+        add_header X-Content-Type-Options "nosniff";
+        default_type application/octet-stream;
+        types { application/json json; }
         try_files $uri =404;
     }
-    location /media/ {
+    # Media is customer-uploaded on the same origin as /admin, so the
+    # defense against an attacker uploading a .html / .svg / .xml and
+    # getting it rendered is layered: an extension allowlist in the
+    # location regex, an explicit per-type map, nosniff, and a sandbox
+    # CSP that defangs any script that did sneak in.
+    location ~* ^/media/[a-z0-9][a-z0-9-]*/[A-Za-z0-9._-]+\.(jpe?g|png|gif|webp|mp4|mov|webm|mp3|m4a|aac|ogg|wav)$ {
         alias /var/lib/lamma-backend/media/;
         add_header Cache-Control "public, max-age=604800, immutable";
+        add_header X-Content-Type-Options "nosniff";
+        add_header Content-Security-Policy "sandbox; default-src 'none'";
+        default_type application/octet-stream;
+        types {
+            image/jpeg      jpg jpeg;
+            image/png       png;
+            image/gif       gif;
+            image/webp      webp;
+            video/mp4       mp4;
+            video/quicktime mov;
+            video/webm      webm;
+            audio/mpeg      mp3;
+            audio/mp4       m4a;
+            audio/aac       aac;
+            audio/ogg       ogg;
+            audio/wav       wav;
+        }
         try_files $uri =404;
     }
+    # Any other /media/ shape never reaches disk — 404 before alias
+    # resolution so the attacker can't fish for extensions.
+    location /media/ { return 404; }
 
 Then:
     sudo nginx -t && sudo systemctl reload nginx
