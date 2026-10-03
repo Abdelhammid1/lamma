@@ -13,7 +13,11 @@ class Config:
     # --- Core Flask ---
     SECRET_KEY = os.environ.get("SECRET_KEY", "dev-change-me")
     JSON_SORT_KEYS = False
-    MAX_CONTENT_LENGTH = 52 * 1024 * 1024   # 52 MB — matches nginx cap
+    # Headroom over the per-file ceiling in uploads.py (100 MB) +
+    # multipart envelope + nginx client_max_body_size (110m). Werkzeug
+    # cuts the request off at exactly this many bytes, so this must
+    # be at least as big as the biggest file we accept.
+    MAX_CONTENT_LENGTH = 110 * 1024 * 1024
 
     # --- Database ---
     SQLALCHEMY_DATABASE_URI = os.environ.get(
