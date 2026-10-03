@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,600&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Cairo:wght@400;600;700&family=Manrope:wght@400;500;600;700&display=swap"
       rel="stylesheet" />
-<link rel="stylesheet" href="create.css" />
+<link rel="stylesheet" href="create.css?v=2" />
 </head>
 <body>
 
@@ -78,6 +78,7 @@
         <div class="cx-field">
           <label for="f-video-file">Upload a video file</label>
           <input id="f-video-file" type="file" accept="video/*" />
+          <button type="button" class="cx-btn cx-btn-ghost cx-clear" data-clear="f-video-file" hidden>Remove</button>
           <span class="cx-hint">MP4 / MOV / WebM. Max 50 MB.</span>
         </div>
         <div class="cx-field">
@@ -89,6 +90,7 @@
         <div class="cx-field">
           <label for="f-music-file">Upload an audio file</label>
           <input id="f-music-file" type="file" accept="audio/*" />
+          <button type="button" class="cx-btn cx-btn-ghost cx-clear" data-clear="f-music-file" hidden>Remove</button>
           <span class="cx-hint">MP3 / M4A / OGG. Max 20 MB. Plays after the guest presses Start.</span>
         </div>
       </div>
@@ -151,6 +153,7 @@
         <div class="cx-field">
           <label for="f-wedding-music">Upload an audio file</label>
           <input id="f-wedding-music" type="file" accept="audio/*" />
+          <button type="button" class="cx-btn cx-btn-ghost cx-clear" data-clear="f-wedding-music" hidden>Remove</button>
           <span class="cx-hint">MP3 / M4A / OGG. Max 20 MB. Plays after the guest presses Open Invitation.</span>
         </div>
       </div>
@@ -205,6 +208,6 @@
 
 </main>
 
-<script type="module" src="js/create-form.js?v=7"></script>
+<script type="module" src="js/create-form.js?v=8"></script>
 </body>
 </html>

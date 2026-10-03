@@ -94,6 +94,15 @@ html, body {
 .cx-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 4px; }
 @media (max-width: 640px) { .cx-field-row { grid-template-columns: 1fr; } }
 
+/* Inline "Remove" button that appears next to a file input once a file
+   is picked. Small, aligned under the input, hidden by [hidden]. */
+.cx-clear {
+  align-self: flex-start;
+  padding: 4px 10px;
+  font-size: 12px;
+}
+.cx-clear[hidden] { display: none; }
+
 .cx-field label, .cx-field legend, fieldset.cx-field legend {
   font-family: 'Manrope', sans-serif;
   font-size: 11px;

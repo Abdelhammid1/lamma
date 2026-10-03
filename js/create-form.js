@@ -212,25 +212,39 @@ function addMemoryRow() {
       <div class="cx-field">
         <label>Photo</label>
         <input type="file" class="mem-file" accept="image/*">
+        <button type="button" class="cx-btn cx-btn-ghost cx-clear mem-clear" hidden>Remove photo</button>
       </div>
       <div class="cx-field">
         <label>Date caption (optional)</label>
         <input type="text" class="mem-date" placeholder="NOV 2024 · 23">
       </div>
     </div>
-    <button type="button" class="mem-remove" title="Remove">×</button>
+    <button type="button" class="mem-remove" title="Remove entire row">×</button>
   `;
   const fileInput = row.querySelector(".mem-file");
-  const thumb = row.querySelector(".mem-thumb");
+  const thumb     = row.querySelector(".mem-thumb");
+  const clearBtn  = row.querySelector(".mem-clear");
+  const resetThumb = () => {
+    thumb.innerHTML = `<div class="mem-thumb-num">#${idx + 1}</div>`;
+    renumberMemories();
+  };
   fileInput.addEventListener("change", (e) => {
     const f = e.target.files?.[0];
-    if (!f) return;
+    if (!f) { clearBtn.hidden = true; resetThumb(); schedulePreview(); return; }
     if (f.size / 1024 / 1024 > MAX_MB) {
       alert(`Photo too large (${(f.size / 1024 / 1024).toFixed(1)} MB). Max ${MAX_MB} MB.`);
       fileInput.value = "";
+      clearBtn.hidden = true;
       return;
     }
     thumb.innerHTML = `<img src="${URL.createObjectURL(f)}" alt="">`;
+    clearBtn.hidden = false;
+    schedulePreview();
+  });
+  clearBtn.addEventListener("click", () => {
+    fileInput.value = "";
+    clearBtn.hidden = true;
+    resetThumb();
     schedulePreview();
   });
   row.querySelector(".mem-remove").addEventListener("click", () => {
@@ -251,9 +265,30 @@ addMemoryRow();  // seed one row
 
 $("f-video-file").addEventListener("change", (e) => {
   if (guardFileSize(e.target, MAX_MB, "Video")) schedulePreview();
+  syncClearButton(e.target);
 });
 $("f-music-file").addEventListener("change", (e) => {
   if (guardFileSize(e.target, MAX_AUDIO_MB, "Audio")) schedulePreview();
+  syncClearButton(e.target);
+});
+
+/* ================= Shared "Remove" (clear file input) wiring ================= */
+
+// Every input with a sibling [data-clear="<input-id>"] button is wired
+// up here: button shows while a file is selected, hides when cleared,
+// click resets the input and re-runs the preview.
+function syncClearButton(input) {
+  const btn = document.querySelector(`[data-clear="${input.id}"]`);
+  if (btn) btn.hidden = !(input.files && input.files.length);
+}
+document.querySelectorAll("[data-clear]").forEach((btn) => {
+  const input = document.getElementById(btn.dataset.clear);
+  if (!input) return;
+  btn.addEventListener("click", () => {
+    input.value = "";
+    btn.hidden = true;
+    schedulePreview();
+  });
 });
 
 /* ================= Wedding gallery builder ================= */
@@ -272,16 +307,29 @@ function addGalleryRow() {
       <div class="cx-field">
         <label>Photo${rows === 0 ? " (hero)" : ""}</label>
         <input type="file" class="mem-file" accept="image/*">
+        <button type="button" class="cx-btn cx-btn-ghost cx-clear mem-clear" hidden>Remove photo</button>
       </div>
     </div>
-    <button type="button" class="mem-remove" title="Remove">×</button>
+    <button type="button" class="mem-remove" title="Remove entire row">×</button>
   `;
   const fileInput = row.querySelector(".mem-file");
-  const thumb = row.querySelector(".mem-thumb");
+  const thumb     = row.querySelector(".mem-thumb");
+  const clearBtn  = row.querySelector(".mem-clear");
+  const resetThumb = () => {
+    const num = [...galleryBuilder.querySelectorAll(".mem-row")].indexOf(row) + 1;
+    thumb.innerHTML = `<div class="mem-thumb-num">#${num}</div>`;
+  };
   fileInput.addEventListener("change", (e) => {
     const f = guardFileSize(e.target, MAX_MB, "Photo");
-    if (!f) return;
+    if (!f) { clearBtn.hidden = true; resetThumb(); schedulePreview(); return; }
     thumb.innerHTML = `<img src="${URL.createObjectURL(f)}" alt="">`;
+    clearBtn.hidden = false;
+    schedulePreview();
+  });
+  clearBtn.addEventListener("click", () => {
+    fileInput.value = "";
+    clearBtn.hidden = true;
+    resetThumb();
     schedulePreview();
   });
   row.querySelector(".mem-remove").addEventListener("click", () => {
@@ -296,6 +344,7 @@ function addGalleryRow() {
 
 $("f-wedding-music").addEventListener("change", (e) => {
   if (guardFileSize(e.target, MAX_AUDIO_MB, "Audio")) schedulePreview();
+  syncClearButton(e.target);
 });
 
 addGalleryRow();
