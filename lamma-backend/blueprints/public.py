@@ -176,9 +176,9 @@ def event_status(event_id):
 def activate_event(event_id):
     """Body: `{ "code": "AH3F-9K2P-XZLB" }`.
 
-    On success: marks the code as used, uploads every staged media blob
-    to `<event_type>/media/<slug>/<filename>`, writes
-    `<event_type>/data/<slug>.json`, cleans local staging, sets
+    On success: marks the code as used, moves every staged media blob
+    into `<MEDIA_SERVE_DIR>/<slug>/<filename>`, writes
+    `<DATA_SERVE_DIR>/<slug>.json`, cleans local staging, sets
     `event.status = 'published'`, returns `{ status, public_url }`.
 
     On any failure the event's status is unchanged so the user can retry.
@@ -204,43 +204,17 @@ def activate_event(event_id):
     except ActivationError as e:
         return jsonify(error=e.reason, message=e.message), 400
 
-    # Commit to GitHub — data JSON first (single-file failure is easy to
-    # recover from), then each media blob, then update DB.
-    client = GitHubClient()
-    prefix = event.event_type                        # 'birthday' | 'wedding' | 'invitation'
-    slug   = event.slug
-
+    # Commit to local disk (replaces the old GitHub Contents + Git Data
+    # API path). storage.commit_event is idempotent so a retry after a
+    # partial move does the right thing.
+    from storage import commit_event
     try:
-        json_path = f"{prefix}/data/{slug}.json"
-        json_body = _serialize_event(event)          # str
-        put_res   = client.put_file(
-            json_path,
-            content=json_body,
-            message=f"{prefix}: publish {slug}",
-        )
-        event.published_commit_sha = (put_res.get("content") or {}).get("sha")
-
-        for blob in db.session.query(MediaBlob).filter_by(event_id=event.id).all():
-            local_path = _local_staging_path(event.id, blob.path)
-            if not os.path.exists(local_path):
-                # Already committed on a previous partial attempt (idempotent)
-                continue
-            with open(local_path, "rb") as f:
-                data = f.read()
-            filename = os.path.basename(blob.path)
-            remote_path = f"{prefix}/media/{slug}/{filename}"
-            put_res = client.put_file(
-                remote_path,
-                content=data,
-                message=f"{prefix}: add media {slug}/{filename}",
-            )
-            blob.committed_sha = (put_res.get("content") or {}).get("sha")
-            blob.path = remote_path
-
-    except GitHubError as e:
-        return jsonify(error="github_failed",
-                       message="Could not save your page. Please try again in a moment.",
-                       status=e.status), 502
+        blobs = db.session.query(MediaBlob).filter_by(event_id=event.id).all()
+        commit_event(event, blobs, current_app.config["UPLOAD_STAGING_DIR"])
+    except OSError as e:
+        current_app.logger.exception("storage commit failed")
+        return jsonify(error="storage_failed",
+                       message="Could not save your invitation. Please try again."), 502
 
     # DB updates + code burn
     code_row.used = True

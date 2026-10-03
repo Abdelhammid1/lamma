@@ -53,12 +53,18 @@ sudo -u lamma python3 -m venv "$BACKEND_DIR/.venv"
 sudo -u lamma "$BACKEND_DIR/.venv/bin/pip" install --upgrade pip
 sudo -u lamma "$BACKEND_DIR/.venv/bin/pip" install -r "$BACKEND_DIR/requirements.txt"
 
-echo "==> 5/8  Creating state dir $STATE_DIR"
-install -d -o lamma -g lamma -m 0755 "$STATE_DIR" "$STATE_DIR/uploads"
+echo "==> 5/8  Creating state dirs under $STATE_DIR"
+install -d -o lamma -g lamma -m 0755 \
+    "$STATE_DIR" \
+    "$STATE_DIR/uploads" \
+    "$STATE_DIR/media" \
+    "$STATE_DIR/data"
 
 echo "==> 6/8  Environment file $ENV_FILE"
 if [[ ! -f "$ENV_FILE" ]]; then
-  read -r -p "  GitHub PAT (github_pat_...): " GH_TOKEN
+  # GITHUB_TOKEN is now optional — the publish path writes to local disk,
+  # not GitHub. We still accept one in case you re-enable the old path.
+  read -r -p "  GitHub PAT (optional — press ENTER to skip): " GH_TOKEN
   read -r -p "  Flask SECRET_KEY (leave blank to auto-generate): " SECRET
   if [[ -z "$SECRET" ]]; then
     SECRET="$(python3 -c 'import secrets; print(secrets.token_urlsafe(48))')"
@@ -72,6 +78,8 @@ MEDIA_REPO=birthday-media
 MEDIA_BRANCH=main
 PUBLIC_DOMAIN=manasety.ai
 UPLOAD_STAGING_DIR=$STATE_DIR/uploads
+MEDIA_SERVE_DIR=$STATE_DIR/media
+DATA_SERVE_DIR=$STATE_DIR/data
 RATELIMIT_STORAGE_URI=memory://
 SCHEDULER_ENABLED=1
 ENV
@@ -79,7 +87,10 @@ ENV
   chmod 640 "$ENV_FILE"
   echo "  wrote $ENV_FILE"
 else
-  echo "  $ENV_FILE already exists — leaving untouched"
+  # Ensure the two new vars exist in an older env file; append if missing.
+  grep -q "^MEDIA_SERVE_DIR=" "$ENV_FILE" || echo "MEDIA_SERVE_DIR=$STATE_DIR/media" >> "$ENV_FILE"
+  grep -q "^DATA_SERVE_DIR="  "$ENV_FILE" || echo "DATA_SERVE_DIR=$STATE_DIR/data"   >> "$ENV_FILE"
+  echo "  $ENV_FILE already exists — appended MEDIA_SERVE_DIR / DATA_SERVE_DIR if missing"
 fi
 
 echo "==> 7/8  Installing systemd unit"
@@ -154,6 +165,22 @@ static `location /` catch-all:
 
     location /admin  { proxy_pass http://127.0.0.1:8010; proxy_set_header Host $host; }
     location /admin/ { proxy_pass http://127.0.0.1:8010; proxy_set_header Host $host; }
+
+    # Published invitation payloads (JSON) + their media files, written
+    # by activate_event to MEDIA_SERVE_DIR / DATA_SERVE_DIR. Serving them
+    # directly from nginx bypasses Flask for every guest page load.
+    # The `alias` paths must match the dirs the install script created
+    # (/var/lib/lamma-backend/{data,media} by default).
+    location /data/ {
+        alias /var/lib/lamma-backend/data/;
+        add_header Cache-Control "public, max-age=300";
+        try_files $uri =404;
+    }
+    location /media/ {
+        alias /var/lib/lamma-backend/media/;
+        add_header Cache-Control "public, max-age=604800, immutable";
+        try_files $uri =404;
+    }
 
 Then:
     sudo nginx -t && sudo systemctl reload nginx

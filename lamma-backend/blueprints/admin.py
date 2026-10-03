@@ -15,6 +15,7 @@ from datetime import datetime
 from flask import (
     Blueprint,
     abort,
+    current_app,
     flash,
     redirect,
     render_template,
@@ -179,9 +180,16 @@ def delete_event(event_id):
     if event is None:
         abort(404)
 
-    # If it was published we also try to remove the JSON + media on GitHub.
+    # If it was published, also remove the JSON + media from local
+    # disk (the activate path writes them to MEDIA_SERVE_DIR /
+    # DATA_SERVE_DIR). storage.delete_event is idempotent so a
+    # retry does the right thing.
     if event.status == "published":
-        _cascade_delete_on_github(event)
+        from storage import delete_event as _delete_event_files
+        try:
+            _delete_event_files(event.slug)
+        except Exception:   # noqa: BLE001 — best-effort cleanup
+            current_app.logger.exception("local-disk cleanup failed for %s", event.slug)
 
     event.status = "deleted"
     db.session.commit()

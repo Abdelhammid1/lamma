@@ -43,6 +43,21 @@ class Config:
         os.path.abspath(os.path.join(os.path.dirname(__file__), "instance", "uploads")),
     )
 
+    # --- Published-media storage (replaces GitHub as the serving layer) ---
+    # On activate, the backend moves each staged blob into
+    # MEDIA_SERVE_DIR/<slug>/<filename> and writes the final JSON to
+    # DATA_SERVE_DIR/<slug>.json. nginx serves both prefixes directly;
+    # if the nginx snippet isn't applied, Flask also serves them via
+    # send_from_directory routes as a backstop.
+    MEDIA_SERVE_DIR = os.environ.get(
+        "MEDIA_SERVE_DIR",
+        os.path.abspath(os.path.join(os.path.dirname(__file__), "instance", "media")),
+    )
+    DATA_SERVE_DIR = os.environ.get(
+        "DATA_SERVE_DIR",
+        os.path.abspath(os.path.join(os.path.dirname(__file__), "instance", "data")),
+    )
+
     # --- Rate limits (Stage 5 — placeholders for now) ---
     RATELIMIT_STORAGE_URI = os.environ.get("RATELIMIT_STORAGE_URI", "memory://")
 

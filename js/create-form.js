@@ -679,13 +679,17 @@ function prepareFiles(slug, type) {
 }
 
 // Take the preview cfg (which references files by blob: URLs) and swap
-// in the CDN URLs that the backend will publish each file at.
+// in the public URLs the backend will serve each file at.
+//
+// Media now lives on the backend's own disk (served by nginx at /media/)
+// instead of GitHub, so the baked-in URL is `/media/<slug>/<filename>`.
+// We use a relative path so the same JSON works from any host the
+// backend is deployed under; the loader resolves it against location.origin.
 function buildFinalConfig(files, slug, type) {
   const cfg = collectFormForPreview();
-  const cdn = CONFIG.cdnBase;
   const urlFor = (field) => {
     const hit = files.find((x) => x.field === field);
-    return hit ? `${cdn}/${hit.cdnPath}` : "";
+    return hit ? `/media/${slug}/${hit.finalName}` : "";
   };
 
   if (type === "birthday") {
@@ -699,7 +703,7 @@ function buildFinalConfig(files, slug, type) {
   } else {
     cfg.gallery = files
       .filter((f) => f.field.startsWith("gallery-"))
-      .map((f) => `${cdn}/${f.cdnPath}`);
+      .map((f) => `/media/${slug}/${f.finalName}`);
     cfg.music = urlFor("music") || "";
   }
   return cfg;

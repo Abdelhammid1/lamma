@@ -58,7 +58,14 @@ export function getSlug() {
  * (Ranon, etc.). Returns null if not found in either.
  */
 export async function loadBirthday(slug) {
-  // 1. Firestore
+  // 1. Backend's own /data/<slug>.json — the current publish path
+  //    writes here (nginx alias → MEDIA_SERVE_DIR). Fastest + fresh.
+  try {
+    const res = await fetch(`/data/${slug}.json`, { cache: "no-store" });
+    if (res.ok) return await res.json();
+  } catch (_) { /* try next source */ }
+
+  // 2. Firestore — invitations created via the old /create (pre-backend).
   try {
     const snap = await getDoc(doc(db, "invitations", slug));
     if (snap.exists()) return _mapFirestoreDoc(snap.data());
@@ -66,11 +73,9 @@ export async function loadBirthday(slug) {
     console.warn("[loader] Firestore lookup failed, trying GitHub:", e);
   }
 
-  // 2. GitHub — raw first (fresh), CDN as safety net. Two prefixes:
-  //    - `data/<slug>.json`          — legacy admin publishes (Ranon, etc.)
-  //    - `<type>/data/<slug>.json`   — backend-published /create invitations
-  //      (the backend commits per event_type; we probe both because at
-  //      this point we don't know the type yet).
+  // 3. GitHub — legacy admin publishes (Ranon, Rana) and the brief
+  //    period when the backend committed to <type>/data/<slug>.json.
+  //    Raw first (fresh), CDN as safety net.
   const bust = Date.now();
   const paths = [
     `${CONFIG.rawBase}/data/${slug}.json?nc=${bust}`,
