@@ -97,6 +97,7 @@ EnvironmentFile=$ENV_FILE
 ExecStart=$BACKEND_DIR/.venv/bin/gunicorn \\
     --bind 127.0.0.1:8010 \\
     --workers 2 \\
+    --timeout 300 \\
     --access-logfile - \\
     --error-logfile - \\
     wsgi:app
@@ -138,7 +139,7 @@ Add these blocks INSIDE the `server { ... }` for lamma.manasety.ai
 (usually /etc/nginx/sites-available/lamma.manasety.ai), BEFORE the
 static `location /` catch-all:
 
-    client_max_body_size 55m;
+    client_max_body_size 110m;
 
     location /api/ {
         proxy_pass         http://127.0.0.1:8010;
@@ -146,7 +147,8 @@ static `location /` catch-all:
         proxy_set_header   X-Real-IP         $remote_addr;
         proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
         proxy_set_header   X-Forwarded-Proto $scheme;
-        proxy_read_timeout 60s;
+        proxy_read_timeout 300s;
+        proxy_send_timeout 300s;
         proxy_request_buffering off;
     }
 

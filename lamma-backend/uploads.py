@@ -31,12 +31,14 @@ ALLOWED_AUDIO_MIME = frozenset({
 ALLOWED_MIME       = ALLOWED_IMAGE_MIME | ALLOWED_VIDEO_MIME | ALLOWED_AUDIO_MIME
 
 # Max any single file may be. Frontend warns above 25 MB; server refuses
-# above 50 MB. Nginx client_max_body_size should be >= 55 MB.
-MAX_FILE_BYTES     = 50 * 1024 * 1024
+# above 100 MB. Nginx client_max_body_size should be >= 110 MB.
+# 100 MB is the GitHub Git Data API blob ceiling — above that we'd need
+# Git LFS (not wired).
+MAX_FILE_BYTES     = 100 * 1024 * 1024
 
 # Max sum of files per event. Prevents a single event exhausting the
 # staging disk.
-MAX_EVENT_BYTES    = 300 * 1024 * 1024
+MAX_EVENT_BYTES    = 500 * 1024 * 1024
 
 
 # Only keep basenames matching this — strips paths, weird chars, etc.

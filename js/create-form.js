@@ -27,10 +27,10 @@ const state = {
   codeChecked:   false,       // becomes true only right before publish
 };
 
-const MAX_MB       = 50;
+const MAX_MB       = 100;   // per video / photo (GitHub Git Data API ceiling)
 const WARN_MB      = 25;
-const MAX_TOTAL_MB = 300;
-const MAX_AUDIO_MB = 20;
+const MAX_TOTAL_MB = 500;
+const MAX_AUDIO_MB = 50;
 
 function guardFileSize(input, maxMb, label) {
   const f = input.files?.[0];
