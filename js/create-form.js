@@ -541,7 +541,10 @@ async function publish() {
     );
 
     // 5. Success — backend returns the real public URL.
-    const publicUrl = act.public_url || `${location.origin}/${slug}`;
+    // Fallback mirrors the backend's _build_public_url: wedding lives
+    // under /wedding/<slug>; birthday + anything else at /<slug>.
+    const slugPath = type === "wedding" ? `/wedding/${slug}` : `/${slug}`;
+    const publicUrl = act.public_url || `${location.origin}${slugPath}`;
     $("success-url").href = publicUrl;
     $("success-url").textContent = publicUrl;
     $("editor-screen").hidden = true;
