@@ -71,7 +71,34 @@ function encodePreviewData(cfg) {
   );
 }
 
-function mergeInvitation(data) {
+// Mirrors sanitizeConfigUrls in js/loader.js — accept only http(s),
+// protocol-relative (//), or site-relative (/) URLs. Blocks the
+// `javascript:` + `data:text/html,…` payloads a hostile customer could
+// bake into their invitation and have the venue iframe or gallery <img>
+// execute. Kept inline rather than cross-importing loader.js so this
+// module stays independent of the birthday renderer stack.
+const _SAFE_URL_RE = /^(https?:|\/\/|\/)/i;
+const _cleanUrl = (u) =>
+  (typeof u === "string" && _SAFE_URL_RE.test(u.trim())) ? u.trim() : "";
+
+function sanitizeWeddingData(data) {
+  if (!data || typeof data !== "object") return data;
+  const out = { ...data };
+  if (Array.isArray(data.gallery)) out.gallery = data.gallery.map(_cleanUrl).filter(Boolean);
+  if ("music" in data)             out.music   = _cleanUrl(data.music);
+  // Venue has an iframe src (mapsEmbedSrc) + a deep link; sanitize both.
+  if (data.venue && typeof data.venue === "object") {
+    out.venue = {
+      ...data.venue,
+      ...(data.venue.mapsEmbedSrc ? { mapsEmbedSrc: _cleanUrl(data.venue.mapsEmbedSrc) } : {}),
+      ...(data.venue.mapsDeepLink ? { mapsDeepLink: _cleanUrl(data.venue.mapsDeepLink) } : {}),
+    };
+  }
+  return out;
+}
+
+function mergeInvitation(raw) {
+  const data = sanitizeWeddingData(raw);
   if (!data || typeof data !== "object") return;
   if (data.couple    && typeof data.couple    === "object") Object.assign(CONFIG.couple,    data.couple);
   if (data.event     && typeof data.event     === "object") Object.assign(CONFIG.event,     data.event);
@@ -125,15 +152,33 @@ if (isPreview()) {
 
   const slug = resolveSlug();
   if (slug) {
+    let loaded = false;
+    // 1. Backend's local-disk /data/<slug>.json — this is where every
+    //    wedding published through /create lands since commit 93df6bc.
+    //    Without this lookup, weddings loaded from local disk fell
+    //    through to Firestore (never set) and rendered the demo
+    //    (Ahmed & Sara).
     try {
-      const snap = await getDoc(doc(db, "invitations", slug));
-      if (snap.exists()) {
-        const data = snap.data();
-        mergeInvitation(data);
+      const res = await fetch(`/data/${slug}.json`, { cache: "no-store" });
+      if (res.ok) {
+        mergeInvitation(await res.json());
         CONFIG.slug = slug;
+        loaded = true;
       }
-    } catch (e) {
-      console.warn("[wedding-bootstrap] Firestore fetch failed:", e);
+    } catch (_) { /* try Firestore */ }
+
+    // 2. Firestore — invitations created via the pre-backend /create
+    //    (while the publish flow still wrote Firebase docs).
+    if (!loaded) {
+      try {
+        const snap = await getDoc(doc(db, "invitations", slug));
+        if (snap.exists()) {
+          mergeInvitation(snap.data());
+          CONFIG.slug = slug;
+        }
+      } catch (e) {
+        console.warn("[wedding-bootstrap] Firestore fetch failed:", e);
+      }
     }
   }
   // If no slug was found, the demo (Ahmed & Sara) still renders — that's
