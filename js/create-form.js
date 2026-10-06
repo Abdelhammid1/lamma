@@ -27,6 +27,27 @@ const state = {
   codeChecked:   false,       // becomes true only right before publish
 };
 
+/* ================= Admin mode detection =================
+   When the admin opens /create via one of the links in the admin
+   dashboard, two URL params change behavior:
+
+     ?admin_create=1     Admin is creating a fresh invitation. The
+                         activation-code gate is suppressed, Publish
+                         commits directly via /admin/api/.../publish
+                         (which Flask-Login's session cookie protects).
+
+     ?admin_edit=<id>    Admin is editing an existing event. The
+                         form is pre-filled from GET /admin/api/events/<id>,
+                         slug/type become read-only, and the Publish
+                         button becomes "Save changes" that PATCHes
+                         the payload. */
+const ADMIN_PARAMS = new URLSearchParams(location.search);
+const ADMIN_MODE   =
+    ADMIN_PARAMS.get("admin_edit")   ? "edit"
+  : ADMIN_PARAMS.get("admin_create") ? "create"
+  : null;
+const ADMIN_EDIT_ID = ADMIN_PARAMS.get("admin_edit") || null;
+
 const MAX_MB       = 35;    // per video / photo — real GitHub blob API ceiling
 const WARN_MB      = 25;
 const MAX_TOTAL_MB = 300;
@@ -447,15 +468,21 @@ $("f-name").addEventListener("input", updatePublishGate);
 
 function updatePublishGate() {
   const nameOk = !!$("f-name").value.trim();
-  const slugOk = state.slugAvailable === true;
-  const codeOk = codeInput.value.trim().length >= 6;
+  // In edit mode the slug is immutable, so slugAvailable stays null —
+  // treat it as satisfied. Admin create still enforces slug uniqueness.
+  const slugOk = ADMIN_MODE === "edit"
+    ? !!$("f-slug").value.trim()
+    : state.slugAvailable === true;
+  // Admin modes don't require an activation code — Flask-Login's
+  // session cookie is the auth.
+  const codeOk = ADMIN_MODE ? true : codeInput.value.trim().length >= 6;
   const canPublish = nameOk && slugOk && codeOk;
   $("publish-btn").disabled = !canPublish;
   $("publish-hint").hidden  = canPublish;
   if (!canPublish) {
     const bits = [];
     if (!nameOk) bits.push("name");
-    if (state.slugAvailable !== true) bits.push("valid available slug");
+    if (!slugOk) bits.push("valid available slug");
     if (!codeOk) bits.push("activation code");
     $("publish-hint").textContent = "Fill in: " + bits.join(", ") + ".";
   }
@@ -480,6 +507,10 @@ function normalizeCode(raw) {
 }
 
 async function publish() {
+  // Edit mode is a totally different animal (text PATCH only, no new
+  // uploads or activate step). Hand off to the dedicated path.
+  if (ADMIN_MODE === "edit") { return publishAdminEdit(); }
+
   clearCodeErr();
   const btn = $("publish-btn");
   btn.disabled = true;
@@ -531,14 +562,14 @@ async function publish() {
       );
     }
 
-    // 4. Activate — the backend verifies the code, commits every staged
-    //    blob + the data JSON to GitHub, and burns the code, atomically.
+    // 4. Activate — commits every staged blob + the data JSON. For a
+    //    customer flow this verifies the activation code and burns it.
+    //    For admin create (Flask-Login session already proves identity)
+    //    the dedicated /admin/api/.../publish endpoint skips both.
     setProgress(95, "Publishing your invitation…");
-    const act = await apiJson(
-      "POST",
-      `/api/events/${eventId}/activate`,
-      { code }
-    );
+    const act = ADMIN_MODE === "create"
+      ? await apiJson("POST", `/admin/api/events/${eventId}/publish`, {})
+      : await apiJson("POST", `/api/events/${eventId}/activate`, { code });
 
     // 5. Success — backend returns the real public URL.
     // Fallback mirrors the backend's _build_public_url: wedding lives
@@ -730,7 +761,130 @@ function debounce(fn, ms) {
   return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
 }
 
+/* ================= Admin modes ================= */
+
+// Show a visible mode banner + hide the activation-code gate so the
+// admin UI doesn't look misleading.
+function applyAdminChrome() {
+  if (!ADMIN_MODE) return;
+  const codeField = $("f-code")?.closest(".cx-field");
+  if (codeField) codeField.hidden = true;
+  if ($("publish-hint")) $("publish-hint").hidden = true;
+  const title = $("cx-title");
+  if (title) {
+    title.textContent = ADMIN_MODE === "edit"
+      ? "Edit invitation (admin)"
+      : "Create invitation (admin)";
+  }
+  const lede = document.querySelector(".cx-lede");
+  if (lede) {
+    lede.textContent = ADMIN_MODE === "edit"
+      ? "You're editing this invitation as an admin. Changes are saved immediately — no activation code needed."
+      : "Admin create: publishes immediately without an activation code.";
+  }
+  if ($("publish-btn")) {
+    $("publish-btn").textContent =
+      ADMIN_MODE === "edit" ? "Save changes" : "Publish (admin)";
+  }
+}
+
+/* Pre-fill form fields from an existing event's stored payload. Called
+ * on boot when ?admin_edit=<id> is present. */
+async function loadAdminEditFixtures() {
+  if (ADMIN_MODE !== "edit" || !ADMIN_EDIT_ID) return;
+  let evt;
+  try {
+    evt = await apiJson("GET", `/admin/api/events/${ADMIN_EDIT_ID}`, null);
+  } catch (e) {
+    alert("Couldn't load this invitation: " + (e?.data?.message || e.message));
+    return;
+  }
+  applyType(evt.event_type === "wedding" ? "wedding" : "birthday");
+
+  // Slug + type become read-only in edit mode (changing them would
+  // orphan the on-disk /data/<slug>.json and /media/<slug>/* trees).
+  const slugEl = $("f-slug");
+  slugEl.value = evt.slug;
+  slugEl.readOnly = true;
+  document.querySelectorAll('input[name="event_type"]').forEach((r) => {
+    r.disabled = true;
+  });
+
+  const p = evt.payload_json || {};
+  const setIf = (id, v) => { const el = $(id); if (el && v != null) el.value = v; };
+
+  if (state.type === "birthday") {
+    setIf("f-name",        p.name);
+    setIf("f-letterAr",    p.letterAr);
+    setIf("f-letterEn",    p.letterEn);
+    setIf("f-signatureEn", p.signatureEn);
+    setIf("f-signatureAr", p.signatureAr);
+    setIf("f-video-url",   p.videoUrl);
+    // Rebuild quiz rows from stored data.
+    if (Array.isArray(p.quiz) && p.quiz.length) {
+      quizBuilder.innerHTML = "";
+      for (const q of p.quiz) addQuizRow(q);
+    }
+  } else {
+    const c = p.couple || {};
+    setIf("f-groom",         c.groom);
+    setIf("f-name",          c.groom && c.bride ? `${c.groom} & ${c.bride}` : "");
+    setIf("f-bride",         c.bride);
+    const ev = p.event || {};
+    if (ev.datetimeIso && $("f-event-datetime")) {
+      // <input type="datetime-local"> wants YYYY-MM-DDTHH:MM (no tz).
+      try {
+        const d = new Date(ev.datetimeIso);
+        const pad = (n) => String(n).padStart(2, "0");
+        $("f-event-datetime").value =
+          `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}` +
+          `T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      } catch (_) { /* leave blank */ }
+    }
+    setIf("f-welcome-time",   ev.welcomeTime);
+    setIf("f-reception-time", ev.receptionTime);
+    const v = p.venue || {};
+    setIf("f-venue-name",    v.name);
+    setIf("f-venue-address", v.address);
+    setIf("f-venue-maps",    v.mapsEmbedSrc);
+    setIf("f-blessing",      p.blessing);
+    setIf("f-dress-code",    p.dressCode?.label);
+  }
+
+  schedulePreview();
+  updatePublishGate();
+}
+
+/* Edit-mode "Save changes" handler — PATCHes the payload. Does NOT
+ * handle new file uploads in this iteration (text edits only). */
+async function publishAdminEdit() {
+  const btn = $("publish-btn");
+  btn.disabled = true;
+  btn.textContent = "Saving…";
+  try {
+    // Reuse the preview builder — it already produces the right shape
+    // for both birthday and wedding, with the file-URL fields pointing
+    // at the live /media/<slug>/… paths that were committed last time.
+    const nextPayload = collectFormForPreview();
+    setProgress(50, "Saving changes…");
+    await apiJson("PATCH", `/admin/api/events/${ADMIN_EDIT_ID}`, {
+      payload_json: nextPayload,
+    });
+    setProgress(100, "Saved.");
+    setTimeout(() => { hideProgress(); btn.textContent = "Save changes"; btn.disabled = false; }, 600);
+  } catch (err) {
+    console.error("[admin-edit]", err);
+    alert("Save failed: " + (err?.data?.message || err.message || String(err)));
+    hideProgress();
+    btn.textContent = "Save changes";
+    btn.disabled = false;
+  }
+}
+
 /* ================= boot (last: all `let` bindings are alive) ================= */
 
 const initialType = new URLSearchParams(location.search).get("type");
 applyType(initialType === "wedding" ? "wedding" : "birthday");
+
+applyAdminChrome();
+loadAdminEditFixtures();

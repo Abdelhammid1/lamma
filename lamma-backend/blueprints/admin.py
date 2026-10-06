@@ -6,7 +6,13 @@ Routes:
     GET      /admin/                          → dashboard summary
     GET      /admin/events                    → all events table
     POST     /admin/events/<id>/generate-code → mint activation code
+    POST     /admin/codes/generate-unbound    → mint an unbound code
     POST     /admin/events/<id>/delete        → soft-delete
+
+JSON API (used by /create's admin modes — see js/create-form.js):
+    GET      /admin/api/events/<id>           → payload for the editor
+    PATCH    /admin/api/events/<id>           → update payload + re-publish
+    POST     /admin/api/events/<id>/publish   → activate without a code
 """
 
 import json
@@ -17,6 +23,7 @@ from flask import (
     abort,
     current_app,
     flash,
+    jsonify,
     redirect,
     render_template,
     request,
@@ -205,6 +212,118 @@ def delete_event(event_id):
     _audit(current_user.id, "delete_event", event.id)
     flash(f"Deleted {event.slug}.", "info")
     return redirect(url_for("admin.events"))
+
+
+# ---------------------------------------------------------------------------
+# JSON API — used by /create's admin modes (?admin_edit, ?admin_create)
+# ---------------------------------------------------------------------------
+# These three endpoints give the Flask-Login-gated admin everything the
+# public flow has, minus the activation-code gate. They sit under
+# /admin/api/ so Flask-Login (session-cookie backed) protects them for
+# free — no second auth system to maintain.
+
+@bp.get("/api/events/<event_id>")
+@login_required
+def api_get_event(event_id):
+    """Return the stored payload + metadata so the /create form can
+    pre-fill when the admin opens `?admin_edit=<id>`."""
+    event = db.session.get(Event, event_id)
+    if event is None:
+        return jsonify(error="not_found"), 404
+    try:
+        payload = json.loads(event.payload_json) if event.payload_json else {}
+    except (TypeError, ValueError):
+        payload = {}
+    return jsonify(
+        event_id=event.id,
+        slug=event.slug,
+        event_type=event.event_type,
+        status=event.status,
+        payload_json=payload,
+        contact=event.contact,
+    ), 200
+
+
+@bp.patch("/api/events/<event_id>")
+@login_required
+def api_update_event(event_id):
+    """Rewrite the stored payload. If the event is already published,
+    also re-write <DATA_SERVE_DIR>/<slug>.json so guests see the edit
+    immediately (media moves still go through the public upload path)."""
+    event = db.session.get(Event, event_id)
+    if event is None:
+        return jsonify(error="not_found"), 404
+    if event.status == "deleted":
+        return jsonify(error="deleted",
+                       message="Can't edit a deleted event."), 409
+
+    body = request.get_json(silent=True) or {}
+    new_payload = body.get("payload_json")
+    if not isinstance(new_payload, (dict, list, str)):
+        return jsonify(error="bad_payload",
+                       message="payload_json must be an object, array, or JSON string."), 400
+    event.payload_json = (
+        new_payload if isinstance(new_payload, str)
+        else json.dumps(new_payload, ensure_ascii=False)
+    )
+    db.session.commit()
+
+    # Already-published events need their on-disk JSON refreshed so
+    # the guest-facing page reflects the admin's edit without having
+    # to go through the activate flow again.
+    if event.status == "published":
+        from storage import rewrite_data_json
+        try:
+            rewrite_data_json(event)
+        except OSError:
+            current_app.logger.exception("rewrite_data_json failed for %s", event.slug)
+            return jsonify(error="storage_failed",
+                           message="Saved to DB but couldn't rewrite the public file."), 500
+
+    _audit(current_user.id, "admin_edit_event", event.id)
+    return jsonify(event_id=event.id, slug=event.slug, status=event.status), 200
+
+
+@bp.post("/api/events/<event_id>/publish")
+@login_required
+def api_publish_event(event_id):
+    """Admin override — move the event to `published` and commit media
+    without needing an activation code. Mirrors the public activate
+    endpoint minus the code check + without burning a code."""
+    event = db.session.get(Event, event_id)
+    if event is None:
+        return jsonify(error="not_found"), 404
+    if event.status == "published":
+        return jsonify(error="already_published",
+                       message="This event is already live."), 409
+    if event.status == "deleted":
+        return jsonify(error="deleted",
+                       message="Can't publish a deleted event."), 409
+
+    from storage import commit_event
+    try:
+        blobs = db.session.query(MediaBlob).filter_by(event_id=event.id).all()
+        commit_event(event, blobs, current_app.config["UPLOAD_STAGING_DIR"])
+    except OSError:
+        current_app.logger.exception("admin storage commit failed for %s", event.slug)
+        return jsonify(error="storage_failed",
+                       message="Could not save your invitation."), 502
+
+    event.status = "published"
+    event.activated_at = datetime.utcnow()
+    db.session.commit()
+
+    # Clear staging exactly like the public activate path does.
+    from blueprints.public import _cleanup_staging
+    _cleanup_staging(event.id)
+
+    _audit(current_user.id, "admin_publish_event", event.id)
+    # Match the public URL shape so the frontend can navigate.
+    from blueprints.public import _build_public_url
+    return jsonify(
+        status="published",
+        public_url=_build_public_url(event),
+    ), 200
 
 
 # ---------------------------------------------------------------------------

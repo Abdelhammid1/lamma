@@ -1,7 +1,12 @@
 {% extends "base.html" %}
 {% block title %}Events · Admin{% endblock %}
 {% block content %}
-<h1 class="page-title">Events</h1>
+<div class="page-title-row" style="display:flex; align-items:center; justify-content:space-between; gap:16px;">
+  <h1 class="page-title" style="margin:0;">Events</h1>
+  <!-- "New invitation" opens /create in admin-create mode: no code gate,
+       publishes immediately via /admin/api/.../publish. -->
+  <a href="/create?admin_create=1" class="btn btn-primary">+ New invitation</a>
+</div>
 
 <form class="filter-bar" method="get">
   <input name="q" type="search" placeholder="Search slug…" value="{{ q or '' }}">
@@ -41,6 +46,9 @@
             <input type="text" name="notes" placeholder="notes (payment ref)" style="width:180px">
             <button type="submit" class="btn btn-primary btn-sm">Generate code</button>
           </form>
+        {% endif %}
+        {% if ev.status != 'deleted' %}
+          <a href="/create?admin_edit={{ ev.id }}" class="btn btn-outline btn-sm">Edit</a>
         {% endif %}
         <form method="post" action="{{ url_for('admin.delete_event', event_id=ev.id) }}"
               onsubmit="return confirm('Delete {{ ev.slug }}?')" class="inline">

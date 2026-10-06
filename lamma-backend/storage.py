@@ -96,6 +96,24 @@ def delete_event(slug: str) -> None:
             pass
 
 
+def rewrite_data_json(event) -> None:
+    """Re-serialize the event's payload and overwrite the on-disk JSON.
+    Used when an admin edits a published event via PATCH — the DB row
+    gets the new payload, but guests see nothing until this writes the
+    public file. Media files are untouched.
+
+    Atomic: writes to a tmp path then os.replaces so a crash mid-write
+    can't leave a half-written JSON that the loader would try to parse.
+    """
+    data_root = current_app.config["DATA_SERVE_DIR"]
+    os.makedirs(data_root, exist_ok=True)
+    data_path = os.path.join(data_root, f"{event.slug}.json")
+    tmp = data_path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        f.write(_serialize_event(event))
+    os.replace(tmp, data_path)
+
+
 def _serialize_event(event) -> str:
     """Same JSON shape the old GitHub path produced, so birthday.html's
     loader renders either source transparently."""
