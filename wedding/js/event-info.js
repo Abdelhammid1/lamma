@@ -13,6 +13,13 @@ const set = (id, value) => {
 const eventDate = new Date(CONFIG.event.datetimeIso);
 const fmt = (opts) => new Intl.DateTimeFormat("en-US", opts).format(eventDate);
 
+// Event-type-aware titles so a wedding doesn't read "Engagement Party Info".
+// Fallback for anything unexpected keeps the neutral "Event…" wording.
+const eventType = (CONFIG.couple.eventType || "Event").trim();
+set("event-title", `${eventType} Info`);
+set("event-lead",  `The ${eventType.toLowerCase()} will take place at:`);
+set("venue-title", `${eventType} Venue`);
+
 set("welcome-time",   CONFIG.event.welcomeTime);
 set("reception-time", CONFIG.event.receptionTime);
 

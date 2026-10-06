@@ -13,7 +13,7 @@
     rel="stylesheet"
   />
 
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/style.css?v=2" />
 </head>
 <body>
 
@@ -122,9 +122,9 @@
     <!-- Stage 4 · Event Info + Countdown + Calendar + Add-to-Calendar + RSVP -->
     <section class="section event-info reveal" id="event-info" aria-labelledby="event-title">
       <img class="divider" src="images/divider.png" alt="" aria-hidden="true" />
-      <h2 id="event-title" class="section-title-caps">Engagement Party Info</h2>
+      <h2 id="event-title" class="section-title-caps">Event Info</h2>
 
-      <p class="event-lead">The engagement party will take place at:</p>
+      <p class="event-lead" id="event-lead">The event will take place at:</p>
 
       <p class="event-time-big" id="event-time-big">—</p>
 
@@ -149,12 +149,12 @@
       </div>
 
       <p class="countdown-title">Countdown</p>
-      <p class="countdown-line" id="countdown" aria-live="polite">
-        <span data-unit="days">--</span> days
-        <span data-unit="hours">--</span> hours
-        <span data-unit="minutes">--</span> min
-        <span data-unit="seconds">--</span> sec
-      </p>
+      <div class="countdown-grid" id="countdown" aria-live="polite">
+        <div class="countdown-cell"><span class="countdown-num" data-unit="days">--</span><span class="countdown-label">days</span></div>
+        <div class="countdown-cell"><span class="countdown-num" data-unit="hours">--</span><span class="countdown-label">hours</span></div>
+        <div class="countdown-cell"><span class="countdown-num" data-unit="minutes">--</span><span class="countdown-label">min</span></div>
+        <div class="countdown-cell"><span class="countdown-num" data-unit="seconds">--</span><span class="countdown-label">sec</span></div>
+      </div>
 
       <div class="calendar-frame">
         <img class="calendar-frame-img" src="images/calendar-frame.png" alt="" aria-hidden="true" />
@@ -200,7 +200,7 @@
     <!-- Stage 5 · Venue Map -->
     <section class="section venue reveal" id="venue" aria-labelledby="venue-title">
       <img class="divider" src="images/divider.png" alt="" aria-hidden="true" />
-      <h2 id="venue-title" class="section-title-caps">Engagement Party Venue</h2>
+      <h2 id="venue-title" class="section-title-caps">Venue</h2>
 
       <div class="venue-details">
         <p class="venue-name" id="venue-name">—</p>
@@ -272,7 +272,7 @@
 
   <!-- One entry point: bootstrap.js resolves the slug, fetches Firestore,
        merges into CONFIG, then dynamically imports every renderer. -->
-  <script type="module" src="js/bootstrap.js?v=2"></script>
+  <script type="module" src="js/bootstrap.js?v=3"></script>
 
 </body>
 </html>

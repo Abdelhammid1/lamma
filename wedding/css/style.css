@@ -577,18 +577,23 @@ body.lightbox-open { overflow: hidden; }
   margin-bottom: 24px;
 }
 
-/* SUNDAY | 06 | SEPTEMBER date bar */
+/* SUNDAY · 06 · SEPTEMBER date bar — baseline-aligned so the big day
+   number sits level with the uppercase weekday + month. The old
+   `align-items: center` + `font-size: 32px` combo made the small text
+   look floated and the pipe separators looked heavy. */
 .event-date-bar {
   display: inline-flex;
-  align-items: center;
-  gap: 18px;
+  align-items: baseline;
+  gap: 14px;
   font-family: var(--font-serif);
   font-weight: 600;
   color: var(--muted);
-  letter-spacing: 0.28em;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
   font-size: 13px;
   margin-bottom: 4px;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 .event-date-bar .day {
   color: var(--rose);
@@ -599,9 +604,15 @@ body.lightbox-open { overflow: hidden; }
 }
 .event-date-bar .sep {
   color: var(--muted);
-  opacity: 0.5;
+  opacity: 0.4;
   font-weight: 400;
-  font-size: 20px;
+  font-size: 14px;
+  letter-spacing: 0;
+}
+@media (max-width: 480px) {
+  /* Phone: tight gap, smaller day numeral, keep everything on one row. */
+  .event-date-bar { gap: 10px; letter-spacing: 0.14em; }
+  .event-date-bar .day { font-size: 26px; }
 }
 .event-year {
   font-family: var(--font-serif);
@@ -645,15 +656,50 @@ body.lightbox-open { overflow: hidden; }
   text-transform: uppercase;
   margin-bottom: 6px;
 }
-.countdown-line {
+/* Pill-grid countdown — four small cards with the number stacked over
+   its unit label. The old single-line layout ("46 days 7 hours 14 min
+   1 sec") was dense and hard to scan at a glance; the user asked for
+   something cleaner. */
+.countdown-grid {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 0 auto 32px;
+  font-variant-numeric: tabular-nums;
+  max-width: 360px;
+}
+.countdown-cell {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 6px;
+  background: var(--cream);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  min-width: 0;
+}
+.countdown-num {
   font-family: var(--font-serif);
   color: var(--rose);
-  font-size: 15px;
-  margin-bottom: 32px;
-  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: 22px;
+  line-height: 1;
 }
-.countdown-line span { font-weight: 700; }
-.countdown-line.celebrating { color: var(--plum); font-weight: 700; }
+.countdown-label {
+  font-family: var(--font-serif);
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.countdown-grid.celebrating .countdown-num { color: var(--plum); }
+@media (max-width: 380px) {
+  .countdown-grid { gap: 6px; }
+  .countdown-num  { font-size: 18px; }
+  .countdown-label{ font-size: 10px; letter-spacing: 0.1em; }
+}
 
 /* Calendar wrapped in ornate gold PNG frame */
 .calendar-frame {
@@ -876,6 +922,11 @@ body.lightbox-open { overflow: hidden; }
   margin-bottom: 24px;
   background: linear-gradient(135deg, var(--blush-2), #efc8d2);
 }
+/* The CSS above would otherwise beat the UA `[hidden] { display:none }`
+   rule when venue.js sets .venue-map hidden because mapsEmbedSrc was
+   blank. Match the `.btn-outline[hidden]` pattern from style.css. */
+.venue-map[hidden] { display: none !important; }
+.btn-outline[hidden], #venue-open[hidden] { display: none !important; }
 .venue-map iframe {
   position: absolute;
   inset: 0;
@@ -935,9 +986,14 @@ body.lightbox-open { overflow: hidden; }
 .swatch-code {
   font-family: var(--font-serif);
   font-size: 10px;
-  letter-spacing: 0.15em;
+  /* No tracking — a bordered hex like #1E3A8A at 10px with 0.15em
+     letter-spacing was ~62px wide and bled over into the next swatch
+     column (gap is only 20px), making labels overlap. */
+  letter-spacing: 0;
   color: var(--muted);
   font-variant-numeric: tabular-nums;
+  text-align: center;
+  max-width: 100%;
 }
 @media (min-width: 640px) {
   .swatch { width: 60px; height: 60px; }
