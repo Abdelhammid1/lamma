@@ -17,6 +17,8 @@ JSON API (used by /create's admin modes — see js/create-form.js):
 
 import json
 from datetime import datetime
+from functools import wraps
+from urllib.parse import urlparse
 
 from flask import (
     Blueprint,
@@ -44,6 +46,59 @@ bp = Blueprint(
     template_folder="../templates/admin",
     static_folder="../static/admin",
 )
+
+
+# ---------------------------------------------------------------------------
+# CSRF guard for the JSON /admin/api/* endpoints
+# ---------------------------------------------------------------------------
+# Session-cookie auth alone is CSRF-vulnerable: a logged-in admin visiting a
+# hostile page would have their browser attach the session cookie to any
+# cross-origin request the attacker triggers. Two cheap, no-token defenses
+# layered here close that:
+#
+#   1. State-changing requests must send `Content-Type: application/json`.
+#      Browsers can submit HTML forms cross-origin with
+#      application/x-www-form-urlencoded or multipart/form-data without a
+#      CORS preflight — this would skip it. Any `fetch(..., {headers:
+#      {'Content-Type': 'application/json'}})` is a "non-simple" CORS
+#      request and triggers an OPTIONS preflight, which this server does
+#      not whitelist for other origins.
+#
+#   2. Origin/Referer, when present, must match the request's own Host.
+#      This stops a same-site-but-different-port attacker, and catches any
+#      edge case the Content-Type check misses.
+#
+# Shared across all /admin/api/* mutating endpoints below.
+def _is_same_origin() -> bool:
+    header = request.headers.get("Origin") or request.headers.get("Referer")
+    if not header:
+        # Browsers send Origin on cross-origin PATCH/POST (and nearly always
+        # on same-origin ones too). Missing header is suspicious — reject.
+        return False
+    want = request.host.lower()
+    try:
+        got = urlparse(header).netloc.lower()
+    except ValueError:
+        return False
+    return got == want
+
+
+def admin_json_csrf(fn):
+    """Wrap mutating JSON endpoints. GET is handled by the browser's
+    same-origin policy and session-cookie SameSite default; nothing extra
+    needed. Everything else must be JSON + same-origin."""
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        if request.method not in ("GET", "HEAD", "OPTIONS"):
+            ct = (request.content_type or "").split(";", 1)[0].strip().lower()
+            if ct != "application/json":
+                return jsonify(error="bad_content_type",
+                               message="JSON only."), 415
+            if not _is_same_origin():
+                return jsonify(error="csrf_blocked",
+                               message="Cross-origin request rejected."), 403
+        return fn(*args, **kwargs)
+    return wrapper
 
 
 # ---------------------------------------------------------------------------
@@ -246,6 +301,7 @@ def api_get_event(event_id):
 
 @bp.patch("/api/events/<event_id>")
 @login_required
+@admin_json_csrf
 def api_update_event(event_id):
     """Rewrite the stored payload. If the event is already published,
     also re-write <DATA_SERVE_DIR>/<slug>.json so guests see the edit
@@ -286,6 +342,7 @@ def api_update_event(event_id):
 
 @bp.post("/api/events/<event_id>/publish")
 @login_required
+@admin_json_csrf
 def api_publish_event(event_id):
     """Admin override — move the event to `published` and commit media
     without needing an activation code. Mirrors the public activate
