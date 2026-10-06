@@ -22,4 +22,10 @@
 /engagement             /engagement/index.html    200
 /engagement/            /engagement/index.html    200
 /engagement/*           /engagement/index.html    200
+/qiraya                 /qiraya/index.html        200
+/qiraya/                /qiraya/index.html        200
+/qiraya/*               /qiraya/index.html        200
+/sobou                  /sobou/index.html         200
+/sobou/                 /sobou/index.html         200
+/sobou/*                /sobou/index.html         200
 /*                      /birthday.html            200

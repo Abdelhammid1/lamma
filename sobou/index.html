@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#fdf6ec" />
+<title>دعوة سبوع</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet" />
+
+<link rel="stylesheet" href="css/style.css?v=1" />
+</head>
+<body>
+
+<!-- Soft gradient wash + a scatter of tiny warm orbs (SVG) that
+     evoke candle light without going literal. -->
+<div class="aura" aria-hidden="true">
+  <svg class="aura-dots aura-dots--top" viewBox="0 0 200 140" preserveAspectRatio="xMidYMid slice">
+    <defs>
+      <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+        <stop offset="0" stop-color="#f5d77d" stop-opacity="0.5"/>
+        <stop offset="1" stop-color="#f5d77d" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+    <circle cx="30"  cy="30" r="24" fill="url(#glow)"/>
+    <circle cx="150" cy="60" r="38" fill="url(#glow)"/>
+    <circle cx="90"  cy="110" r="28" fill="url(#glow)"/>
+    <circle cx="180" cy="20" r="18" fill="url(#glow)"/>
+  </svg>
+</div>
+
+<!-- ─────────────────────────  Cover  ───────────────────────── -->
+<section class="cover" id="cover" aria-labelledby="baby-name">
+  <div class="cover-card">
+    <!-- Candle flame + saucer motif. All inline SVG — crisp, zero HTTP. -->
+    <svg class="cover-candle" viewBox="0 0 60 110" aria-hidden="true">
+      <defs>
+        <linearGradient id="flame" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#f5d77d"/>
+          <stop offset="1" stop-color="#e8884d"/>
+        </linearGradient>
+      </defs>
+      <!-- Flame -->
+      <path d="M30 10 Q 20 25 24 35 Q 26 45 30 50 Q 34 45 36 35 Q 40 25 30 10 Z" fill="url(#flame)"/>
+      <circle cx="30" cy="22" r="2.5" fill="#fff" opacity="0.6"/>
+      <!-- Wick -->
+      <line x1="30" y1="48" x2="30" y2="56" stroke="#4a3b2e" stroke-width="1.2"/>
+      <!-- Candle body -->
+      <rect x="22" y="56" width="16" height="34" rx="2" fill="#fdf6ec" stroke="#c9a86a" stroke-width="1"/>
+      <!-- Saucer -->
+      <ellipse cx="30" cy="94" rx="24" ry="4" fill="#c9a86a" opacity="0.3"/>
+      <ellipse cx="30" cy="92" rx="24" ry="4" fill="none" stroke="#c9a86a" stroke-width="1"/>
+    </svg>
+
+    <p class="cover-eyebrow">يا رب احفظه</p>
+    <h2 class="cover-sub" id="cover-sub">سبوع</h2>
+
+    <h1 class="baby-name" id="baby-name">يوسف</h1>
+
+    <p class="baby-sub" id="cover-parents">
+      <span class="baby-sub-label">أهله:</span>
+      <span id="cover-parents-names">محمد و نور</span>
+    </p>
+
+    <p class="cover-date" id="cover-date">السبت ٢١ نوفمبر ٢٠٢٦</p>
+
+    <button type="button" class="cover-cta" id="open-btn" aria-controls="greeting details venue guestbook">
+      <span>افتح الدعوة</span>
+      <span aria-hidden="true">←</span>
+    </button>
+  </div>
+</section>
+
+<main class="scroll" id="scroll" aria-hidden="true">
+
+  <!-- ─────────────────────────  Greeting  ───────────────────────── -->
+  <section class="section greeting" id="greeting" aria-labelledby="greeting-title">
+    <svg class="greeting-charm" viewBox="0 0 40 50" aria-hidden="true">
+      <!-- Hand of Fatima (khamsa) — simplified silhouette -->
+      <path d="M20 2 Q 24 2 25 6 L 26 20
+               L 32 15 Q 36 15 36 20 L 32 28
+               L 36 28 Q 38 30 36 32 L 30 36
+               L 30 42 Q 26 48 20 48 Q 14 48 10 42 L 10 36
+               L 4 32 Q 2 30 4 28 L 8 28 L 4 20 Q 4 15 8 15 L 14 20
+               L 15 6 Q 16 2 20 2 Z"
+            fill="#c9a86a" opacity="0.75"/>
+      <circle cx="20" cy="30" r="3.5" fill="#f5d77d" opacity="0.9"/>
+    </svg>
+
+    <h2 class="section-title visually-hidden" id="greeting-title">كلمة أهله</h2>
+    <p class="greeting-body" id="greeting-body">
+      بشرى ونور دخلوا بيتنا. يسعدنا نشارككم فرحة سبوع صغيرنا، وتدعوا له بالصحة والحياة الطيبة.
+    </p>
+    <div class="rule" aria-hidden="true"></div>
+  </section>
+
+  <!-- ─────────────────────────  Details  ───────────────────────── -->
+  <section class="section details" id="details" aria-labelledby="details-title">
+    <p class="eyebrow">موعد السبوع</p>
+    <h2 class="section-title" id="details-title">هنفرح بكم معانا</h2>
+
+    <div class="date-pane">
+      <div class="date-chip">
+        <span class="date-day"   id="date-day">٢١</span>
+        <span class="date-month" id="date-month">نوفمبر</span>
+        <span class="date-year"  id="date-year">٢٠٢٦</span>
+      </div>
+    </div>
+
+    <p class="time-line">
+      <span class="time-cell">
+        <span class="time-label">الاستقبال</span>
+        <span class="time-value" id="welcome-time">٥:٠٠ م</span>
+      </span>
+      <span class="time-sep" aria-hidden="true"></span>
+      <span class="time-cell">
+        <span class="time-label">الاحتفال</span>
+        <span class="time-value" id="reception-time">٦:٠٠ م</span>
+      </span>
+    </p>
+
+    <div class="countdown-grid" id="countdown" aria-live="polite">
+      <div class="countdown-cell"><span class="countdown-num" data-unit="days">--</span><span class="countdown-label">يوم</span></div>
+      <div class="countdown-cell"><span class="countdown-num" data-unit="hours">--</span><span class="countdown-label">ساعة</span></div>
+      <div class="countdown-cell"><span class="countdown-num" data-unit="minutes">--</span><span class="countdown-label">دقيقة</span></div>
+      <div class="countdown-cell"><span class="countdown-num" data-unit="seconds">--</span><span class="countdown-label">ثانية</span></div>
+    </div>
+
+    <a id="ics-link" class="btn-ghost" href="#" download="sobou.ics">أضف إلى التقويم</a>
+  </section>
+
+  <!-- ─────────────────────────  Venue  ───────────────────────── -->
+  <section class="section venue" id="venue" aria-labelledby="venue-title">
+    <p class="eyebrow">المكان</p>
+    <h2 class="section-title" id="venue-title">هنكون هنا</h2>
+
+    <div class="venue-text">
+      <p class="venue-name" id="venue-name">—</p>
+      <p class="venue-address" id="venue-address">—</p>
+    </div>
+
+    <div class="venue-map" id="venue-map">
+      <iframe
+        id="venue-iframe"
+        title="موقع الحفل على خرائط جوجل"
+        src=""
+        loading="lazy"
+        referrerpolicy="no-referrer-when-downgrade"
+        allowfullscreen
+      ></iframe>
+    </div>
+
+    <a id="venue-open" class="btn-ghost" href="#" target="_blank" rel="noopener noreferrer">
+      افتح في الخرائط
+    </a>
+  </section>
+
+  <!-- ─────────────────────────  Wishes guestbook  ───────────────────────── -->
+  <section class="section guestbook" id="guestbook" aria-labelledby="guestbook-title">
+    <p class="eyebrow">دعوة بالخير</p>
+    <h2 class="section-title" id="guestbook-title">اكتب كلمة لـ المولود</h2>
+
+    <form id="guestbook-form" class="gb-form" autocomplete="on">
+      <label class="field">
+        <span class="field-label">اسمك</span>
+        <input id="gb-name" type="text" required maxlength="60" dir="auto" />
+      </label>
+      <label class="field">
+        <span class="field-label">دعوة بالخير</span>
+        <textarea id="gb-message" rows="3" required maxlength="400" dir="auto"></textarea>
+      </label>
+      <button type="submit" class="btn-primary">أرسل</button>
+      <p id="gb-status" class="gb-status" role="status" aria-live="polite"></p>
+    </form>
+
+    <ul id="gb-list" class="gb-list" aria-label="رسائل بالخير"></ul>
+  </section>
+
+  <footer class="footer">
+    <p class="footer-mark">— مبروك —</p>
+  </footer>
+</main>
+
+<audio id="bg-audio" loop preload="metadata"></audio>
+<button type="button" id="music-toggle" class="music-toggle" hidden aria-label="إيقاف الموسيقى">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5z" fill="currentColor"/><path d="M15 9c1.5 1.5 1.5 4.5 0 6" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+</button>
+
+<script type="module" src="js/bootstrap.js?v=1"></script>
+</body>
+</html>

@@ -24,7 +24,9 @@ from uploads import UploadError, stage_upload, total_bytes_for_event
 bp = Blueprint("public_api", __name__, url_prefix="/api")
 
 
-VALID_EVENT_TYPES = frozenset({"birthday", "wedding", "engagement", "invitation"})
+VALID_EVENT_TYPES = frozenset({
+    "birthday", "wedding", "engagement", "qiraya", "sobou", "invitation",
+})
 
 
 # --------------------------------------------------------------------------
@@ -282,9 +284,11 @@ def _build_public_url(event: Event) -> str:
     (Ahmed & Sara) because birthday.html's loader doesn't understand
     the wedding schema.
     """
-    domain = current_app.config["PUBLIC_DOMAIN"]
-    if event.event_type == "wedding":
-        return f"https://lamma.{domain}/wedding/{event.slug}"
-    if event.event_type == "engagement":
-        return f"https://lamma.{domain}/engagement/{event.slug}"
+    # Prefix-routed templates — each lives under /<type>/<slug> and is
+    # served by its own index.html via _redirects. The birthday + any
+    # unknown type stays on the /<slug> catch-all.
+    domain  = current_app.config["PUBLIC_DOMAIN"]
+    PREFIXED = {"wedding", "engagement", "qiraya", "sobou"}
+    if event.event_type in PREFIXED:
+        return f"https://lamma.{domain}/{event.event_type}/{event.slug}"
     return f"https://lamma.{domain}/{event.slug}"

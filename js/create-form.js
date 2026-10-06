@@ -69,33 +69,39 @@ function guardFileSize(input, maxMb, label) {
 
 /* ================= Type toggle ================= */
 
+// All templates that share the "couple + event + venue" schema reuse
+// the wedding-shaped form. Birthday is the only outlier (quiz + memories).
+const COUPLE_TYPES = new Set(["wedding", "engagement", "qiraya", "sobou"]);
+const ALL_TYPES    = new Set(["birthday", ...COUPLE_TYPES]);
+
+const TYPE_TITLE = {
+  birthday:   "Create your birthday invitation",
+  wedding:    "Create your wedding invitation",
+  engagement: "Create your engagement invitation",
+  qiraya:     "اعمل دعوة قراية فاتحة",
+  sobou:      "اعمل دعوة سبوع",
+};
+
+const TYPE_PREVIEW = {
+  birthday:   "birthday.html?preview=1",
+  wedding:    "wedding/index.html?preview=1",
+  engagement: "engagement/index.html?preview=1",
+  qiraya:     "qiraya/index.html?preview=1",
+  sobou:      "sobou/index.html?preview=1",
+};
+
 function applyType(t) {
-  if (!["birthday", "wedding", "engagement"].includes(t)) return;
+  if (!ALL_TYPES.has(t)) return;
   state.type = t;
   document.querySelectorAll('input[name="event_type"]').forEach((r) => {
     r.checked = (r.value === t);
   });
-  // Engagement uses the same form fields as a wedding — same schema
-  // under the hood (couple/event/venue/dressCode/gallery/music) — but
-  // publishes as its own event_type so the backend routes to
-  // /engagement/<slug> and the engagement template picks it up.
-  const usesWeddingForm = t === "wedding" || t === "engagement";
-  $("birthday-fields").hidden = !!usesWeddingForm;
-  $("wedding-fields").hidden  = !usesWeddingForm;
+  const usesCoupleForm = COUPLE_TYPES.has(t);
+  $("birthday-fields").hidden = !!usesCoupleForm;
+  $("wedding-fields").hidden  = !usesCoupleForm;
   const title = $("cx-title");
-  if (title) {
-    title.textContent = ({
-      birthday:   "Create your birthday invitation",
-      wedding:    "Create your wedding invitation",
-      engagement: "Create your engagement invitation",
-    })[t];
-  }
-  const src = ({
-    birthday:   "birthday.html?preview=1",
-    wedding:    "wedding/index.html?preview=1",
-    engagement: "engagement/index.html?preview=1",
-  })[t];
-  $("preview-frame").src = src;
+  if (title) title.textContent = TYPE_TITLE[t];
+  $("preview-frame").src = TYPE_PREVIEW[t];
   schedulePreview();
   updatePublishGate();
 }
@@ -406,7 +412,11 @@ document.getElementById("editor-screen").addEventListener("change", schedulePrev
 $("preview-open").addEventListener("click", () => {
   const cfg = collectFormForPreview();
   const payload = encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(cfg)))));
-  const path = state.type === "wedding" ? "wedding/index.html" : "birthday.html";
+  // Each prefix-routed template serves its own index.html. Birthday
+  // (and anything else) lands on birthday.html.
+  const path = COUPLE_TYPES.has(state.type)
+    ? `${state.type}/index.html`
+    : "birthday.html";
   window.open(`${path}?preview=1&data=${payload}`, "_blank");
 });
 
@@ -440,16 +450,23 @@ function collectFormForPreview() {
   // wedding
   const groom = $("f-groom").value.trim();
   const bride = $("f-bride").value.trim();
+  // Each couple-shaped type gets its own eventType label so renderers
+  // that branch on CONFIG.couple.eventType (cover.js, event-info.js)
+  // pick the right wording. The label is also what the UI shows on
+  // the cover headline ("The Wedding of" / "to the engagement of" /
+  // "قراية فاتحة" / "سبوع").
+  const EVENT_TYPE_LABEL = {
+    wedding:    "Wedding",
+    engagement: "Engagement",
+    qiraya:     "قراية فاتحة",
+    sobou:      "سبوع",
+  };
   return {
     slug:        $("f-slug").value,
-    // Preview iframe is picked by applyType(), but the payload we hand
-    // to the preview carries the actual event_type so renderers that
-    // branch on it (e.g. cover.js labels, event-info titles) see the
-    // right value for engagement vs wedding.
-    event_type:  state.type === "engagement" ? "engagement" : "wedding",
+    event_type:  state.type,
     couple: {
       groom, bride,
-      eventType: state.type === "engagement" ? "Engagement" : "Wedding",
+      eventType: EVENT_TYPE_LABEL[state.type] || "Wedding",
       groomLabel: "The Groom",
       brideLabel: "The Bride",
     },
@@ -591,13 +608,10 @@ async function publish() {
       : await apiJson("POST", `/api/events/${eventId}/activate`, { code });
 
     // 5. Success — backend returns the real public URL.
-    // Fallback mirrors the backend's _build_public_url: wedding lives
-    // under /wedding/<slug>, engagement under /engagement/<slug>,
-    // birthday + anything else at /<slug>.
-    const slugPath = type === "wedding"
-      ? `/wedding/${slug}`
-      : type === "engagement"
-      ? `/engagement/${slug}`
+    // Mirror backend _build_public_url — each prefix-routed template
+    // lives at /<type>/<slug>; birthday and anything else at /<slug>.
+    const slugPath = COUPLE_TYPES.has(type)
+      ? `/${type}/${slug}`
       : `/${slug}`;
     const publicUrl = act.public_url || `${location.origin}${slugPath}`;
     $("success-url").href = publicUrl;
@@ -823,7 +837,7 @@ async function loadAdminEditFixtures() {
     alert("Couldn't load this invitation: " + (e?.data?.message || e.message));
     return;
   }
-  applyType(["wedding", "engagement"].includes(evt.event_type) ? evt.event_type : "birthday");
+  applyType(ALL_TYPES.has(evt.event_type) ? evt.event_type : "birthday");
 
   // Slug + type become read-only in edit mode (changing them would
   // orphan the on-disk /data/<slug>.json and /media/<slug>/* trees).
@@ -908,10 +922,7 @@ async function publishAdminEdit() {
 /* ================= boot (last: all `let` bindings are alive) ================= */
 
 const initialType = new URLSearchParams(location.search).get("type");
-applyType(
-  ["wedding", "engagement", "birthday"].includes(initialType)
-    ? initialType : "birthday"
-);
+applyType(ALL_TYPES.has(initialType) ? initialType : "birthday");
 
 applyAdminChrome();
 loadAdminEditFixtures();

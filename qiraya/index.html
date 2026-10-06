@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#fbf7ee" />
+<title>قراية فاتحة</title>
+
+<!-- Arabic display: Amiri (classical Naskh for the Quran-adjacent moment)
+     Arabic body: Cairo (modern, high legibility at small sizes)
+     Latin pair: Cormorant Garamond (so the date year stays elegant) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Cairo:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet" />
+
+<link rel="stylesheet" href="css/style.css?v=1" />
+</head>
+<body>
+
+<!-- Subtle 8-point Islamic geometric background. One SVG, repeated via
+     CSS background-image at low opacity. -->
+<div class="geometric-bg" aria-hidden="true"></div>
+
+<!-- ─────────────────────────  Cover  ───────────────────────── -->
+<section class="cover" id="cover" aria-labelledby="couple">
+  <div class="cover-card">
+    <!-- Crescent + star geometric emblem -->
+    <svg class="cover-emblem" viewBox="0 0 80 50" aria-hidden="true">
+      <!-- Rotated 8-point star -->
+      <g transform="translate(40 25)" fill="none" stroke="currentColor" stroke-width="1" opacity="0.9">
+        <polygon points="0,-20 5,-5 20,0 5,5 0,20 -5,5 -20,0 -5,-5"/>
+        <polygon points="0,-20 5,-5 20,0 5,5 0,20 -5,5 -20,0 -5,-5" transform="rotate(45)"/>
+      </g>
+      <!-- Horizontal rule framing -->
+      <line x1="0"  y1="25" x2="18" y2="25" stroke="currentColor" stroke-width="0.6" opacity="0.5"/>
+      <line x1="62" y1="25" x2="80" y2="25" stroke="currentColor" stroke-width="0.6" opacity="0.5"/>
+    </svg>
+
+    <p class="cover-eyebrow">بسم الله الرحمن الرحيم</p>
+
+    <h1 class="couple" id="couple">
+      <span class="couple-pretitle" id="cover-pretitle">قراية فاتحة</span>
+      <span class="couple-names">
+        <span class="couple-name" id="couple-groom">محمد</span>
+        <span class="couple-amp" aria-hidden="true">﴾</span>
+        <span class="couple-and">و</span>
+        <span class="couple-amp" aria-hidden="true">﴿</span>
+        <span class="couple-name" id="couple-bride">آية</span>
+      </span>
+    </h1>
+
+    <p class="cover-date" id="cover-date">السبت ١٤ نوفمبر ٢٠٢٦</p>
+
+    <button type="button" class="cover-cta" id="open-btn" aria-controls="verse details venue blessing guestbook">
+      <span>افتح الدعوة</span>
+      <span class="cover-cta-arrow" aria-hidden="true">←</span>
+    </button>
+  </div>
+</section>
+
+<!-- Everything below the cover is hidden on first paint; revealed by cover.js -->
+<main class="scroll" id="scroll" aria-hidden="true">
+
+  <!-- ─────────────────────────  Verse  ─────────────────────────
+       Shown only if CONFIG.quote is a non-empty string. -->
+  <section class="section verse" id="verse" aria-labelledby="verse-text" hidden>
+    <svg class="verse-flourish" viewBox="0 0 160 20" aria-hidden="true">
+      <path d="M10 10 Q 40 2 80 10 T 150 10" fill="none" stroke="currentColor" stroke-width="0.6"/>
+      <circle cx="80" cy="10" r="2" fill="currentColor"/>
+    </svg>
+    <p class="verse-body" id="verse-text">—</p>
+    <p class="verse-source" id="verse-source">—</p>
+  </section>
+
+  <!-- ─────────────────────────  Details  ───────────────────────── -->
+  <section class="section details" id="details" aria-labelledby="details-title">
+    <p class="eyebrow">موعد القراية</p>
+    <h2 class="section-title" id="details-title">مع خالص الدعاء بالتوفيق</h2>
+
+    <div class="date-pane">
+      <span class="date-day" id="date-day">١٤</span>
+      <span class="date-month" id="date-month">نوفمبر ٢٠٢٦</span>
+      <span class="date-dow"   id="date-dow">السبت</span>
+    </div>
+
+    <p class="time-line">
+      <span class="time-cell">
+        <span class="time-label">الاستقبال</span>
+        <span class="time-value" id="welcome-time">٦:٣٠ م</span>
+      </span>
+      <span class="time-sep" aria-hidden="true"></span>
+      <span class="time-cell">
+        <span class="time-label">القراية</span>
+        <span class="time-value" id="reception-time">٧:٠٠ م</span>
+      </span>
+    </p>
+
+    <div class="countdown-grid" id="countdown" aria-live="polite">
+      <div class="countdown-cell"><span class="countdown-num" data-unit="days">--</span><span class="countdown-label">يوم</span></div>
+      <div class="countdown-cell"><span class="countdown-num" data-unit="hours">--</span><span class="countdown-label">ساعة</span></div>
+      <div class="countdown-cell"><span class="countdown-num" data-unit="minutes">--</span><span class="countdown-label">دقيقة</span></div>
+      <div class="countdown-cell"><span class="countdown-num" data-unit="seconds">--</span><span class="countdown-label">ثانية</span></div>
+    </div>
+
+    <a id="ics-link" class="btn-ghost" href="#" download="qiraya.ics">أضف إلى التقويم</a>
+  </section>
+
+  <!-- ─────────────────────────  Venue  ───────────────────────── -->
+  <section class="section venue" id="venue" aria-labelledby="venue-title">
+    <p class="eyebrow">المكان</p>
+    <h2 class="section-title" id="venue-title">نسعد بحضوركم عندنا</h2>
+
+    <div class="venue-text">
+      <p class="venue-name" id="venue-name">—</p>
+      <p class="venue-address" id="venue-address">—</p>
+    </div>
+
+    <div class="venue-map" id="venue-map">
+      <iframe
+        id="venue-iframe"
+        title="موقع المكان على خرائط جوجل"
+        src=""
+        loading="lazy"
+        referrerpolicy="no-referrer-when-downgrade"
+        allowfullscreen
+      ></iframe>
+    </div>
+
+    <a
+      id="venue-open"
+      class="btn-ghost"
+      href="#"
+      target="_blank"
+      rel="noopener noreferrer"
+    >افتح في الخرائط</a>
+  </section>
+
+  <!-- ─────────────────────────  Blessing  ───────────────────────── -->
+  <section class="section blessing" id="blessing" aria-labelledby="blessing-title">
+    <p class="eyebrow">كلمة الأهل</p>
+    <h2 class="section-title visually-hidden" id="blessing-title">كلمة الأهل</h2>
+    <p class="blessing-body" id="blessing-body">
+      يتشرف أهل العروسين بدعوة حضراتكم لقراية الفاتحة بإذن الله وبركته.
+    </p>
+    <div class="rule" aria-hidden="true"></div>
+  </section>
+
+  <!-- ─────────────────────────  Guestbook  ───────────────────────── -->
+  <section class="section guestbook" id="guestbook" aria-labelledby="guestbook-title">
+    <p class="eyebrow">دعوة بالخير</p>
+    <h2 class="section-title" id="guestbook-title">اكتب دعوة لـ العروسين</h2>
+
+    <form id="guestbook-form" class="gb-form" autocomplete="on">
+      <label class="field">
+        <span class="field-label">اسمك</span>
+        <input id="gb-name" type="text" required maxlength="60" dir="auto" />
+      </label>
+      <label class="field">
+        <span class="field-label">كلمة طيبة</span>
+        <textarea id="gb-message" rows="3" required maxlength="400" dir="auto"></textarea>
+      </label>
+      <button type="submit" class="btn-primary">أرسل الدعوة</button>
+      <p id="gb-status" class="gb-status" role="status" aria-live="polite"></p>
+    </form>
+
+    <ul id="gb-list" class="gb-list" aria-label="رسائل الدعاء"></ul>
+  </section>
+
+  <footer class="footer">
+    <p class="footer-mark">— بإذن الله —</p>
+  </footer>
+</main>
+
+<audio id="bg-audio" loop preload="metadata"></audio>
+<button type="button" id="music-toggle" class="music-toggle" hidden aria-label="إيقاف الموسيقى">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5z" fill="currentColor"/><path d="M15 9c1.5 1.5 1.5 4.5 0 6" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+</button>
+
+<script type="module" src="js/bootstrap.js?v=1"></script>
+</body>
+</html>
