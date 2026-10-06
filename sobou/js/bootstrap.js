@@ -20,17 +20,21 @@ const RESERVED_SEG = new Set([
   "admin", "create", "index.html", "admin.html", "create.html",
 ]);
 
+// Same slug fence as qiraya/engagement — blocks `?for=../admin` style
+// path traversal before the slug reaches fetch(`/data/${slug}.json`).
+const _SAFE_SLUG_RE = /^[a-z0-9][a-z0-9-]{0,38}[a-z0-9]$/;
+
 function resolveSlug() {
   const params = new URLSearchParams(location.search);
-  const forParam = params.get("for");
-  if (forParam) return forParam.toLowerCase().trim();
+  const forParam = (params.get("for") || "").toLowerCase().trim();
+  if (forParam) return _SAFE_SLUG_RE.test(forParam) ? forParam : null;
   const segs = location.pathname
     .replace(/^\/+|\/+$/g, "")
     .split("/")
     .map((s) => s.toLowerCase())
     .filter(Boolean);
   for (const seg of segs) {
-    if (!RESERVED_SEG.has(seg) && !seg.includes(".")) return seg;
+    if (!RESERVED_SEG.has(seg) && _SAFE_SLUG_RE.test(seg)) return seg;
   }
   return null;
 }

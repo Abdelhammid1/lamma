@@ -21,11 +21,17 @@ import { doc, getDoc } from
 const RESERVED_LABELS  = new Set(["admin", "www", "api", "lamma"]);
 
 
+// Slug shape must match what the backend enforces at create time
+// (lamma-backend/slugs.py). Blocks path traversal through
+// `?for=../admin` or similar — a slug that passes this fence is safe
+// to interpolate into fetch(`/data/${slug}.json`).
+const _SAFE_SLUG_RE = /^[a-z0-9][a-z0-9-]{0,38}[a-z0-9]$/;
+
 export function getSlug() {
   // 1. Query string (dev / preview / explicit override)
   const params = new URLSearchParams(location.search);
-  const queryFor = params.get("for");
-  if (queryFor) return queryFor.toLowerCase().trim();
+  const queryFor = (params.get("for") || "").toLowerCase().trim();
+  if (queryFor) return _SAFE_SLUG_RE.test(queryFor) ? queryFor : null;
 
   // 2. Path — walk segments so /wedding/sara resolves to "sara".
   const segs = location.pathname
@@ -35,16 +41,16 @@ export function getSlug() {
     .filter(Boolean);
 
   for (const seg of segs) {
-    if (!seg || seg.includes(".")) continue;
-    if (RESERVED_SLUGS.has(seg))   continue;
+    if (RESERVED_SLUGS.has(seg)) continue;
+    if (!_SAFE_SLUG_RE.test(seg)) continue;
     return seg;
   }
 
   // 3. Subdomain (only when hosted under CONFIG.domain and not a reserved label)
   const host = location.hostname;
   if (host.endsWith("." + CONFIG.domain) && host !== CONFIG.domain) {
-    const label = host.split(".")[0];
-    if (label && !RESERVED_LABELS.has(label)) return label.toLowerCase();
+    const label = host.split(".")[0].toLowerCase();
+    if (label && !RESERVED_LABELS.has(label) && _SAFE_SLUG_RE.test(label)) return label;
   }
 
   return null;

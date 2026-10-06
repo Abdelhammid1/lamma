@@ -22,17 +22,25 @@ const RESERVED_SEG = new Set([
   "admin", "create", "index.html", "admin.html", "create.html",
 ]);
 
+// Slug shape must match what the backend enforces at create time:
+// lowercase letters / digits / hyphens, 2–40 chars, and must not start
+// or end with a hyphen. Blocking anything else here closes a path-
+// traversal vector where a hostile `?for=../admin/settings` would make
+// the subsequent fetch(`/data/${slug}.json`) resolve to a different
+// location after browser URL normalization.
+const _SAFE_SLUG_RE = /^[a-z0-9][a-z0-9-]{0,38}[a-z0-9]$/;
+
 function resolveSlug() {
   const params = new URLSearchParams(location.search);
-  const forParam = params.get("for");
-  if (forParam) return forParam.toLowerCase().trim();
+  const forParam = (params.get("for") || "").toLowerCase().trim();
+  if (forParam) return _SAFE_SLUG_RE.test(forParam) ? forParam : null;
   const segs = location.pathname
     .replace(/^\/+|\/+$/g, "")
     .split("/")
     .map((s) => s.toLowerCase())
     .filter(Boolean);
   for (const seg of segs) {
-    if (!RESERVED_SEG.has(seg) && !seg.includes(".")) return seg;
+    if (!RESERVED_SEG.has(seg) && _SAFE_SLUG_RE.test(seg)) return seg;
   }
   return null;
 }
