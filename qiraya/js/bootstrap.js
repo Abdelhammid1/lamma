@@ -86,7 +86,64 @@ async function loadRenderers() {
   }
 }
 
+/* ================== Preview-mode support ==================
+   Lets /create's iframe show the live template as the host types. The
+   create form sends postMessage({type:"lamma:preview", cfg}); we encode
+   that into ?data=<base64> and location.replace so the whole page re-
+   renders with the new config (simpler + more correct than re-running
+   every renderer module). On boot, if ?preview=1, we decode ?data=,
+   merge into CONFIG, collapse the cover (the Open gesture would never
+   fire inside the iframe), and mark sections visible immediately. */
+
+function isPreview() {
+  return new URLSearchParams(location.search).get("preview") === "1";
+}
+function decodePreviewData() {
+  const raw = new URLSearchParams(location.search).get("data");
+  if (!raw) return null;
+  try { return JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(raw))))); }
+  catch (_) { return null; }
+}
+function encodePreviewData(cfg) {
+  return encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(cfg || {})))));
+}
+
+if (isPreview()) {
+  let lastEncoded = new URLSearchParams(location.search).get("data") || "";
+  let reloadTimer = null;
+  window.addEventListener("message", (e) => {
+    if (!e.data || e.data.type !== "lamma:preview") return;
+    let enc;
+    try { enc = encodePreviewData(e.data.cfg); } catch (_) { return; }
+    if (enc === lastEncoded) return;
+    lastEncoded = enc;
+    clearTimeout(reloadTimer);
+    reloadTimer = setTimeout(() => {
+      const url = new URL(location.href);
+      url.searchParams.set("preview", "1");
+      url.searchParams.set("data", enc);
+      location.replace(url.toString());
+    }, 350);
+  });
+}
+
 (async function boot() {
+  if (isPreview()) {
+    const data = decodePreviewData();
+    if (data) mergeInvitation(data);
+    await loadRenderers();
+    // Collapse the cover and reveal every section so the iframe shows
+    // the full invitation body instead of 100vh of blank cover space.
+    document.body.classList.add("opened");
+    const cover = document.getElementById("cover");
+    if (cover) cover.style.display = "none";
+    for (const s of document.querySelectorAll(".section, .reveal")) {
+      s.classList.add("in-view");
+      s.classList.add("is-visible");
+    }
+    return;
+  }
+
   const slug = resolveSlug();
   if (slug) {
     let loaded = false;

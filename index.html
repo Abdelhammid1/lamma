@@ -156,6 +156,139 @@
     </article>
   </div>
 
+  <!-- ======== Template gallery ========
+       Lets a visitor pick a specific template style instead of being
+       routed to the default (wedding → pink/ornate, birthday → playful).
+       Each tile links straight into /create.html?type=<id> and offers
+       a "Preview" link that opens the template demo in a new tab. -->
+  <section class="w-full mt-12" aria-labelledby="templates-title">
+    <div class="flex flex-col items-center text-center mb-5">
+      <span class="font-label text-[10px] font-semibold uppercase tracking-widest text-secondary">
+        Choose a Template
+      </span>
+      <h2 id="templates-title" class="font-display text-[22px] text-primary mt-1">
+        Pick the style that fits your day
+      </h2>
+      <p class="font-arabic text-[13px] text-on-surface-variant mt-0.5" dir="rtl">
+        اختر القالب الذي يناسب مناسبتك
+      </p>
+    </div>
+
+    <div class="grid grid-cols-2 gap-3">
+      <!-- Wedding — Classic (pink + ornate) -->
+      <div class="bg-surface-container-low rounded-lg p-3 flex flex-col items-stretch text-center shadow-sm">
+        <div class="rounded-md h-24 flex items-center justify-center mb-2"
+             style="background:linear-gradient(135deg,#f7d9e1,#efc8d2 60%,#a13b58);">
+          <span class="font-display italic text-white text-[18px] drop-shadow">A &amp; S</span>
+        </div>
+        <h3 class="font-display text-[15px] text-primary leading-tight">Wedding · Classic</h3>
+        <p class="text-[11px] text-on-surface-variant mt-0.5 mb-2">Pink &amp; gold, floral</p>
+        <div class="flex gap-1.5 mt-auto">
+          <a href="/wedding/" target="_blank"
+             class="flex-1 py-1.5 rounded border border-outline text-[11px] font-label font-semibold text-on-surface-variant">Preview</a>
+          <a href="/create.html?type=wedding"
+             class="flex-1 py-1.5 rounded bg-primary-container text-[11px] font-label font-semibold text-secondary-fixed">Create</a>
+        </div>
+      </div>
+
+      <!-- Wedding — Noir (new) -->
+      <div class="bg-surface-container-low rounded-lg p-3 flex flex-col items-stretch text-center shadow-sm">
+        <div class="rounded-md h-24 flex items-center justify-center mb-2"
+             style="background:#f5f1ea; border:1px solid #d8d2c4;">
+          <span class="font-display italic text-[18px]" style="color:#1a1a1a;">A <span style="color:#a84a3a;">&amp;</span> S</span>
+        </div>
+        <h3 class="font-display text-[15px] text-primary leading-tight">Wedding · Noir</h3>
+        <p class="text-[11px] text-on-surface-variant mt-0.5 mb-2">Minimalist cream &amp; black</p>
+        <div class="flex gap-1.5 mt-auto">
+          <a href="/wedding-noir/" target="_blank"
+             class="flex-1 py-1.5 rounded border border-outline text-[11px] font-label font-semibold text-on-surface-variant">Preview</a>
+          <a href="/create.html?type=wedding-noir"
+             class="flex-1 py-1.5 rounded bg-primary-container text-[11px] font-label font-semibold text-secondary-fixed">Create</a>
+        </div>
+      </div>
+
+      <!-- Birthday — Classic (playful) -->
+      <div class="bg-surface-container-low rounded-lg p-3 flex flex-col items-stretch text-center shadow-sm">
+        <div class="rounded-md h-24 flex items-center justify-center mb-2"
+             style="background:linear-gradient(135deg,#fce4e4,#f5c4c9);">
+          <span class="text-[26px]">🎂</span>
+        </div>
+        <h3 class="font-display text-[15px] text-primary leading-tight">Birthday · Classic</h3>
+        <p class="text-[11px] text-on-surface-variant mt-0.5 mb-2">Playful with quiz &amp; letter</p>
+        <div class="flex gap-1.5 mt-auto">
+          <a href="/birthday.html" target="_blank"
+             class="flex-1 py-1.5 rounded border border-outline text-[11px] font-label font-semibold text-on-surface-variant">Preview</a>
+          <a href="/create.html?type=birthday"
+             class="flex-1 py-1.5 rounded bg-primary-container text-[11px] font-label font-semibold text-secondary-fixed">Create</a>
+        </div>
+      </div>
+
+      <!-- Birthday — Elegant (new) -->
+      <div class="bg-surface-container-low rounded-lg p-3 flex flex-col items-stretch text-center shadow-sm">
+        <div class="rounded-md h-24 flex items-center justify-center mb-2"
+             style="background:#f3eee6; border:1px solid #d4ccbe;">
+          <span class="font-display italic text-[22px]" style="color:#1c1a17;">Layla</span>
+        </div>
+        <h3 class="font-display text-[15px] text-primary leading-tight">Birthday · Elegant</h3>
+        <p class="text-[11px] text-on-surface-variant mt-0.5 mb-2">Formal, bone &amp; brass</p>
+        <div class="flex gap-1.5 mt-auto">
+          <a href="/birthday-elegant/" target="_blank"
+             class="flex-1 py-1.5 rounded border border-outline text-[11px] font-label font-semibold text-on-surface-variant">Preview</a>
+          <a href="/create.html?type=birthday-elegant"
+             class="flex-1 py-1.5 rounded bg-primary-container text-[11px] font-label font-semibold text-secondary-fixed">Create</a>
+        </div>
+      </div>
+
+      <!-- Engagement -->
+      <div class="bg-surface-container-low rounded-lg p-3 flex flex-col items-stretch text-center shadow-sm">
+        <div class="rounded-md h-24 flex items-center justify-center mb-2"
+             style="background:linear-gradient(135deg,#f5ead6,#efd8a8);">
+          <span class="font-display italic text-[20px]" style="color:#7a5a2a;">Engagement</span>
+        </div>
+        <h3 class="font-display text-[15px] text-primary leading-tight">Engagement</h3>
+        <p class="text-[11px] text-on-surface-variant mt-0.5 mb-2">Ivory &amp; rose gold</p>
+        <div class="flex gap-1.5 mt-auto">
+          <a href="/engagement/" target="_blank"
+             class="flex-1 py-1.5 rounded border border-outline text-[11px] font-label font-semibold text-on-surface-variant">Preview</a>
+          <a href="/create.html?type=engagement"
+             class="flex-1 py-1.5 rounded bg-primary-container text-[11px] font-label font-semibold text-secondary-fixed">Create</a>
+        </div>
+      </div>
+
+      <!-- قراية فاتحة -->
+      <div class="bg-surface-container-low rounded-lg p-3 flex flex-col items-stretch text-center shadow-sm">
+        <div class="rounded-md h-24 flex items-center justify-center mb-2"
+             style="background:#fbf7ee; border:1px solid #d7cfb8;" dir="rtl">
+          <span class="font-arabic font-semibold text-[18px]" style="color:#1e3f30;">قراية فاتحة</span>
+        </div>
+        <h3 class="font-display text-[15px] text-primary leading-tight">قراية فاتحة</h3>
+        <p class="text-[11px] text-on-surface-variant mt-0.5 mb-2">Ivory &amp; forest green</p>
+        <div class="flex gap-1.5 mt-auto">
+          <a href="/qiraya/" target="_blank"
+             class="flex-1 py-1.5 rounded border border-outline text-[11px] font-label font-semibold text-on-surface-variant">Preview</a>
+          <a href="/create.html?type=qiraya"
+             class="flex-1 py-1.5 rounded bg-primary-container text-[11px] font-label font-semibold text-secondary-fixed">Create</a>
+        </div>
+      </div>
+
+      <!-- سبوع -->
+      <div class="bg-surface-container-low rounded-lg p-3 flex flex-col items-stretch text-center shadow-sm">
+        <div class="rounded-md h-24 flex items-center justify-center mb-2"
+             style="background:linear-gradient(135deg,#fff6e3,#fde4b8);" dir="rtl">
+          <span class="font-arabic font-semibold text-[20px]" style="color:#8a5a1a;">سبوع</span>
+        </div>
+        <h3 class="font-display text-[15px] text-primary leading-tight">سبوع</h3>
+        <p class="text-[11px] text-on-surface-variant mt-0.5 mb-2">Cream &amp; candle yellow</p>
+        <div class="flex gap-1.5 mt-auto">
+          <a href="/sobou/" target="_blank"
+             class="flex-1 py-1.5 rounded border border-outline text-[11px] font-label font-semibold text-on-surface-variant">Preview</a>
+          <a href="/create.html?type=sobou"
+             class="flex-1 py-1.5 rounded bg-primary-container text-[11px] font-label font-semibold text-secondary-fixed">Create</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- Trust footer -->
   <footer class="max-w-md mt-10 mb-2 flex flex-col items-center">
     <div class="relative w-full bg-surface-container-low rounded-xl p-5 flex flex-col items-center text-center shadow-sm">

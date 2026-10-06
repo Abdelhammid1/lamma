@@ -154,6 +154,18 @@ if (isPreview()) {
     const data = decodePreviewData();
     if (data) mergeInvitation(data);
     await loadRenderers();
+    // Auto-open the invitation in preview — the Open gesture inside an
+    // iframe would be lost on every form change (location.replace resets
+    // the opened state), so the host would never see their gallery/
+    // venue/RSVP/guestbook. Also mark sections visible so reveal.js
+    // doesn't leave them at opacity:0.
+    document.body.classList.add("opened");
+    const cover = document.getElementById("cover");
+    if (cover) cover.style.display = "none";
+    for (const s of document.querySelectorAll(".section, .reveal")) {
+      s.classList.add("in-view");
+      s.classList.add("is-visible");
+    }
     return;
   }
 

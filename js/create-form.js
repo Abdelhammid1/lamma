@@ -104,6 +104,10 @@ function applyType(t) {
   const usesCoupleForm = COUPLE_TYPES.has(t);
   $("birthday-fields").hidden = !!usesCoupleForm;
   $("wedding-fields").hidden  = !usesCoupleForm;
+  // The elegant birthday variant has no quiz — hide that group so the
+  // host isn't asked to fill questions that will never be shown.
+  const quizGroup = $("quiz-group");
+  if (quizGroup) quizGroup.hidden = (t === "birthday-elegant");
   const title = $("cx-title");
   if (title) title.textContent = TYPE_TITLE[t];
   $("preview-frame").src = TYPE_PREVIEW[t];

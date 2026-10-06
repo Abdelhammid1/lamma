@@ -287,6 +287,25 @@ if (isPreview()) {
     const data = decodePreviewData();
     if (data) mergeInvitation(data);
     renderAll();
+    // In preview mode we auto-open the invitation so the create form's
+    // iframe shows the full page — otherwise the user never sees the
+    // letter / memories / video they're typing (the Open button is
+    // behind a user gesture, and every form change does location.replace
+    // which would reset the "opened" state anyway).
+    document.body.classList.add("opened");
+    const inv = document.getElementById("invitation");
+    if (inv) inv.setAttribute("aria-hidden", "false");
+    // Collapse the cover entirely — just fading it to opacity:0 still
+    // leaves 100vh of blank space at the top of the iframe, which looks
+    // like the preview is broken.
+    const cover = document.getElementById("cover");
+    if (cover) cover.style.display = "none";
+    // Mark every section in-view synchronously so the fade-up reveal
+    // doesn't leave sections invisible when the preview re-renders.
+    // (requestAnimationFrame doesn't fire reliably for background /
+    //  off-screen iframes, which the create form's preview sometimes is
+    //  while the host is scrolling the form itself.)
+    for (const s of document.querySelectorAll(".section")) s.classList.add("in-view");
     return;
   }
 

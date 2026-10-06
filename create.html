@@ -44,10 +44,14 @@
 
       <!-- ─────────── BIRTHDAY FIELDS ─────────── -->
       <div id="birthday-fields">
-        <h2 class="cx-section">Quiz</h2>
-        <p class="cx-hint">Wrong answers show a playful modal. Correct answers stay selected.</p>
-        <div id="quiz-builder"></div>
-        <button type="button" id="add-question-btn" class="cx-btn cx-btn-ghost">+ Add question</button>
+        <!-- Quiz is only used by the classic birthday template; the
+             elegant variant is a formal single-scroll with no quiz. -->
+        <div id="quiz-group">
+          <h2 class="cx-section">Quiz</h2>
+          <p class="cx-hint">Wrong answers show a playful modal. Correct answers stay selected.</p>
+          <div id="quiz-builder"></div>
+          <button type="button" id="add-question-btn" class="cx-btn cx-btn-ghost">+ Add question</button>
+        </div>
 
         <h2 class="cx-section">Memories (photos)</h2>
         <p class="cx-hint">Up to 6 photos. Warned above 25 MB, refused above 35 MB each.</p>

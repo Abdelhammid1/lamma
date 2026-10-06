@@ -156,6 +156,23 @@ if (isPreview()) {
     const data = decodePreviewData();
     if (data) mergeInvitation(data);
     await loadRenderers();
+    // Auto-open the invitation in preview mode so the create form's
+    // iframe shows the full page content, not just the cover. The Open
+    // button requires a user gesture and every form change triggers a
+    // location.replace that would reset the "opened" state, so the
+    // user otherwise never sees their photo gallery / venue / RSVP /
+    // guestbook. All sections are also marked in-view so the fade-up
+    // reveal doesn't hide them when preview re-renders.
+    document.body.classList.add("opened");
+    // Collapse the cover so the iframe doesn't open on 100vh of blank
+    // space at the top. Fading it to opacity:0 still reserves its space.
+    const cover = document.getElementById("cover");
+    if (cover) cover.style.display = "none";
+    // Synchronous — rAF is unreliable for off-screen / background iframes.
+    for (const s of document.querySelectorAll(".section, .reveal")) {
+      s.classList.add("in-view");
+      s.classList.add("is-visible");
+    }
     return;
   }
 
