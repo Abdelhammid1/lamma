@@ -164,10 +164,17 @@ if (isPreview()) {
     // guestbook. All sections are also marked in-view so the fade-up
     // reveal doesn't hide them when preview re-renders.
     document.body.classList.add("opened");
-    // Collapse the cover so the iframe doesn't open on 100vh of blank
-    // space at the top. Fading it to opacity:0 still reserves its space.
+    // Shrink the cover to its content height and hide the Open button
+    // — keeps the couple names + date visible at the top of the preview
+    // without the 100vh of blank space.
     const cover = document.getElementById("cover");
-    if (cover) cover.style.display = "none";
+    if (cover) {
+      cover.style.minHeight = "auto";
+      cover.style.paddingTop = "48px";
+      cover.style.paddingBottom = "32px";
+    }
+    const openBtn = document.getElementById("open-btn");
+    if (openBtn) openBtn.style.display = "none";
     // Synchronous — rAF is unreliable for off-screen / background iframes.
     for (const s of document.querySelectorAll(".section, .reveal")) {
       s.classList.add("in-view");

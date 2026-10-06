@@ -137,8 +137,17 @@ if (isPreview()) {
     if (data) mergeInvitation(data);
     await loadRenderers();
     document.body.classList.add("opened");
+    // Shrink the cover to its content height (not 100vh) and hide the
+    // Open button. The cover holds the couple names + date — hiding
+    // the cover entirely would strip those from the preview.
     const cover = document.getElementById("cover");
-    if (cover) cover.style.display = "none";
+    if (cover) {
+      cover.style.minHeight = "auto";
+      cover.style.paddingTop = "48px";
+      cover.style.paddingBottom = "32px";
+    }
+    const openBtn = document.getElementById("open-btn");
+    if (openBtn) openBtn.style.display = "none";
     // <main class="scroll"> stays opacity:0 until cover.js's Open
     // handler adds .revealed. In preview the Open handler never fires.
     const scrollEl = document.getElementById("scroll");

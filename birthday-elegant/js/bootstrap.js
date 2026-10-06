@@ -295,11 +295,17 @@ if (isPreview()) {
     document.body.classList.add("opened");
     const inv = document.getElementById("invitation");
     if (inv) inv.setAttribute("aria-hidden", "false");
-    // Collapse the cover entirely — just fading it to opacity:0 still
-    // leaves 100vh of blank space at the top of the iframe, which looks
-    // like the preview is broken.
+    // Shrink the cover to its content height and hide the Open button.
+    // The cover holds the host's name — hiding it entirely would strip
+    // the one field they care most about from the preview.
     const cover = document.getElementById("cover");
-    if (cover) cover.style.display = "none";
+    if (cover) {
+      cover.style.minHeight = "auto";
+      cover.style.paddingTop = "48px";
+      cover.style.paddingBottom = "32px";
+    }
+    const openBtn = document.getElementById("open-btn");
+    if (openBtn) openBtn.style.display = "none";
     // Mark every section in-view synchronously so the fade-up reveal
     // doesn't leave sections invisible when the preview re-renders.
     // (requestAnimationFrame doesn't fire reliably for background /

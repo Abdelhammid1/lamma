@@ -160,8 +160,17 @@ if (isPreview()) {
     // venue/RSVP/guestbook. Also mark sections visible so reveal.js
     // doesn't leave them at opacity:0.
     document.body.classList.add("opened");
+    // Shrink the cover to its content height (not 100vh) and hide the
+    // Open button. Keeps the couple names + date visible at the top of
+    // the preview so the host sees everything they're typing.
     const cover = document.getElementById("cover");
-    if (cover) cover.style.display = "none";
+    if (cover) {
+      cover.style.minHeight = "auto";
+      cover.style.paddingTop = "48px";
+      cover.style.paddingBottom = "32px";
+    }
+    const openBtn = document.getElementById("open-btn");
+    if (openBtn) openBtn.style.display = "none";
     for (const s of document.querySelectorAll(".section, .reveal")) {
       s.classList.add("in-view");
       s.classList.add("is-visible");

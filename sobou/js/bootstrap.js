@@ -120,12 +120,20 @@ if (isPreview()) {
     if (data) mergeInvitation(data);
     await loadRenderers();
     document.body.classList.add("opened");
+    // Shrink the cover to its content height (not 100vh) and hide the
+    // Open button — the cover holds the baby's name + parents + date,
+    // which the host wants to see in the preview. Fully hiding the
+    // cover would strip those fields from the preview entirely.
     const cover = document.getElementById("cover");
-    if (cover) cover.style.display = "none";
-    // The invitation body is <main class="scroll"> which stays
-    // opacity:0 until cover.js adds .revealed. In preview the Open
-    // handler never fires, so we add it here or the preview shows a
-    // blank, decorations-only iframe.
+    if (cover) {
+      cover.style.minHeight = "auto";
+      cover.style.paddingTop = "48px";
+      cover.style.paddingBottom = "32px";
+    }
+    const openBtn = document.getElementById("open-btn");
+    if (openBtn) openBtn.style.display = "none";
+    // <main class="scroll"> stays opacity:0 until cover.js adds
+    // .revealed. In preview the Open handler never fires.
     const scrollEl = document.getElementById("scroll");
     if (scrollEl) {
       scrollEl.classList.add("revealed");
