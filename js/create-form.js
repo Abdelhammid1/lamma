@@ -121,6 +121,17 @@ function applyType(t) {
     groomLbl.textContent = "Groom name";
     brideLbl.textContent = "Bride name";
   }
+  // The top "Name (or couple)" field is only read by birthday variants
+  // (CONFIG.name) and by slugify() as the auto-slug seed. Couple
+  // templates render from Groom + Bride instead, so showing the field
+  // on top misleads hosts into typing the actual names there — which
+  // the preview then ignores. Hide it for couple types and keep it
+  // auto-synced from groom+bride so the slug + publish gate still work.
+  // Use style.display (not .hidden) — .cx-field has display:flex which
+  // overrides the [hidden] user-agent rule.
+  const nameWrap = $("name-field-wrapper");
+  if (nameWrap) nameWrap.style.display = usesCoupleForm ? "none" : "";
+  if (usesCoupleForm) syncNameFromCouple();
   const title = $("cx-title");
   if (title) title.textContent = TYPE_TITLE[t];
   $("preview-frame").src = TYPE_PREVIEW[t];
@@ -154,6 +165,25 @@ $("f-name").addEventListener("input", (e) => {
   schedulePreview();
 });
 $("f-slug").addEventListener("keydown", () => { $("f-slug").dataset.userEdited = "1"; });
+
+// Keep the hidden-for-couples f-name in sync with the Groom + Bride
+// fields so the slug auto-generation and the publish gate still have
+// a non-empty value to work with. Dispatched as an input event so the
+// slug input listener and updatePublishGate() pick it up.
+function syncNameFromCouple() {
+  const g = ($("f-groom").value || "").trim();
+  const b = ($("f-bride").value || "").trim();
+  const combined =
+    state.type === "sobou"       ? g                 // سبوع: baby's name only
+    : (g && b)                   ? `${g} & ${b}`      // Ahmed & Sara
+    : (g || b || "");
+  const nameEl = $("f-name");
+  if (nameEl.value === combined) return;
+  nameEl.value = combined;
+  nameEl.dispatchEvent(new Event("input", { bubbles: true }));
+}
+$("f-groom").addEventListener("input", () => { if (COUPLE_TYPES.has(state.type)) syncNameFromCouple(); });
+$("f-bride").addEventListener("input", () => { if (COUPLE_TYPES.has(state.type)) syncNameFromCouple(); });
 
 function slugify(s) {
   return (s || "").toLowerCase().trim()

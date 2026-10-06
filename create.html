@@ -30,7 +30,13 @@
       <p class="cx-lede">Fill in your details. The preview updates as you type. When you're happy, enter your activation code and publish.</p>
 
       <!-- Basics: shared -->
-      <div class="cx-field">
+      <!-- The top name field is only used by the birthday variants
+           (CONFIG.name) and by slugify() as the auto-slug seed. Couple
+           templates read from the Groom + Bride fields below instead,
+           so applyType() in create-form.js hides this wrapper for
+           every COUPLE_TYPES value and auto-fills f-name from groom+
+           bride so the Publish gate + slug seeding still work. -->
+      <div class="cx-field" id="name-field-wrapper">
         <label for="f-name">Name (or couple)</label>
         <input id="f-name" type="text" autocomplete="off" dir="auto" />
         <span class="cx-hint">e.g. "Medo" or "Ahmed & Sara"</span>
@@ -215,6 +221,6 @@
 
 </main>
 
-<script type="module" src="js/create-form.js?v=16"></script>
+<script type="module" src="js/create-form.js?v=18"></script>
 </body>
 </html>
