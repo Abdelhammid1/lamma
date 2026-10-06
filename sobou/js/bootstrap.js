@@ -122,6 +122,15 @@ if (isPreview()) {
     document.body.classList.add("opened");
     const cover = document.getElementById("cover");
     if (cover) cover.style.display = "none";
+    // The invitation body is <main class="scroll"> which stays
+    // opacity:0 until cover.js adds .revealed. In preview the Open
+    // handler never fires, so we add it here or the preview shows a
+    // blank, decorations-only iframe.
+    const scrollEl = document.getElementById("scroll");
+    if (scrollEl) {
+      scrollEl.classList.add("revealed");
+      scrollEl.setAttribute("aria-hidden", "false");
+    }
     for (const s of document.querySelectorAll(".section, .reveal")) {
       s.classList.add("in-view");
       s.classList.add("is-visible");
