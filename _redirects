@@ -16,7 +16,10 @@
 /admin/                 /admin.html            200
 /wedding/admin          /admin.html            200
 /create                 /create.html           200
-/wedding                /wedding/index.html    200
-/wedding/               /wedding/index.html    200
-/wedding/*              /wedding/index.html    200
-/*                      /birthday.html         200
+/wedding                /wedding/index.html       200
+/wedding/               /wedding/index.html       200
+/wedding/*              /wedding/index.html       200
+/engagement             /engagement/index.html    200
+/engagement/            /engagement/index.html    200
+/engagement/*           /engagement/index.html    200
+/*                      /birthday.html            200

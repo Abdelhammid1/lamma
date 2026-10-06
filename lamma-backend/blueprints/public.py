@@ -24,7 +24,7 @@ from uploads import UploadError, stage_upload, total_bytes_for_event
 bp = Blueprint("public_api", __name__, url_prefix="/api")
 
 
-VALID_EVENT_TYPES = frozenset({"birthday", "wedding", "invitation"})
+VALID_EVENT_TYPES = frozenset({"birthday", "wedding", "engagement", "invitation"})
 
 
 # --------------------------------------------------------------------------
@@ -285,4 +285,6 @@ def _build_public_url(event: Event) -> str:
     domain = current_app.config["PUBLIC_DOMAIN"]
     if event.event_type == "wedding":
         return f"https://lamma.{domain}/wedding/{event.slug}"
+    if event.event_type == "engagement":
+        return f"https://lamma.{domain}/engagement/{event.slug}"
     return f"https://lamma.{domain}/{event.slug}"

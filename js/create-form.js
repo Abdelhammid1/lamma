@@ -70,20 +70,31 @@ function guardFileSize(input, maxMb, label) {
 /* ================= Type toggle ================= */
 
 function applyType(t) {
-  if (t !== "birthday" && t !== "wedding") return;
+  if (!["birthday", "wedding", "engagement"].includes(t)) return;
   state.type = t;
   document.querySelectorAll('input[name="event_type"]').forEach((r) => {
     r.checked = (r.value === t);
   });
-  $("birthday-fields").hidden = t !== "birthday";
-  $("wedding-fields").hidden  = t !== "wedding";
+  // Engagement uses the same form fields as a wedding — same schema
+  // under the hood (couple/event/venue/dressCode/gallery/music) — but
+  // publishes as its own event_type so the backend routes to
+  // /engagement/<slug> and the engagement template picks it up.
+  const usesWeddingForm = t === "wedding" || t === "engagement";
+  $("birthday-fields").hidden = !!usesWeddingForm;
+  $("wedding-fields").hidden  = !usesWeddingForm;
   const title = $("cx-title");
   if (title) {
-    title.textContent = t === "wedding" ? "Create your wedding invitation"
-                                        : "Create your birthday invitation";
+    title.textContent = ({
+      birthday:   "Create your birthday invitation",
+      wedding:    "Create your wedding invitation",
+      engagement: "Create your engagement invitation",
+    })[t];
   }
-  const src = t === "wedding" ? "wedding/index.html?preview=1"
-                              : "birthday.html?preview=1";
+  const src = ({
+    birthday:   "birthday.html?preview=1",
+    wedding:    "wedding/index.html?preview=1",
+    engagement: "engagement/index.html?preview=1",
+  })[t];
   $("preview-frame").src = src;
   schedulePreview();
   updatePublishGate();
@@ -431,9 +442,17 @@ function collectFormForPreview() {
   const bride = $("f-bride").value.trim();
   return {
     slug:        $("f-slug").value,
-    event_type:  "wedding",
-    couple: { groom, bride, eventType: "Wedding",
-              groomLabel: "The Groom", brideLabel: "The Bride" },
+    // Preview iframe is picked by applyType(), but the payload we hand
+    // to the preview carries the actual event_type so renderers that
+    // branch on it (e.g. cover.js labels, event-info titles) see the
+    // right value for engagement vs wedding.
+    event_type:  state.type === "engagement" ? "engagement" : "wedding",
+    couple: {
+      groom, bride,
+      eventType: state.type === "engagement" ? "Engagement" : "Wedding",
+      groomLabel: "The Groom",
+      brideLabel: "The Bride",
+    },
     event: {
       datetimeIso:   $("f-event-datetime").value ? new Date($("f-event-datetime").value).toISOString() : "",
       welcomeTime:   $("f-welcome-time").value,
@@ -573,8 +592,13 @@ async function publish() {
 
     // 5. Success — backend returns the real public URL.
     // Fallback mirrors the backend's _build_public_url: wedding lives
-    // under /wedding/<slug>; birthday + anything else at /<slug>.
-    const slugPath = type === "wedding" ? `/wedding/${slug}` : `/${slug}`;
+    // under /wedding/<slug>, engagement under /engagement/<slug>,
+    // birthday + anything else at /<slug>.
+    const slugPath = type === "wedding"
+      ? `/wedding/${slug}`
+      : type === "engagement"
+      ? `/engagement/${slug}`
+      : `/${slug}`;
     const publicUrl = act.public_url || `${location.origin}${slugPath}`;
     $("success-url").href = publicUrl;
     $("success-url").textContent = publicUrl;
@@ -799,7 +823,7 @@ async function loadAdminEditFixtures() {
     alert("Couldn't load this invitation: " + (e?.data?.message || e.message));
     return;
   }
-  applyType(evt.event_type === "wedding" ? "wedding" : "birthday");
+  applyType(["wedding", "engagement"].includes(evt.event_type) ? evt.event_type : "birthday");
 
   // Slug + type become read-only in edit mode (changing them would
   // orphan the on-disk /data/<slug>.json and /media/<slug>/* trees).
@@ -884,7 +908,10 @@ async function publishAdminEdit() {
 /* ================= boot (last: all `let` bindings are alive) ================= */
 
 const initialType = new URLSearchParams(location.search).get("type");
-applyType(initialType === "wedding" ? "wedding" : "birthday");
+applyType(
+  ["wedding", "engagement", "birthday"].includes(initialType)
+    ? initialType : "birthday"
+);
 
 applyAdminChrome();
 loadAdminEditFixtures();

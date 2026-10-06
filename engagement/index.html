@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#f5e6e3" />
+<title>Engagement Invitation</title>
+
+<!-- Fonts: Cormorant for romantic display, Playfair for structured
+     headings, Jost for body. Pinyon Script carries the couple names
+     only — one script face is enough on a card. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Playfair+Display:ital,wght@0,500;0,600&family=Pinyon+Script&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<!-- Soft, breathing background with a quiet botanical ornament -->
+<div class="aura" aria-hidden="true">
+  <svg class="aura-botanical aura-botanical--tl" viewBox="0 0 160 200" preserveAspectRatio="xMidYMid slice">
+    <defs>
+      <linearGradient id="leaf-tl" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#c9a37a" stop-opacity="0.55"/>
+        <stop offset="1" stop-color="#c9a37a" stop-opacity="0.1"/>
+      </linearGradient>
+    </defs>
+    <!-- Hand-drawn stem with ovate leaves. Pure SVG so no 404 on an
+         image file; also crisp at any pixel density. -->
+    <path d="M20 10 Q 50 60 40 110 Q 30 160 55 190" fill="none" stroke="#c9a37a" stroke-width="0.8" opacity="0.5"/>
+    <ellipse cx="55" cy="40"  rx="18" ry="7"  fill="url(#leaf-tl)" transform="rotate(-28 55 40)" />
+    <ellipse cx="22" cy="70"  rx="20" ry="8"  fill="url(#leaf-tl)" transform="rotate( 32 22 70)" />
+    <ellipse cx="60" cy="105" rx="22" ry="8"  fill="url(#leaf-tl)" transform="rotate(-22 60 105)" />
+    <ellipse cx="26" cy="140" rx="18" ry="7"  fill="url(#leaf-tl)" transform="rotate( 42 26 140)" />
+    <ellipse cx="64" cy="172" rx="16" ry="6"  fill="url(#leaf-tl)" transform="rotate(-18 64 172)" />
+  </svg>
+  <svg class="aura-botanical aura-botanical--br" viewBox="0 0 160 200" preserveAspectRatio="xMidYMid slice">
+    <path d="M140 10 Q 110 60 120 110 Q 130 160 105 190" fill="none" stroke="#c9a37a" stroke-width="0.8" opacity="0.5"/>
+    <ellipse cx="105" cy="40"  rx="18" ry="7" fill="#c9a37a" opacity="0.3" transform="rotate(28  105 40)" />
+    <ellipse cx="138" cy="70"  rx="20" ry="8" fill="#c9a37a" opacity="0.3" transform="rotate(-32 138 70)" />
+    <ellipse cx="100" cy="105" rx="22" ry="8" fill="#c9a37a" opacity="0.3" transform="rotate(22  100 105)" />
+    <ellipse cx="134" cy="140" rx="18" ry="7" fill="#c9a37a" opacity="0.3" transform="rotate(-42 134 140)" />
+    <ellipse cx="96"  cy="172" rx="16" ry="6" fill="#c9a37a" opacity="0.3" transform="rotate(18  96 172)" />
+  </svg>
+</div>
+
+<!-- ─────────────────────────  Cover  ───────────────────────── -->
+<section class="cover" id="cover" aria-labelledby="couple-headline">
+  <div class="cover-card">
+    <!-- Interlocking rings — SVG so it renders instantly before any
+         image loads and stays crisp at any density. -->
+    <svg class="cover-emblem" viewBox="0 0 72 44" aria-hidden="true">
+      <circle cx="26" cy="22" r="16" fill="none" stroke="currentColor" stroke-width="1.2"/>
+      <circle cx="46" cy="22" r="16" fill="none" stroke="currentColor" stroke-width="1.2"/>
+    </svg>
+
+    <p class="cover-eyebrow" id="cover-eyebrow">You're Invited</p>
+
+    <!-- Decorative "You're invited to the engagement of" above the names.
+         Set by cover.js from CONFIG.couple.eventType. -->
+    <p class="cover-pretitle" id="cover-pretitle">to the engagement of</p>
+
+    <h1 class="couple" id="couple-headline">
+      <span class="couple-name" id="couple-groom">Yousef</span>
+      <span class="couple-amp" aria-hidden="true">&amp;</span>
+      <span class="couple-name" id="couple-bride">Layla</span>
+    </h1>
+
+    <!-- A single, calm date line — different rhythm from the busy
+         SATURDAY | 21 | NOVEMBER date-bar the wedding template uses. -->
+    <p class="cover-date" id="cover-date">Saturday · 5 December 2026</p>
+
+    <button type="button" class="cover-cta" id="open-btn" aria-controls="story details venue dress-code gallery guestbook">
+      Open invitation
+      <span class="cover-cta-arrow" aria-hidden="true">→</span>
+    </button>
+  </div>
+</section>
+
+<!-- Everything below the cover is hidden on first paint and faded in
+     when "Open invitation" is pressed. .revealed class flips it. -->
+<main class="scroll" id="scroll" aria-hidden="true">
+
+  <!-- ─────────────────────────  Our Story  ───────────────────────── -->
+  <section class="section story" id="story">
+    <p class="eyebrow">Our Story</p>
+    <p class="story-body" id="story-body">
+      <!-- Set from CONFIG.blessing in details.js -->
+      With joyful hearts, we invite you to celebrate the beginning of our forever.
+    </p>
+    <div class="rule" aria-hidden="true"></div>
+  </section>
+
+  <!-- ─────────────────────────  Save The Date  ───────────────────────── -->
+  <section class="section details" id="details" aria-labelledby="details-title">
+    <p class="eyebrow">Save The Date</p>
+    <h2 class="section-title" id="details-title">An evening to remember</h2>
+
+    <div class="date-pane">
+      <span class="date-day" id="date-day">05</span>
+      <span class="date-month" id="date-month">December 2026</span>
+    </div>
+
+    <p class="time-line">
+      <span class="time-cell">
+        <span class="time-label">Welcome</span>
+        <span class="time-value" id="welcome-time">6:30 PM</span>
+      </span>
+      <span class="time-sep" aria-hidden="true"></span>
+      <span class="time-cell">
+        <span class="time-label">Reception</span>
+        <span class="time-value" id="reception-time">7:30 PM</span>
+      </span>
+    </p>
+
+    <!-- Countdown pill-grid — same visual language as the fix I shipped
+         for the wedding template, so both feel part of one family. -->
+    <div class="countdown-grid" id="countdown" aria-live="polite">
+      <div class="countdown-cell"><span class="countdown-num" data-unit="days">--</span><span class="countdown-label">days</span></div>
+      <div class="countdown-cell"><span class="countdown-num" data-unit="hours">--</span><span class="countdown-label">hours</span></div>
+      <div class="countdown-cell"><span class="countdown-num" data-unit="minutes">--</span><span class="countdown-label">min</span></div>
+      <div class="countdown-cell"><span class="countdown-num" data-unit="seconds">--</span><span class="countdown-label">sec</span></div>
+    </div>
+
+    <a id="ics-link" class="btn-ghost" href="#" download="engagement.ics">Add to calendar</a>
+  </section>
+
+  <!-- ─────────────────────────  Venue  ───────────────────────── -->
+  <section class="section venue" id="venue" aria-labelledby="venue-title">
+    <p class="eyebrow">Venue</p>
+    <h2 class="section-title" id="venue-title">Where to find us</h2>
+
+    <div class="venue-text">
+      <p class="venue-name" id="venue-name">—</p>
+      <p class="venue-address" id="venue-address">—</p>
+    </div>
+
+    <div class="venue-map" id="venue-map">
+      <iframe
+        id="venue-iframe"
+        title="Venue location on Google Maps"
+        src=""
+        loading="lazy"
+        referrerpolicy="no-referrer-when-downgrade"
+        allowfullscreen
+      ></iframe>
+    </div>
+
+    <a
+      id="venue-open"
+      class="btn-ghost"
+      href="#"
+      target="_blank"
+      rel="noopener noreferrer"
+    >Open in Maps</a>
+  </section>
+
+  <!-- ─────────────────────────  Dress Code  ───────────────────────── -->
+  <section class="section dress-code" id="dress-code" aria-labelledby="dress-code-title">
+    <p class="eyebrow">Dress Code</p>
+    <h2 class="section-title" id="dress-code-title">A note on what to wear</h2>
+    <p class="dress-code-label" id="dress-code-label">—</p>
+    <div class="dress-code-swatches" id="dress-code-swatches" role="list"></div>
+  </section>
+
+  <!-- ─────────────────────────  Gallery  ───────────────────────── -->
+  <section class="section gallery" id="gallery" aria-labelledby="gallery-title">
+    <p class="eyebrow">Us</p>
+    <h2 class="section-title" id="gallery-title">A few of our favorite moments</h2>
+    <div class="gallery-grid" id="gallery-grid">
+      <!-- Populated by gallery.js from CONFIG.gallery[] -->
+    </div>
+  </section>
+
+  <!-- ─────────────────────────  Guestbook  ───────────────────────── -->
+  <section class="section guestbook" id="guestbook" aria-labelledby="guestbook-title">
+    <p class="eyebrow">Guestbook</p>
+    <h2 class="section-title" id="guestbook-title">Leave us a wish</h2>
+
+    <form id="guestbook-form" class="gb-form" autocomplete="on">
+      <label class="field">
+        <span class="field-label">Your name</span>
+        <input id="gb-name" type="text" required maxlength="60" />
+      </label>
+      <label class="field">
+        <span class="field-label">A short message</span>
+        <textarea id="gb-message" rows="3" required maxlength="400"></textarea>
+      </label>
+      <button type="submit" class="btn-primary">Sign the guestbook</button>
+      <p id="gb-status" class="gb-status" role="status" aria-live="polite"></p>
+    </form>
+
+    <ul id="gb-list" class="gb-list" aria-label="Guestbook messages"></ul>
+  </section>
+
+  <footer class="footer">
+    <p class="footer-mark">— With love —</p>
+  </footer>
+</main>
+
+<!-- Background music — plays only after the Open button is pressed so
+     autoplay restrictions don't block it; a small toggle sits bottom-
+     right once playback starts. -->
+<audio id="bg-audio" loop preload="metadata"></audio>
+<button type="button" id="music-toggle" class="music-toggle" hidden aria-label="Mute music">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5z" fill="currentColor"/><path d="M15 9c1.5 1.5 1.5 4.5 0 6" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+</button>
+
+<script type="module" src="js/bootstrap.js?v=1"></script>
+</body>
+</html>
