@@ -71,23 +71,28 @@ function guardFileSize(input, maxMb, label) {
 
 // All templates that share the "couple + event + venue" schema reuse
 // the wedding-shaped form. Birthday is the only outlier (quiz + memories).
-const COUPLE_TYPES = new Set(["wedding", "engagement", "qiraya", "sobou"]);
-const ALL_TYPES    = new Set(["birthday", ...COUPLE_TYPES]);
+const COUPLE_TYPES = new Set(["wedding", "wedding-noir", "engagement", "qiraya", "sobou"]);
+const BIRTHDAY_TYPES = new Set(["birthday", "birthday-elegant"]);
+const ALL_TYPES    = new Set([...BIRTHDAY_TYPES, ...COUPLE_TYPES]);
 
 const TYPE_TITLE = {
-  birthday:   "Create your birthday invitation",
-  wedding:    "Create your wedding invitation",
-  engagement: "Create your engagement invitation",
-  qiraya:     "اعمل دعوة قراية فاتحة",
-  sobou:      "اعمل دعوة سبوع",
+  birthday:          "Create your birthday invitation",
+  "birthday-elegant":"Create your birthday invitation — Elegant",
+  wedding:           "Create your wedding invitation",
+  "wedding-noir":    "Create your wedding invitation — Noir",
+  engagement:        "Create your engagement invitation",
+  qiraya:            "اعمل دعوة قراية فاتحة",
+  sobou:             "اعمل دعوة سبوع",
 };
 
 const TYPE_PREVIEW = {
-  birthday:   "birthday.html?preview=1",
-  wedding:    "wedding/index.html?preview=1",
-  engagement: "engagement/index.html?preview=1",
-  qiraya:     "qiraya/index.html?preview=1",
-  sobou:      "sobou/index.html?preview=1",
+  birthday:           "birthday.html?preview=1",
+  "birthday-elegant": "birthday-elegant/index.html?preview=1",
+  wedding:            "wedding/index.html?preview=1",
+  "wedding-noir":     "wedding-noir/index.html?preview=1",
+  engagement:         "engagement/index.html?preview=1",
+  qiraya:             "qiraya/index.html?preview=1",
+  sobou:              "sobou/index.html?preview=1",
 };
 
 function applyType(t) {
@@ -412,11 +417,12 @@ document.getElementById("editor-screen").addEventListener("change", schedulePrev
 $("preview-open").addEventListener("click", () => {
   const cfg = collectFormForPreview();
   const payload = encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(cfg)))));
-  // Each prefix-routed template serves its own index.html. Birthday
-  // (and anything else) lands on birthday.html.
-  const path = COUPLE_TYPES.has(state.type)
-    ? `${state.type}/index.html`
-    : "birthday.html";
+  // Each prefix-routed template serves its own index.html. The classic
+  // birthday still lands on birthday.html at the root; every other
+  // template (couple-shaped or birthday-elegant) is under its own folder.
+  const path = state.type === "birthday"
+    ? "birthday.html"
+    : `${state.type}/index.html`;
   window.open(`${path}?preview=1&data=${payload}`, "_blank");
 });
 
@@ -424,12 +430,12 @@ $("preview-open").addEventListener("click", () => {
 
 function collectFormForPreview() {
   const name = $("f-name").value.trim();
-  if (state.type === "birthday") {
+  if (BIRTHDAY_TYPES.has(state.type)) {
     const videoFile = $("f-video-file").files?.[0];
     const musicFile = $("f-music-file").files?.[0];
     return {
       slug:        $("f-slug").value,
-      event_type:  "birthday",
+      event_type:  state.type,
       name,
       quiz:        readQuiz(),
       memories:    [...memBuilder.querySelectorAll(".mem-row")].map((row) => {
@@ -456,10 +462,11 @@ function collectFormForPreview() {
   // the cover headline ("The Wedding of" / "to the engagement of" /
   // "قراية فاتحة" / "سبوع").
   const EVENT_TYPE_LABEL = {
-    wedding:    "Wedding",
-    engagement: "Engagement",
-    qiraya:     "قراية فاتحة",
-    sobou:      "سبوع",
+    wedding:        "Wedding",
+    "wedding-noir": "Wedding",
+    engagement:     "Engagement",
+    qiraya:         "قراية فاتحة",
+    sobou:          "سبوع",
   };
   return {
     slug:        $("f-slug").value,
@@ -608,11 +615,11 @@ async function publish() {
       : await apiJson("POST", `/api/events/${eventId}/activate`, { code });
 
     // 5. Success — backend returns the real public URL.
-    // Mirror backend _build_public_url — each prefix-routed template
-    // lives at /<type>/<slug>; birthday and anything else at /<slug>.
-    const slugPath = COUPLE_TYPES.has(type)
-      ? `/${type}/${slug}`
-      : `/${slug}`;
+    // Mirror backend _build_public_url — every template except the
+    // classic birthday lives at /<type>/<slug>; birthday catches /<slug>.
+    const slugPath = type === "birthday"
+      ? `/${slug}`
+      : `/${type}/${slug}`;
     const publicUrl = act.public_url || `${location.origin}${slugPath}`;
     $("success-url").href = publicUrl;
     $("success-url").textContent = publicUrl;

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f5f1ea" />
+  <title>Wedding — Noir</title>
+
+  <!-- Inter for body/display + Playfair Display for the single italic
+       serif accent on the couple names and section leads. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="css/style.css?v=1" />
+</head>
+<body>
+
+  <!-- Music toggle (persists across cover + invitation) -->
+  <button id="music-toggle" class="music-toggle music-btn" type="button" aria-label="Toggle background music" title="Toggle music" hidden>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5z" fill="currentColor"/><path d="M15 9c1.5 1.5 1.5 4.5 0 6" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+    <span class="off" hidden>🔇</span>
+    <span class="on"  hidden>🔊</span>
+  </button>
+  <audio id="bg-audio" loop preload="metadata"></audio>
+
+  <!-- ============ COVER ============ -->
+  <section id="cover" class="cover">
+    <div class="cover-card cover-content">
+      <p class="ann-eyebrow">A Wedding</p>
+
+      <!-- Terracotta heart emblem — single accent on the page -->
+      <svg class="cover-emblem heart" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+        <path
+          d="M32 54s-20-11.5-20-27a11 11 0 0 1 20-6.3A11 11 0 0 1 52 27c0 15.5-20 27-20 27z"
+          stroke="currentColor" stroke-width="2.2" fill="none" stroke-linejoin="round"
+        />
+      </svg>
+
+      <h1 class="couple cover-couple" id="cover-couple">
+        <span id="cover-groom">Groom</span>
+        <span class="cover-amp" aria-hidden="true">&amp;</span>
+        <span id="cover-bride">Bride</span>
+      </h1>
+
+      <p class="cover-date" id="cover-date">— — —</p>
+
+      <button id="open-btn" class="open-btn cover-cta btn btn-primary" type="button">
+        <span>Open invitation</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ============ INVITATION ============ -->
+  <main id="invitation">
+
+    <!-- Announcement -->
+    <section class="section announcement reveal" id="announcement" aria-labelledby="ann-header">
+      <p class="event-header section-title-caps" id="ann-header">The Wedding of</p>
+      <div class="couple announcement-couple" id="ann-couple">
+        <span class="name-script" id="ann-groom">Groom</span>
+        <span class="amp" aria-hidden="true">&amp;</span>
+        <span class="name-script" id="ann-bride">Bride</span>
+      </div>
+      <p class="ann-labels">
+        <span id="ann-groom-label">The Groom</span>
+        <span class="dot" aria-hidden="true">·</span>
+        <span id="ann-bride-label">The Bride</span>
+      </p>
+    </section>
+
+    <!-- Gallery -->
+    <section class="section gallery reveal" id="gallery" aria-labelledby="gallery-title">
+      <h2 id="gallery-title" class="section-title section-title-caps">Photo Gallery</h2>
+      <div class="gallery-grid" id="gallery-grid"></div>
+    </section>
+
+    <!-- Event Info + Countdown + Calendar + RSVP -->
+    <section class="section event-info reveal" id="event-info" aria-labelledby="event-title">
+      <h2 id="event-title" class="section-title section-title-caps">Event Info</h2>
+
+      <p class="event-lead" id="event-lead">The event will take place at</p>
+      <p class="event-time-big" id="event-time-big">—</p>
+
+      <div class="event-date-bar">
+        <span class="dow" id="event-dow">—</span>
+        <span class="sep" aria-hidden="true">·</span>
+        <span class="day" id="event-day">—</span>
+        <span class="sep" aria-hidden="true">·</span>
+        <span class="mon" id="event-mon">—</span>
+      </div>
+      <p class="event-year" id="event-year">—</p>
+
+      <div class="event-times">
+        <div class="event-time">
+          <span class="time-label">Welcome</span>
+          <span class="time-value" id="welcome-time">—</span>
+        </div>
+        <div class="event-time">
+          <span class="time-label">Reception</span>
+          <span class="time-value" id="reception-time">—</span>
+        </div>
+      </div>
+
+      <p class="countdown-title">Countdown</p>
+      <div class="countdown-grid" id="countdown" aria-live="polite">
+        <div class="countdown-cell"><span class="countdown-num" data-unit="days">--</span><span class="countdown-label">days</span></div>
+        <div class="countdown-cell"><span class="countdown-num" data-unit="hours">--</span><span class="countdown-label">hours</span></div>
+        <div class="countdown-cell"><span class="countdown-num" data-unit="minutes">--</span><span class="countdown-label">min</span></div>
+        <div class="countdown-cell"><span class="countdown-num" data-unit="seconds">--</span><span class="countdown-label">sec</span></div>
+      </div>
+
+      <div class="calendar-frame">
+        <div class="calendar" id="calendar"></div>
+      </div>
+
+      <div class="event-actions">
+        <a href="#" id="ics-btn" class="btn btn-outline ics-btn">Add to Calendar</a>
+        <button id="rsvp-open" class="btn btn-primary" type="button">Confirm Attendance</button>
+      </div>
+
+      <form id="rsvp-form" class="rsvp-form" hidden>
+        <div class="field">
+          <label for="rsvp-name" class="field-label">Your name</label>
+          <input id="rsvp-name" name="name" type="text" autocomplete="name" dir="auto" />
+          <span class="error" data-for="rsvp-name"></span>
+        </div>
+
+        <fieldset class="field radio-group">
+          <legend class="field-label">Will you attend?</legend>
+          <label class="radio-opt"><input type="radio" name="attending" value="yes" checked /><span>Yes, joyfully</span></label>
+          <label class="radio-opt"><input type="radio" name="attending" value="no"  /><span>Sadly, no</span></label>
+        </fieldset>
+
+        <div class="field" id="guest-count-field">
+          <label for="rsvp-guests" class="field-label">Number of guests (including you)</label>
+          <input id="rsvp-guests" name="guestCount" type="number" min="1" max="10" value="1" />
+        </div>
+
+        <button type="submit" class="btn btn-primary">Send RSVP</button>
+        <p class="rsvp-status" id="rsvp-status" role="status"></p>
+      </form>
+    </section>
+
+    <!-- Venue -->
+    <section class="section venue reveal" id="venue" aria-labelledby="venue-title">
+      <h2 id="venue-title" class="section-title section-title-caps">Venue</h2>
+      <div class="venue-details">
+        <p class="venue-name" id="venue-name">—</p>
+        <p class="venue-address" id="venue-address">—</p>
+      </div>
+      <div class="venue-map">
+        <iframe
+          id="venue-iframe"
+          title="Venue location on Google Maps"
+          src=""
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+          allowfullscreen
+        ></iframe>
+      </div>
+      <a id="venue-open" class="btn btn-outline" href="#" target="_blank" rel="noopener noreferrer">Open in Maps</a>
+    </section>
+
+    <!-- Dress Code -->
+    <section class="section dress-code reveal" id="dress-code" aria-labelledby="dress-code-title">
+      <h2 id="dress-code-title" class="section-title section-title-caps">Dress Code</h2>
+      <p class="dress-code-label" id="dress-code-label">—</p>
+      <div class="dress-code-swatches" id="dress-code-swatches"></div>
+    </section>
+
+    <!-- Guestbook -->
+    <section class="section guestbook reveal" id="guestbook" aria-labelledby="guestbook-title">
+      <h2 id="guestbook-title" class="section-title section-title-caps">Guestbook</h2>
+
+      <form id="gb-form" class="gb-form pill-form">
+        <label class="field">
+          <span class="field-label">Your name</span>
+          <input id="gb-name" name="name" type="text" autocomplete="name" dir="auto" />
+          <span class="error" data-for="gb-name"></span>
+        </label>
+        <label class="field">
+          <span class="field-label">Your wish</span>
+          <textarea id="gb-message" name="message" rows="4" dir="auto"></textarea>
+          <span class="error" data-for="gb-message"></span>
+        </label>
+        <button type="submit" class="btn btn-primary">Send Wishes</button>
+        <p class="rsvp-status gb-status" id="gb-status" role="status"></p>
+      </form>
+
+      <ul id="gb-list" class="gb-list wish-list" aria-live="polite"></ul>
+      <p id="gb-empty" class="gb-empty">Be the first to leave a wish.</p>
+    </section>
+
+    <footer class="footer">
+      <p class="footer-mark">— with love —</p>
+    </footer>
+  </main>
+
+  <!-- Lightbox overlay (populated by gallery.js) -->
+  <div id="lightbox" class="lightbox" role="dialog" aria-modal="true" aria-label="Photo viewer" hidden>
+    <button type="button" class="lightbox-btn lightbox-close" id="lightbox-close" aria-label="Close">✕</button>
+    <button type="button" class="lightbox-btn lightbox-prev"  id="lightbox-prev"  aria-label="Previous photo">‹</button>
+    <img id="lightbox-image" alt="" />
+    <button type="button" class="lightbox-btn lightbox-next"  id="lightbox-next"  aria-label="Next photo">›</button>
+    <div class="lightbox-counter" id="lightbox-counter" aria-live="polite">1 / 1</div>
+  </div>
+
+  <script type="module" src="js/bootstrap.js?v=1"></script>
+
+</body>
+</html>

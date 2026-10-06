@@ -11,7 +11,8 @@
 
 export const RESERVED_SLUGS = new Set([
   // Routes / product surfaces
-  "", "admin", "create", "wedding", "birthday", "invitation",
+  "", "admin", "create", "wedding", "wedding-noir", "birthday",
+  "birthday-elegant", "engagement", "qiraya", "sobou", "invitation",
   "lamma", "landing",
 
   // Deployed static files at the site root (nginx serves these directly)
