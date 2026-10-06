@@ -108,6 +108,19 @@ function applyType(t) {
   // host isn't asked to fill questions that will never be shown.
   const quizGroup = $("quiz-group");
   if (quizGroup) quizGroup.hidden = (t === "birthday-elegant");
+  // سبوع isn't a couple — it's a baby's naming ceremony. The groom
+  // field holds the baby's name, the bride field holds the family /
+  // parents. Rewrite the labels so the host isn't confused into
+  // typing nonsense into "Groom name" for their newborn.
+  const groomLbl = $("f-groom-label");
+  const brideLbl = $("f-bride-label");
+  if (t === "sobou") {
+    if (groomLbl) groomLbl.textContent = "Baby's name";
+    if (brideLbl) brideLbl.textContent = "Family / parents";
+  } else if (groomLbl && brideLbl) {
+    groomLbl.textContent = "Groom name";
+    brideLbl.textContent = "Bride name";
+  }
   const title = $("cx-title");
   if (title) title.textContent = TYPE_TITLE[t];
   $("preview-frame").src = TYPE_PREVIEW[t];

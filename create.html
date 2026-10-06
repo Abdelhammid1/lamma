@@ -103,11 +103,14 @@
       <div id="wedding-fields" hidden>
         <div class="cx-field-row">
           <div class="cx-field">
-            <label for="f-groom">Groom name</label>
+            <!-- Labels are rewritten per template type in create-form.js
+                 (applyType). "Groom/Bride" fits wedding/engagement/qiraya;
+                 سبوع instead uses "Baby's name / Family name". -->
+            <label for="f-groom" id="f-groom-label">Groom name</label>
             <input id="f-groom" type="text" dir="auto" />
           </div>
           <div class="cx-field">
-            <label for="f-bride">Bride name</label>
+            <label for="f-bride" id="f-bride-label">Bride name</label>
             <input id="f-bride" type="text" dir="auto" />
           </div>
         </div>
@@ -212,6 +215,6 @@
 
 </main>
 
-<script type="module" src="js/create-form.js?v=15"></script>
+<script type="module" src="js/create-form.js?v=16"></script>
 </body>
 </html>
