@@ -36,12 +36,12 @@ ALLOWED_MIME       = ALLOWED_IMAGE_MIME | ALLOWED_VIDEO_MIME | ALLOWED_AUDIO_MIM
 # above ~35 MB — tested empirically across 40/45/50/60/70/80 MB. The
 # only paths above that are Git LFS or `git push` from the backend,
 # neither of which is wired.
-MAX_FILE_BYTES     = 35 * 1024 * 1024
+MAX_FILE_BYTES     = 300 * 1024 * 1024
 
 # Max sum of files per event. 6 photos × 35 MB + 1 video × 35 MB +
 # audio = ~260 MB; a 300 MB cap prevents one event eating the whole
 # staging disk.
-MAX_EVENT_BYTES    = 300 * 1024 * 1024
+MAX_EVENT_BYTES    = 1024 * 1024 * 1024
 
 
 # Only keep basenames matching this — strips paths, weird chars, etc.

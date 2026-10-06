@@ -17,7 +17,7 @@ class Config:
     # multipart envelope + nginx client_max_body_size (110m). Werkzeug
     # cuts the request off at exactly this many bytes, so this must
     # be at least as big as the biggest file we accept.
-    MAX_CONTENT_LENGTH = 110 * 1024 * 1024
+    MAX_CONTENT_LENGTH = 320 * 1024 * 1024
 
     # --- Database ---
     SQLALCHEMY_DATABASE_URI = os.environ.get(
