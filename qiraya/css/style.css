@@ -146,19 +146,15 @@ a { color: inherit; }
   flex-wrap: wrap;
   justify-content: center;
   align-items: baseline;
-  gap: 8px;
+  gap: 16px;        /* wider than before — the "و" now carries the
+                       breath that the ornate brackets used to */
 }
 .couple-name { color: var(--ink); font-weight: 700; }
 .couple-and {
   color: var(--gold-ink);
   font-weight: 400;
-  font-size: 0.75em;
-  margin: 0 2px;
-}
-.couple-amp {
-  color: var(--gold);
-  font-size: 0.85em;
-  font-weight: 400;
+  font-size: 0.72em;
+  font-style: italic;
 }
 
 .cover-date {

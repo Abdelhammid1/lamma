@@ -40,11 +40,13 @@
 
     <h1 class="couple" id="couple">
       <span class="couple-pretitle" id="cover-pretitle">قراية فاتحة</span>
+      <!-- No ornate brackets around the و — U+FD3E / U+FD3F are paired
+           bidi brackets and get mirrored in RTL+flex layout so they
+           came out opening outward ")(" instead of inward "()". A plain
+           gold "و" with a bit of breathing room reads cleaner anyway. -->
       <span class="couple-names">
         <span class="couple-name" id="couple-groom">محمد</span>
-        <span class="couple-amp" aria-hidden="true">﴾</span>
         <span class="couple-and">و</span>
-        <span class="couple-amp" aria-hidden="true">﴿</span>
         <span class="couple-name" id="couple-bride">آية</span>
       </span>
     </h1>
