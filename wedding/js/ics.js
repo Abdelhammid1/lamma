@@ -21,11 +21,14 @@ function toIcsUtc(d) {
   );
 }
 
-/** Escape commas, semicolons, and newlines per RFC 5545. */
+/** Escape commas, semicolons, and newlines per RFC 5545.
+ * Treats CRLF and bare CR as `\n` so a hostile invitation payload
+ * can't smuggle extra ICS properties through CONFIG.couple.* or
+ * CONFIG.venue.* fields. */
 function icsEscape(str) {
   return String(str)
     .replace(/\\/g, "\\\\")
-    .replace(/\n/g, "\\n")
+    .replace(/\r\n|\r|\n/g, "\\n")
     .replace(/,/g, "\\,")
     .replace(/;/g, "\\;");
 }
