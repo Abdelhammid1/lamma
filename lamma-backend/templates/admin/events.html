@@ -5,13 +5,19 @@
   <h1 class="page-title" style="margin:0;">Events</h1>
   <!-- "New invitation" opens /create in admin-create mode: no code gate,
        publishes immediately via /admin/api/.../publish. -->
-  <a href="/create?admin_create=1&amp;type=birthday" class="btn btn-primary">+ Birthday</a>
-  <a href="/create?admin_create=1&amp;type=birthday-elegant" class="btn btn-primary">+ Birthday · Elegant</a>
-  <a href="/create?admin_create=1&amp;type=wedding" class="btn btn-primary">+ Wedding</a>
-  <a href="/create?admin_create=1&amp;type=wedding-noir" class="btn btn-primary">+ Wedding · Noir</a>
-  <a href="/create?admin_create=1&amp;type=engagement" class="btn btn-primary">+ Engagement</a>
-  <a href="/create?admin_create=1&amp;type=qiraya" class="btn btn-primary">+ قراية فاتحة</a>
-  <a href="/create?admin_create=1&amp;type=sobou" class="btn btn-primary">+ سبوع</a>
+  <!-- Explicit .html so nginx static serves the file directly. The bare
+       /create path only resolves on Cloudflare Pages (where _redirects
+       rewrites it) or when nginx has an extra /create → /create.html
+       rule; without that extra rule nginx falls to try_files and ends
+       up on /index.html, which doesn't carry the ?type= param forward,
+       so the create form defaults to birthday. -->
+  <a href="/create.html?admin_create=1&amp;type=birthday" class="btn btn-primary">+ Birthday</a>
+  <a href="/create.html?admin_create=1&amp;type=birthday-elegant" class="btn btn-primary">+ Birthday · Elegant</a>
+  <a href="/create.html?admin_create=1&amp;type=wedding" class="btn btn-primary">+ Wedding</a>
+  <a href="/create.html?admin_create=1&amp;type=wedding-noir" class="btn btn-primary">+ Wedding · Noir</a>
+  <a href="/create.html?admin_create=1&amp;type=engagement" class="btn btn-primary">+ Engagement</a>
+  <a href="/create.html?admin_create=1&amp;type=qiraya" class="btn btn-primary">+ قراية فاتحة</a>
+  <a href="/create.html?admin_create=1&amp;type=sobou" class="btn btn-primary">+ سبوع</a>
 </div>
 
 <form class="filter-bar" method="get">
@@ -54,7 +60,7 @@
           </form>
         {% endif %}
         {% if ev.status != 'deleted' %}
-          <a href="/create?admin_edit={{ ev.id }}" class="btn btn-outline btn-sm">Edit</a>
+          <a href="/create.html?admin_edit={{ ev.id }}" class="btn btn-outline btn-sm">Edit</a>
         {% endif %}
         <form method="post" action="{{ url_for('admin.delete_event', event_id=ev.id) }}"
               onsubmit="return confirm('Delete {{ ev.slug }}?')" class="inline">

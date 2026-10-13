@@ -2,262 +2,84 @@
 <html lang="en" dir="ltr">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>لمة · LAMMA — Birthday Admin</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Admin — redirecting · لمة · LAMMA</title>
 <link rel="icon" href="logo.jpg" type="image/jpeg" />
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link
-  href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Playfair+Display:ital,wght@0,400;0,600;0,700&family=Cairo:wght@400;600;700&display=swap"
-  rel="stylesheet"
-/>
-<link rel="stylesheet" href="css/admin.css?v=2" />
+<!-- The old GitHub-based "Birthday Admin" lived here and only ever
+     created birthdays — if a host tried to make a wedding here they'd
+     end up with a birthday no matter what they typed. The real admin
+     is now Flask-served at /admin and supports every template type
+     (wedding, engagement, qiraya, sobou, birthday-elegant,
+     wedding-noir). This file is a transition stub that forwards the
+     browser straight there. If JS is off, the meta-refresh still goes.
+
+     The Cloudflare _redirects /admin → /admin.html alias was removed
+     at the same time, so on nginx production this file is never served
+     (nginx proxies /admin to the Flask backend); it only kicks in on
+     Cloudflare Pages, where it still correctly bounces to the real
+     admin on the main host. -->
+<!-- Prefer the current host (production nginx proxies /admin to Flask).
+     Pages deployments without the backend fall back to the absolute
+     production domain via the JS at the bottom. -->
+<style>
+  :root { color-scheme: light; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    background: #fbf9f6;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    color: #310b1e;
+  }
+  .card {
+    max-width: 420px;
+    padding: 32px 28px;
+    text-align: center;
+  }
+  h1 { margin: 0 0 12px; font-size: 22px; font-weight: 600; }
+  p  { margin: 0 0 20px; color: #504347; line-height: 1.55; font-size: 14px; }
+  a.btn {
+    display: inline-block;
+    padding: 12px 24px;
+    background: #4a2033;
+    color: #ffdea4;
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    font-weight: 600;
+  }
+  a.btn:hover { background: #310b1e; }
+</style>
 </head>
 <body>
-
-  <!-- ============ LOGIN GATE ============ -->
-  <div id="gate" class="gate">
-    <div class="gate-card">
-      <img class="gate-logo" src="logo.jpg" alt="لمة · LAMMA" />
-      <div class="gate-sub">Birthday admin</div>
-
-      <form id="pat-form" class="gate-form">
-        <input
-          id="pat-input"
-          type="password"
-          autocomplete="off"
-          spellcheck="false"
-          aria-label="Access code"
-        />
-        <span class="error" id="pat-error"></span>
-        <button id="pat-submit" type="submit" class="btn btn-primary gate-submit">
-          Continue
-        </button>
-      </form>
-    </div>
+  <div class="card">
+    <h1>Admin has moved</h1>
+    <p>Taking you to the new admin — it supports every template (wedding, engagement, قراية فاتحة, سبوع, elegant birthday, wedding noir), not just birthdays.</p>
+    <a class="btn" href="/admin/">Continue to admin →</a>
   </div>
-
-  <!-- ============ SIGNED-IN APP (shell — inner screens toggle) ============ -->
-  <div id="admin-app" hidden>
-
-    <!-- Dashboard screen -->
-    <div id="dashboard" class="dash-shell screen">
-      <header class="dash-topbar">
-        <div class="dash-brand">
-          <img class="dash-brand-logo" src="logo.jpg" alt="لمة · LAMMA" />
-          <span class="dash-brand-name">لمة <span class="dash-brand-latin">· LAMMA</span></span>
-        </div>
-        <div class="dash-topbar-actions">
-          <span class="who" id="whoami"></span>
-          <button id="codes-tab-btn" type="button" class="btn btn-outline">Codes</button>
-          <button id="signout-btn"   type="button" class="btn btn-ghost">Sign out</button>
-        </div>
-      </header>
-
-      <div data-admin-panel>
-        <section class="dash-hero">
-          <div>
-            <h1 class="dash-title">Birthdays</h1>
-            <p class="dash-subtitle" id="dash-note">Loading…</p>
-          </div>
-          <button id="new-btn" type="button" class="btn btn-primary dash-new-btn">
-            <span aria-hidden="true">＋</span> New birthday
-          </button>
-        </section>
-
-        <ul class="dash-grid" id="dash-list"></ul>
-      </div>
-
-      <!-- Codes panel — toggled by the "Codes" button in the topbar -->
-      <div id="codes-panel" data-admin-panel hidden>
-        <section class="dash-hero">
-          <div>
-            <h1 class="dash-title">Activation codes</h1>
-            <p class="dash-subtitle">
-              Generate one-time codes for the /create self-serve flow.
-              <span id="codes-whoami" class="hint"></span>
-            </p>
-          </div>
-          <button id="codes-signout-btn" type="button" class="btn btn-ghost" hidden>Sign out of codes</button>
-        </section>
-
-        <!-- Firebase Auth sign-in: required before generating or listing codes.
-             The Firestore rules on activation_codes require request.auth != null,
-             so an unauthed client can't mint codes even if it POSTs directly. -->
-        <div id="codes-signin" class="card" style="max-width: 480px; margin-bottom: 24px;">
-          <h2 style="font-family: 'Playfair Display', serif; color: var(--plum); margin-bottom: 6px;">Sign in required</h2>
-          <p class="hint" style="margin-bottom: 14px;">
-            Codes are minted server-side against a signed-in admin. Use the
-            Firebase Auth email/password you created in the Firebase console.
-          </p>
-          <div class="field">
-            <label for="codes-email">Email</label>
-            <input type="email" id="codes-email" autocomplete="email" />
-          </div>
-          <div class="field">
-            <label for="codes-password">Password</label>
-            <input type="password" id="codes-password" autocomplete="current-password" />
-          </div>
-          <span class="error" id="codes-signin-error"></span>
-          <button id="codes-signin-btn" type="button" class="btn btn-primary" style="margin-top: 8px;">
-            Sign in
-          </button>
-        </div>
-
-        <div class="card" data-codes-authed style="max-width: 720px; margin-bottom: 24px;" hidden>
-          <h2 style="font-family: 'Playfair Display', serif; color: var(--plum); margin-bottom: 10px;">New code</h2>
-          <div class="field">
-            <label for="gen-code-slug">Bind to slug (optional)</label>
-            <input type="text" id="gen-code-slug" placeholder="medo (leave blank = works for any slug)">
-          </div>
-          <div class="field">
-            <label for="gen-code-hours">Expires after (hours, optional)</label>
-            <input type="number" id="gen-code-hours" min="1" max="720" placeholder="48">
-          </div>
-          <div class="field">
-            <label for="gen-code-notes">Notes (optional)</label>
-            <input type="text" id="gen-code-notes" placeholder="Instapay txn 1234 – mona">
-          </div>
-          <span class="error" id="gen-code-error"></span>
-          <button id="gen-code-btn" type="button" class="btn btn-primary" style="margin-top: 8px;">
-            + Generate code
-          </button>
-
-          <div id="gen-code-output" hidden style="margin-top: 20px; padding: 16px; background: var(--bg-1); border-radius: 12px; border: 2px dashed var(--rose); text-align: center;">
-            <p style="font-family: 'Playfair Display', serif; color: var(--muted); margin-bottom: 8px;">
-              Copy this and send to the customer:
-            </p>
-            <p id="gen-code-value"
-               style="font-family: 'SF Mono', Consolas, monospace; font-size: 22px; font-weight: 700; color: var(--plum); letter-spacing: 0.12em; margin-bottom: 12px; user-select: all;"></p>
-            <button id="copy-code-btn" type="button" class="btn btn-outline btn-sm">Copy</button>
-          </div>
-        </div>
-
-        <h2 data-codes-authed hidden style="font-family: 'Playfair Display', serif; color: var(--plum); margin: 20px 0 12px;">All codes</h2>
-        <ul id="codes-list" class="codes-list" data-codes-authed hidden></ul>
-      </div>
-    </div>
-
-    <!-- Editor screen -->
-    <div id="editor" class="admin-shell screen" hidden>
-      <div class="admin-header">
-        <h1 id="editor-title">New birthday</h1>
-        <div class="actions">
-          <button id="back-btn" type="button" class="btn btn-ghost">← Cancel</button>
-        </div>
-      </div>
-
-      <form id="editor-form" class="card" novalidate>
-
-        <div class="section-block">
-          <h2>Basics</h2>
-          <div class="field">
-            <label for="f-name">Name</label>
-            <input type="text" id="f-name" dir="auto" />
-            <span class="error" data-for="f-name"></span>
-          </div>
-          <div class="field">
-            <label for="f-slug">URL slug</label>
-            <input type="text" id="f-slug" />
-            <span class="hint">Will be published at <code id="slug-preview">&lt;slug&gt;</code></span>
-            <span class="error" data-for="f-slug"></span>
-          </div>
-        </div>
-
-        <details class="section-block">
-          <summary>Advanced text (labels, buttons, wrong-answer modal)</summary>
-          <div class="field"><label>Cover eyebrow</label><input id="f-eyebrowText" /></div>
-          <div class="field"><label>Cover subtitle</label><input id="f-celebrationSub" /></div>
-          <div class="field"><label>Start button text</label><input id="f-startButtonText" dir="auto" /></div>
-          <div class="field"><label>Wrong-answer emoji</label><input id="f-wrongEmoji" /></div>
-          <div class="field"><label>Wrong-answer message</label><input id="f-wrongMessage" dir="auto" /></div>
-          <div class="field"><label>Try again button</label><input id="f-wrongButtonText" dir="auto" /></div>
-          <div class="field"><label>Confirm answers button</label><input id="f-confirmButtonText" dir="auto" /></div>
-          <div class="field"><label>Celebrate button</label><input id="f-celebrateButtonText" /></div>
-        </details>
-
-        <div class="section-block">
-          <h2>Quiz</h2>
-          <p class="hint">The wrong-answer modal fires when the user clicks a wrong option. Correct ones stay selected.</p>
-          <div id="quiz-builder"></div>
-          <button type="button" id="add-question-btn" class="btn btn-outline" style="margin-top: 12px;">+ Add question</button>
-          <span class="error" data-for="quiz"></span>
-        </div>
-
-        <div class="section-block">
-          <h2>Memories</h2>
-          <p class="hint">Photos that appear in the grid after the quiz. Each can have a small date caption.</p>
-          <div id="memories-builder"></div>
-          <button type="button" id="add-memory-btn" class="btn btn-outline" style="margin-top: 12px;">+ Add photo</button>
-        </div>
-
-        <div class="section-block">
-          <h2>Love letter</h2>
-          <div class="field"><label>Section eyebrow</label><input id="f-letterEyebrow" dir="auto" /></div>
-          <div class="field"><label>Recipient name</label><input id="f-letterName" dir="auto" /></div>
-          <div class="field">
-            <label>Arabic body</label>
-            <textarea id="f-letterAr" dir="rtl" rows="5"></textarea>
-          </div>
-          <div class="field">
-            <label>English body</label>
-            <textarea id="f-letterEn" rows="5"></textarea>
-          </div>
-          <div class="field"><label>Signature (English)</label><input id="f-signatureEn" /></div>
-          <div class="field"><label>Signature (Arabic)</label><input id="f-signatureAr" dir="auto" /></div>
-        </div>
-
-        <div class="section-block">
-          <h2>Video</h2>
-          <div class="field">
-            <label for="f-video-file">Upload a video file</label>
-            <input type="file" id="f-video-file" accept="video/mp4,video/webm,video/quicktime" />
-            <span class="hint">MP4 or WebM. Warn above 25 MB, refuse above 50 MB.</span>
-          </div>
-          <div id="video-existing" class="video-existing" hidden>
-            <span class="hint">Currently attached: <code id="video-existing-path"></code></span>
-            <button type="button" id="video-remove-btn" class="btn btn-ghost">Remove</button>
-          </div>
-          <div class="field">
-            <label for="f-video-url">…or paste a YouTube / embed URL</label>
-            <input type="url" id="f-video-url" />
-            <span class="hint">If both are set, the uploaded file wins.</span>
-          </div>
-        </div>
-
-        <div id="publish-progress" class="progress" hidden>
-          <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
-          <p class="progress-text" id="progress-text">Preparing…</p>
-        </div>
-        <span class="error" data-for="publish" id="publish-error"></span>
-
-        <button type="submit" id="publish-btn" class="btn btn-primary" style="width: 100%; margin-top: 24px; padding: 16px;">
-          Publish
-        </button>
-      </form>
-    </div>
-
-    <!-- Success screen -->
-    <div id="success" class="admin-shell screen" hidden>
-      <div class="card" style="text-align: center;">
-        <h2 style="font-size: 26px;">🎉 Published</h2>
-        <p>The birthday is live at:</p>
-        <p style="margin: 16px 0;"><a id="success-link" target="_blank" rel="noopener"><code id="success-url"></code></a></p>
-        <p class="hint">Files are now on GitHub; the CDN cache may take ~1 min to catch up.</p>
-        <div style="display:flex; justify-content: center; gap: 12px; margin-top: 24px; flex-wrap: wrap;">
-          <button id="copy-url-btn" type="button" class="btn btn-primary">Copy link</button>
-          <button id="edit-again-btn" type="button" class="btn btn-outline">Edit again</button>
-          <button id="back-to-dash-btn" type="button" class="btn btn-ghost">Back to dashboard</button>
-        </div>
-      </div>
-    </div>
-
-  </div><!-- /#admin-app -->
-
-  <script type="module" src="js/admin-auth.js?v=3"></script>
-  <script type="module" src="js/admin-list.js?v=3"></script>
-  <script type="module" src="js/admin-form.js?v=4"></script>
-  <script type="module" src="js/admin-codes.js?v=2"></script>
-
+  <script>
+    (function () {
+      // The real admin is the Flask app proxied at /admin on the
+      // production host (lamma.manasety.ai). If we're on anything else
+      // (a Cloudflare Pages preview, a staging host, a random mirror)
+      // bounce to the absolute production domain so the user doesn't
+      // get stuck looking at this transition card forever.
+      var host = location.hostname;
+      var isProdOrLocal =
+        host === "lamma.manasety.ai" ||
+        host === "localhost" || host === "127.0.0.1";
+      var target = isProdOrLocal
+        ? "/admin/"
+        : "https://lamma.manasety.ai/admin/";
+      // Also update the fallback button in case the JS replace is
+      // blocked / slow / breaks (e.g. CSP), so the user still has a
+      // one-click way out of the transition page.
+      var btn = document.querySelector("a.btn");
+      if (btn) btn.href = target;
+      location.replace(target);
+    })();
+  </script>
 </body>
 </html>

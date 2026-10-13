@@ -1,12 +1,19 @@
 # Cloudflare Pages URL routing for lamma.manasety.ai
 #
 # / (root)              → index.html          (landing)
-# /admin, /admin/       → admin.html          (admin panel — shared)
-# /wedding/admin        → admin.html          (also serves admin)
 # /create               → create.html         (self-serve create form)
 # /wedding, /wedding/   → wedding/index.html  (wedding template + guestbook)
 # /wedding/:slug        → wedding/index.html  (loader picks up `for=` from path)
 # /<slug>               → birthday.html       (birthday template resolves slug)
+#
+# /admin on Cloudflare Pages is aliased to /admin.html, which is now
+# a *bounce page* (not the old birthday-only admin) that forwards the
+# browser to the real multi-template admin hosted on the production
+# nginx vhost (https://lamma.manasety.ai/admin/). Without this alias,
+# /admin on Pages would fall into the /* → /birthday.html catchall and
+# the host would see a birthday instead of being sent to the admin.
+# On nginx production this alias never fires — nginx's location /admin
+# proxy_pass to Flask wins before the static file is tried.
 #
 # Static assets (logo.jpg, css/*, js/*, images/*, favicon) are served
 # directly BEFORE these rewrites, so they always work as normal files.
@@ -14,7 +21,6 @@
 /                       /index.html            200
 /admin                  /admin.html            200
 /admin/                 /admin.html            200
-/wedding/admin          /admin.html            200
 /create                 /create.html           200
 /wedding                /wedding/index.html         200
 /wedding/               /wedding/index.html         200

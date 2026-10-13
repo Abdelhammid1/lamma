@@ -63,18 +63,45 @@ export function getSlug() {
  * legacy GitHub path is a fallback for old admin-created invitations
  * (Ranon, etc.). Returns null if not found in either.
  */
+// Every published event — birthday, wedding, qiraya, sobou, … — writes
+// to the same /data/<slug>.json. If a visitor hits /<slug> for a wedding
+// (the birthday catchall), the birthday renderer would try to display a
+// wedding payload and show a broken page. Detect it here and redirect
+// to the right template URL before the loader returns.
+const _PREFIXED_TYPES = new Set([
+  "wedding", "wedding-noir", "birthday-elegant",
+  "engagement", "qiraya", "sobou",
+]);
+
+function _redirectIfWrongTemplate(data, slug) {
+  const t = data && typeof data === "object" ? data.event_type : null;
+  if (t && t !== "birthday" && _PREFIXED_TYPES.has(t)) {
+    location.replace(`/${t}/${slug}`);
+    return true;
+  }
+  return false;
+}
+
 export async function loadBirthday(slug) {
   // 1. Backend's own /data/<slug>.json — the current publish path
   //    writes here (nginx alias → MEDIA_SERVE_DIR). Fastest + fresh.
   try {
     const res = await fetch(`/data/${slug}.json`, { cache: "no-store" });
-    if (res.ok) return sanitizeConfigUrls(await res.json());
+    if (res.ok) {
+      const data = await res.json();
+      if (_redirectIfWrongTemplate(data, slug)) return null;
+      return sanitizeConfigUrls(data);
+    }
   } catch (_) { /* try next source */ }
 
   // 2. Firestore — invitations created via the old /create (pre-backend).
   try {
     const snap = await getDoc(doc(db, "invitations", slug));
-    if (snap.exists()) return sanitizeConfigUrls(_mapFirestoreDoc(snap.data()));
+    if (snap.exists()) {
+      const data = _mapFirestoreDoc(snap.data());
+      if (_redirectIfWrongTemplate(data, slug)) return null;
+      return sanitizeConfigUrls(data);
+    }
   } catch (e) {
     console.warn("[loader] Firestore lookup failed, trying GitHub:", e);
   }
@@ -94,7 +121,11 @@ export async function loadBirthday(slug) {
   for (const url of paths) {
     try {
       const res = await fetch(url, { cache: "no-store" });
-      if (res.ok) return sanitizeConfigUrls(await res.json());
+      if (res.ok) {
+        const data = await res.json();
+        if (_redirectIfWrongTemplate(data, slug)) return null;
+        return sanitizeConfigUrls(data);
+      }
     } catch (_) { /* try next */ }
   }
 
