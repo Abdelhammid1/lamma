@@ -10,7 +10,7 @@ const RENDERER_MODULES = [
   "./cover.js",
   "./details.js",
   "./countdown.js",
-  "./venue.js",
+  "./venue.js?v=2",
   "./guestbook.js",
   "./reveal.js",
 ];

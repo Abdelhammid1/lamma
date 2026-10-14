@@ -18,7 +18,23 @@ if (addressEl) addressEl.textContent = CONFIG.venue.address || "";
 // deep link — before this guard, the iframe just rendered a blank gray
 // box and the "Open in Maps" button linked to "#". Hide each piece
 // when its source is missing instead of showing a broken map.
-const embedSrc = (CONFIG.venue.mapsEmbedSrc || "").trim();
+// Google refuses to iframe a /maps/place/* share URL (X-Frame-Options:
+// SAMEORIGIN). Hosts routinely paste that URL instead of the Share →
+// Embed one, and the result is a broken-image icon where the map
+// should be. Convert any non-embed URL into a working embed URL at
+// render time so already-published events start working too.
+function _toEmbedUrl(raw) {
+  if (!raw) return "";
+  // Already a Google Maps embed URL — keep as-is.
+  if (/\/maps\/embed/i.test(raw)) return raw;
+  // Pull @lat,lng from a /maps/place/.../@LAT,LNG,zoom/ URL — the
+  // most common thing the host pastes.
+  const m = raw.match(/@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/);
+  if (m) return `https://www.google.com/maps?q=${m[1]},${m[2]}&z=16&output=embed`;
+  // Fallback: treat the whole URL (or free-text address) as a search.
+  return `https://www.google.com/maps?q=${encodeURIComponent(raw)}&output=embed`;
+}
+const embedSrc = _toEmbedUrl((CONFIG.venue.mapsEmbedSrc || "").trim());
 if (iframe && embedSrc) {
   iframe.src = embedSrc;
 } else if (mapWrap) {

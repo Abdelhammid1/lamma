@@ -24,7 +24,7 @@ import { doc, getDoc } from
 const RENDERER_MODULES = [
   "./cover.js",       "./announcement.js", "./gallery.js",
   "./event-info.js",  "./countdown.js",    "./calendar.js",
-  "./ics.js",         "./rsvp.js",         "./venue.js",
+  "./ics.js",         "./rsvp.js",         "./venue.js?v=2",
   "./dress-code.js",  "./guestbook.js",    "./reveal.js",
 ];
 

@@ -16,7 +16,16 @@ const openLink  = q("venue-open");
 if (nameEl)    nameEl.textContent    = CONFIG.venue?.name    || "";
 if (addressEl) addressEl.textContent = CONFIG.venue?.address || "";
 
-const embed = (CONFIG.venue?.mapsEmbedSrc || "").trim();
+// Convert a /maps/place/* share URL into a working embed URL (Google
+// refuses to iframe share URLs). See wedding/js/venue.js for details.
+function _toEmbedUrl(raw) {
+  if (!raw) return "";
+  if (/\/maps\/embed/i.test(raw)) return raw;
+  const m = raw.match(/@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/);
+  if (m) return `https://www.google.com/maps?q=${m[1]},${m[2]}&z=16&output=embed`;
+  return `https://www.google.com/maps?q=${encodeURIComponent(raw)}&output=embed`;
+}
+const embed = _toEmbedUrl((CONFIG.venue?.mapsEmbedSrc || "").trim());
 if (iframe && embed) {
   iframe.src = embed;
 } else if (mapWrap) {
