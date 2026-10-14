@@ -19,7 +19,7 @@ const RENDERER_MODULES = [
   "./venue.js?v=2",
   "./dress-code.js",
   "./gallery.js",
-  "./schedule.js?v=2",
+  "./schedule.js?v=5",
   "./contacts.js?v=1",
   "./guestbook.js",
   "./reveal.js",

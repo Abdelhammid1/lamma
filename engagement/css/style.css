@@ -668,37 +668,113 @@ a { color: inherit; }
 }
 @media (prefers-reduced-motion: reduce) { .tl-next .tl-marker { animation: none; } }
 
-/* ---- Timeline animation on scroll-in -----------------------------
-   .section.schedule gets .in-view (or .is-visible in the wedding
-   template) added by reveal.js when the card enters the viewport.
-   Line draws top → bottom (1.2s), rows fade in with an 80ms stagger
-   so the schedule feels like it is unfolding instead of popping in. */
-.schedule .timeline::before {
-  transform: scaleY(0);
-  transform-origin: top;
-  transition: transform 1.2s cubic-bezier(0.22, 0.61, 0.36, 1);
-}
-.schedule.in-view .timeline::before,
-.schedule.is-visible .timeline::before { transform: scaleY(1); }
+/* ---- Timeline layered animation ---------------------------------
+   Four pieces stacked, orchestrated by .schedule.entered and the
+   --tl-progress custom property schedule.js sets every 60s. See
+   wedding/css/style.css for the full write-up. */
+
+.schedule .timeline { position: relative; }
 
 .tl-row {
   opacity: 0;
-  transform: translateY(10px);
-  transition: opacity 0.5s ease, transform 0.5s ease;
+  transform: translateY(-14px);
+  transition: opacity 0.55s ease, transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-.schedule.in-view .tl-row,
-.schedule.is-visible .tl-row { opacity: 1; transform: none; }
-.schedule.in-view .tl-row:nth-child(1), .schedule.is-visible .tl-row:nth-child(1) { transition-delay: 0.25s; }
-.schedule.in-view .tl-row:nth-child(2), .schedule.is-visible .tl-row:nth-child(2) { transition-delay: 0.33s; }
-.schedule.in-view .tl-row:nth-child(3), .schedule.is-visible .tl-row:nth-child(3) { transition-delay: 0.41s; }
-.schedule.in-view .tl-row:nth-child(4), .schedule.is-visible .tl-row:nth-child(4) { transition-delay: 0.49s; }
-.schedule.in-view .tl-row:nth-child(5), .schedule.is-visible .tl-row:nth-child(5) { transition-delay: 0.57s; }
-.schedule.in-view .tl-row:nth-child(6), .schedule.is-visible .tl-row:nth-child(6) { transition-delay: 0.65s; }
-.schedule.in-view .tl-row:nth-child(7), .schedule.is-visible .tl-row:nth-child(7) { transition-delay: 0.73s; }
-.schedule.in-view .tl-row:nth-child(8), .schedule.is-visible .tl-row:nth-child(8) { transition-delay: 0.81s; }
+.schedule.entered .tl-row {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: calc(var(--i, 0) * 110ms + 0.2s);
+}
+
+.tl-marker { position: relative; }
+.tl-marker::after {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  border-radius: 50%;
+  border: 2px solid #c9a86a;
+  opacity: 0;
+  transform: scale(0.5);
+  pointer-events: none;
+}
+.schedule.entered .tl-row .tl-marker::after {
+  animation: tlRipple 0.9s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+  animation-delay: calc(var(--i, 0) * 110ms + 0.35s);
+}
+@keyframes tlRipple {
+  0%   { opacity: 0;   transform: scale(0.5); }
+  25%  { opacity: 0.9; transform: scale(1.1); }
+  100% { opacity: 0;   transform: scale(2.2); }
+}
+
+.tl-progress {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  width: 1px;
+  transform: translateX(-0.5px);
+  height: 0;
+  max-height: calc(100% - 20px);
+  background: #c9a86a;
+  z-index: 0;
+  pointer-events: none;
+  transition: height 1.2s ease-out;
+}
+.schedule.entered .tl-progress { height: calc(var(--tl-progress, 0%) - 0px); }
+
+.tl-candle {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 22px;
+  height: 36px;
+  margin-left: -11px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 232, 190, 0.55), transparent 65%);
+  filter: blur(5px);
+  pointer-events: none;
+  opacity: 0;
+  z-index: 0;
+}
+.schedule.entered .tl-candle {
+  animation: tlCandle 6s linear infinite;
+  animation-delay: 1.5s;
+}
+@keyframes tlCandle {
+  0%   { top: 0;    opacity: 0; }
+  10%  {            opacity: 1; }
+  90%  {            opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+
+.tl-sweep {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 72px;
+  height: 2px;
+  margin-left: -36px;
+  background: linear-gradient(to right, transparent, #c9a86a 50%, transparent);
+  box-shadow: 0 0 10px rgba(201, 168, 106, 0.55);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+.schedule.entered .tl-sweep {
+  animation: tlSweep 1.2s cubic-bezier(0.33, 0, 0.5, 1) 0.2s forwards;
+}
+@keyframes tlSweep {
+  0%   { top: 0;    opacity: 1; }
+  90%  {            opacity: 0.9; }
+  100% { top: 100%; opacity: 0; }
+}
 
 @media (prefers-reduced-motion: reduce) {
-  .schedule .timeline::before { transform: scaleY(1); transition: none; }
+  .tl-row               { opacity: 1; transform: none; transition: none; }
+  .tl-marker::after     { animation: none; opacity: 0; }
+  .tl-candle, .tl-sweep { display: none; }
+  .schedule.entered .tl-progress { transition: none; }
+}
   .tl-row                      { opacity: 1; transform: none; transition: none; }
 }
 
