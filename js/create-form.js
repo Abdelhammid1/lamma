@@ -101,6 +101,12 @@ function applyType(t) {
   document.querySelectorAll('input[name="event_type"]').forEach((r) => {
     r.checked = (r.value === t);
   });
+  // Reflect the active template on the pill row too.
+  document.querySelectorAll("#type-pills .cx-pill").forEach((btn) => {
+    const on = btn.dataset.type === t;
+    btn.classList.toggle("is-active", on);
+    btn.setAttribute("aria-selected", on ? "true" : "false");
+  });
   const usesCoupleForm = COUPLE_TYPES.has(t);
   $("birthday-fields").hidden = !!usesCoupleForm;
   $("wedding-fields").hidden  = !usesCoupleForm;
@@ -142,6 +148,24 @@ function applyType(t) {
 document.querySelectorAll('input[name="event_type"]').forEach((r) =>
   r.addEventListener("change", () => applyType(r.value))
 );
+
+// Template-switcher pills — click to flip type without reloading. The
+// pill row lives above the shared Name / Slug fields so switching from
+// a wedding to a سبوع mid-session keeps whatever the host already typed.
+// The URL query (?type=…) is also rewritten so a browser refresh
+// restores the picked template.
+document.querySelectorAll("#type-pills .cx-pill").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const t = btn.dataset.type;
+    if (!ALL_TYPES.has(t) || t === state.type) return;
+    applyType(t);
+    try {
+      const url = new URL(location.href);
+      url.searchParams.set("type", t);
+      history.replaceState(null, "", url.toString());
+    } catch (_) { /* ignore */ }
+  });
+});
 
 /* ================= Slug helpers ================= */
 
@@ -1056,3 +1080,19 @@ applyType(ALL_TYPES.has(initialType) ? initialType : "birthday");
 
 applyAdminChrome();
 loadAdminEditFixtures();
+
+// Telemetry: tell the backend that someone opened the create form so
+// the admin's Leads tab can surface visitors who didn't make it to
+// publish. Fire-and-forget — no auth, no body validation on failure,
+// no UX change if the endpoint is down. Admin + edit modes don't ping
+// (that would double-count the host as a lead on their own event).
+if (!ADMIN_MODE) {
+  try {
+    fetch("/api/leads", {
+      method: "POST",
+      keepalive: true,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ event_type: state.type || "unknown" }),
+    }).catch(() => { /* telemetry failure is non-fatal */ });
+  } catch (_) { /* ignore */ }
+}

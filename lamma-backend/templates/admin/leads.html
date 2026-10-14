@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Leads · Admin{% endblock %}
+{% block content %}
+<div class="page-title-row" style="display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+  <div>
+    <h1 class="page-title" style="margin:0;">Leads</h1>
+    <p class="muted" style="margin:4px 0 0;">Visitors who opened /create.html. Published events live under <a href="{{ url_for('admin.events') }}">Events</a>.</p>
+  </div>
+</div>
+
+<div class="lead-counts">
+  <a href="{{ url_for('admin.leads') }}" class="lead-pill {% if not filter_type %}on{% endif %}">
+    All <span class="n">{{ counts.values()|sum }}</span>
+  </a>
+  {% for t, n in counts.items()|sort %}
+    <a href="{{ url_for('admin.leads', type=t) }}" class="lead-pill {% if filter_type == t %}on{% endif %}">
+      {{ t }} <span class="n">{{ n }}</span>
+    </a>
+  {% endfor %}
+</div>
+
+{% if leads %}
+<table class="event-table">
+  <thead>
+    <tr>
+      <th>When</th>
+      <th>Template</th>
+      <th>IP</th>
+      <th>Referrer</th>
+      <th>User agent</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for l in leads %}
+    <tr>
+      <td class="when">{{ l.created_at.strftime('%Y-%m-%d %H:%M') if l.created_at else '' }}</td>
+      <td><code>{{ l.event_type }}</code></td>
+      <td><code>{{ l.ip or '—' }}</code></td>
+      <td class="trunc" title="{{ l.referrer or '' }}">{{ (l.referrer or '—')[:60] }}</td>
+      <td class="trunc" title="{{ l.user_agent or '' }}">{{ (l.user_agent or '—')[:60] }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+<p class="muted" style="margin-top:12px; font-size:12px;">Showing newest 500.</p>
+{% else %}
+<p class="empty">No visits recorded yet{% if filter_type %} for <code>{{ filter_type }}</code>{% endif %}.</p>
+{% endif %}
+
+<style>
+  .muted { color: var(--muted); }
+  .lead-counts { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 20px; }
+  .lead-pill {
+    display: inline-flex; gap: 6px; align-items: center;
+    padding: 6px 12px; border-radius: 999px;
+    border: 1px solid var(--rule, #e5e0d7); background: #fff;
+    text-decoration: none; color: var(--plum, #310b1e); font-size: 13px;
+  }
+  .lead-pill:hover { border-color: var(--plum, #310b1e); }
+  .lead-pill.on   { background: var(--plum, #310b1e); color: #ffdea4; border-color: var(--plum, #310b1e); }
+  .lead-pill .n   { opacity: 0.7; font-variant-numeric: tabular-nums; }
+  .lead-pill.on .n { opacity: 0.9; }
+  .trunc {
+    max-width: 320px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+    color: var(--muted); font-size: 12px;
+  }
+</style>
+{% endblock %}

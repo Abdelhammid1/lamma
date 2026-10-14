@@ -73,3 +73,19 @@ class AuditLog(db.Model):
     event_id      = db.Column(db.String(36),  nullable=True)
     details_json  = db.Column(db.Text,        nullable=True)
     created_at    = db.Column(db.DateTime,    nullable=False, default=datetime.utcnow, index=True)
+
+
+class Lead(db.Model):
+    """A visitor opened /create.html but has not (yet) finished publishing.
+    Logged by the public POST /api/leads so the admin can follow up with
+    hosts who started a flow but didn't convert. One row per visit, not
+    deduped — the dashboard shows them newest-first so repeat visits are
+    obvious."""
+    __tablename__ = "leads"
+
+    id         = db.Column(db.Integer,    primary_key=True, autoincrement=True)
+    event_type = db.Column(db.String(40), nullable=False, index=True)
+    user_agent = db.Column(db.String(500), nullable=True)
+    ip         = db.Column(db.String(45),  nullable=True)   # IPv6 fits in 45
+    referrer   = db.Column(db.String(500), nullable=True)
+    created_at = db.Column(db.DateTime,   nullable=False, default=datetime.utcnow, index=True)

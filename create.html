@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,600&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Cairo:wght@400;600;700&family=Manrope:wght@400;500;600;700&display=swap"
       rel="stylesheet" />
-<link rel="stylesheet" href="create.css?v=3" />
+<link rel="stylesheet" href="create.css?v=4" />
 </head>
 <body>
 
@@ -28,6 +28,20 @@
     <section class="cx-form">
       <h1 class="cx-title" id="cx-title">Create your invitation</h1>
       <p class="cx-lede">Fill in your details. The preview updates as you type. When you're happy, enter your activation code and publish.</p>
+
+      <!-- Template-switcher pills — one tap flips state.type, swaps
+           the field groups + the preview iframe, keeps whatever name /
+           groom / bride / venue the host has already typed. The active
+           pill gets .is-active via create-form.js applyType(). -->
+      <div class="cx-pills" id="type-pills" role="tablist" aria-label="Template">
+        <button type="button" class="cx-pill" role="tab" data-type="wedding">Wedding</button>
+        <button type="button" class="cx-pill" role="tab" data-type="wedding-noir">Wedding · Noir</button>
+        <button type="button" class="cx-pill" role="tab" data-type="engagement">Engagement</button>
+        <button type="button" class="cx-pill" role="tab" data-type="qiraya">قراية فاتحة</button>
+        <button type="button" class="cx-pill" role="tab" data-type="sobou">سبوع</button>
+        <button type="button" class="cx-pill" role="tab" data-type="birthday">Birthday</button>
+        <button type="button" class="cx-pill" role="tab" data-type="birthday-elegant">Birthday · Elegant</button>
+      </div>
 
       <!-- Basics: shared -->
       <!-- The top name field is only used by the birthday variants
@@ -236,6 +250,6 @@
 
 </main>
 
-<script type="module" src="js/create-form.js?v=22"></script>
+<script type="module" src="js/create-form.js?v=23"></script>
 </body>
 </html>

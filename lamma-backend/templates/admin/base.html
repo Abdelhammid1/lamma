@@ -17,6 +17,7 @@
   <nav>
     <a href="{{ url_for('admin.dashboard') }}" {% if request.endpoint == 'admin.dashboard' %}class="on"{% endif %}>Dashboard</a>
     <a href="{{ url_for('admin.events') }}" {% if request.endpoint == 'admin.events' %}class="on"{% endif %}>Events</a>
+    <a href="{{ url_for('admin.leads') }}"  {% if request.endpoint == 'admin.leads'  %}class="on"{% endif %}>Leads</a>
   </nav>
   <div class="who">
     <span>{{ current_user.email }}</span>

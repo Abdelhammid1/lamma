@@ -133,6 +133,46 @@ html, body {
   outline-offset: 2px;
 }
 
+/* Template-switcher pills — a tight horizontal row above the form so
+   the host can flip template mid-session without reloading. The row
+   scrolls horizontally on narrow screens so the Arabic variant names
+   never force a wrap on mobile. */
+.cx-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 10px 0 20px;
+  margin: -6px 0 10px;
+  border-bottom: 1px solid rgba(74, 32, 51, 0.08);
+}
+.cx-pill {
+  appearance: none;
+  padding: 7px 14px;
+  border: 1px solid rgba(74, 32, 51, 0.18);
+  background: #fff;
+  border-radius: 999px;
+  color: #4a2033;
+  font-family: 'Manrope', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  white-space: nowrap;
+}
+.cx-pill:hover {
+  background: rgba(74, 32, 51, 0.06);
+  border-color: rgba(74, 32, 51, 0.32);
+}
+.cx-pill.is-active {
+  background: #4a2033;
+  color: #ffdea4;
+  border-color: #4a2033;
+}
+.cx-pill:focus-visible {
+  outline: 2px solid #4a2033;
+  outline-offset: 2px;
+}
+
 .cx-field label, .cx-field legend, fieldset.cx-field legend {
   font-family: 'Manrope', sans-serif;
   font-size: 11px;

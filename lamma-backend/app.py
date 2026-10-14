@@ -92,8 +92,10 @@ def create_app(config_object: type = Config) -> Flask:
     def health():
         return jsonify(status="ok"), 200
 
-    # Convenience: bare `/admin` (no trailing slash) → dashboard/login
-    @app.get("/admin")
+    # Convenience: bare `/admin` (no trailing slash) → dashboard/login.
+    # Accept POST too so a stale login-form resubmission (back button /
+    # browser repost) lands on the dashboard flow instead of 405'ing.
+    @app.route("/admin", methods=["GET", "POST", "HEAD"])
     def _admin_root():
         return redirect(url_for("admin.dashboard"))
 

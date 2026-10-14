@@ -15,7 +15,7 @@ from flask import Blueprint, current_app, jsonify, request
 
 from codes import ActivationError, normalize_code, validate_code_for_event
 from github import GitHubClient, GitHubError
-from models import ActivationCode, Event, MediaBlob, db
+from models import ActivationCode, Event, Lead, MediaBlob, db
 from rate_limit import limiter
 from slugs import SlugError, validate
 from uploads import UploadError, stage_upload, total_bytes_for_event
@@ -29,6 +29,38 @@ VALID_EVENT_TYPES = frozenset({
     "wedding", "wedding-noir",
     "engagement", "qiraya", "sobou", "invitation",
 })
+
+
+# --------------------------------------------------------------------------
+# Lead tracking — anyone who opened /create.html, before they commit
+# --------------------------------------------------------------------------
+
+@bp.post("/leads")
+@limiter.limit("30/minute")
+def record_lead():
+    """Log a visit to the create form so the admin can follow up with
+    hosts who didn't make it all the way to publish. Fire-and-forget
+    from the frontend — the response is always 204; the frontend never
+    waits on it or shows errors.
+
+    Body: `{ "event_type": "<type>" }`. Unknown or missing types are
+    normalized to "unknown" rather than rejected — this is a telemetry
+    endpoint, not a validation gate."""
+    body = request.get_json(silent=True) or {}
+    t = (body.get("event_type") or "unknown").strip().lower()[:40]
+    row = Lead(
+        event_type=t or "unknown",
+        user_agent=(request.headers.get("User-Agent") or "")[:500] or None,
+        ip=request.remote_addr,
+        referrer=(request.headers.get("Referer") or "")[:500] or None,
+    )
+    db.session.add(row)
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        # Still a 204 — telemetry failures must not break the UX.
+    return ("", 204)
 
 
 # --------------------------------------------------------------------------

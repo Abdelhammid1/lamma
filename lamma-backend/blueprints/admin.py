@@ -171,6 +171,25 @@ def events():
     return render_template("events.html", events=rows, q=q, status=status)
 
 
+@bp.get("/leads")
+@login_required
+def leads():
+    """List of visitors who opened /create.html but haven't published
+    yet. Newest first. Uses a simple page size since lead volume is low;
+    once it isn't, swap for keyset paging on created_at."""
+    from models import Lead
+    event_type = (request.args.get("type") or "").strip().lower()
+    query = db.session.query(Lead)
+    if event_type:
+        query = query.filter(Lead.event_type == event_type)
+    rows = query.order_by(Lead.created_at.desc()).limit(500).all()
+    # Count per template type for the summary bar.
+    counts = {}
+    for t, n in db.session.query(Lead.event_type, db.func.count(Lead.id)).group_by(Lead.event_type).all():
+        counts[t] = n
+    return render_template("leads.html", leads=rows, counts=counts, filter_type=event_type)
+
+
 @bp.get("/events/<event_id>/responses")
 @login_required
 def event_responses(event_id):
