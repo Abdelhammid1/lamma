@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,600&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Cairo:wght@400;600;700&family=Manrope:wght@400;500;600;700&display=swap"
       rel="stylesheet" />
-<link rel="stylesheet" href="create.css?v=2" />
+<link rel="stylesheet" href="create.css?v=3" />
 </head>
 <body>
 
@@ -156,6 +156,21 @@
           <label for="f-dress-code">Dress code label</label>
           <input id="f-dress-code" type="text" placeholder="Pink dresses" />
         </div>
+        <div class="cx-field">
+          <label>Dress code colors</label>
+          <!-- Up to five swatches, each a native <input type="color">.
+               Rows left blank are dropped before publish, so a wedding
+               with two colours only sends those two. Pre-populated with
+               the pink palette so the form isn't empty on first load. -->
+          <div id="dress-colors" class="cx-colors">
+            <input type="color" class="cx-color" value="#f7d9e1" aria-label="Color 1" />
+            <input type="color" class="cx-color" value="#efc8d2" aria-label="Color 2" />
+            <input type="color" class="cx-color" value="#a13b58" aria-label="Color 3" />
+            <input type="color" class="cx-color" value="#c9a86a" aria-label="Color 4" />
+            <input type="color" class="cx-color" value="#ffffff" aria-label="Color 5" />
+          </div>
+          <span class="cx-hint">Up to 5. The hex code shows under each swatch on the invitation.</span>
+        </div>
 
         <h2 class="cx-section">Gallery photos</h2>
         <p class="cx-hint">Up to 8 photos. First photo becomes the hero. Max 35 MB each.</p>
@@ -221,6 +236,6 @@
 
 </main>
 
-<script type="module" src="js/create-form.js?v=19"></script>
+<script type="module" src="js/create-form.js?v=20"></script>
 </body>
 </html>

@@ -537,8 +537,15 @@ function collectFormForPreview() {
       mapsDeepLink: $("f-venue-maps").value,
     },
     blessing:  $("f-blessing").value,
-    dressCode: { label: $("f-dress-code").value,
-                 colors: ["#f7d9e1", "#efc8d2", "#a13b58", "#c9a86a"] },
+    dressCode: {
+      label:  $("f-dress-code").value,
+      // Pull each live swatch value. Lower-case for consistency; drop
+      // the "unset" white sentinel the form seeds the last row with so
+      // a 4-colour palette doesn't silently include stray white.
+      colors: [...document.querySelectorAll("#dress-colors .cx-color")]
+                 .map((el) => (el.value || "").toLowerCase().trim())
+                 .filter((c) => c && c !== "#ffffff"),
+    },
     gallery:   [...galleryBuilder.querySelectorAll(".mem-row")].map((row) => {
       const file = row.querySelector(".mem-file").files?.[0];
       return file ? URL.createObjectURL(file) : "";
@@ -941,6 +948,17 @@ async function loadAdminEditFixtures() {
     setIf("f-venue-maps",    v.mapsEmbedSrc);
     setIf("f-blessing",      p.blessing);
     setIf("f-dress-code",    p.dressCode?.label);
+    // Pre-fill the colour swatches from the stored palette. Missing
+    // slots stay at their seed default so the host can extend an
+    // existing palette by just editing the extra swatches.
+    const storedColors = Array.isArray(p.dressCode?.colors) ? p.dressCode.colors : [];
+    const colorInputs  = document.querySelectorAll("#dress-colors .cx-color");
+    storedColors.forEach((hex, i) => {
+      const el = colorInputs[i];
+      if (el && typeof hex === "string" && /^#[0-9a-f]{6}$/i.test(hex)) {
+        el.value = hex.toLowerCase();
+      }
+    });
   }
 
   schedulePreview();

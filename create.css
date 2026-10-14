@@ -103,6 +103,36 @@ html, body {
 }
 .cx-clear[hidden] { display: none; }
 
+/* Dress-code colour picker row. Each swatch is a native color input
+   stripped of its OS chrome so the row reads as a line of coloured
+   chips the host clicks to open the system picker. */
+.cx-colors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 4px;
+}
+.cx-color {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  border-radius: 10px;
+  background: transparent;
+  cursor: pointer;
+  overflow: hidden;
+}
+.cx-color::-webkit-color-swatch-wrapper { padding: 0; }
+.cx-color::-webkit-color-swatch { border: 0; border-radius: 9px; }
+.cx-color::-moz-color-swatch     { border: 0; border-radius: 9px; }
+.cx-color:focus-visible {
+  outline: 2px solid #4a2033;
+  outline-offset: 2px;
+}
+
 .cx-field label, .cx-field legend, fieldset.cx-field legend {
   font-family: 'Manrope', sans-serif;
   font-size: 11px;
