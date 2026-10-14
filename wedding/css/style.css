@@ -539,18 +539,13 @@ body.lightbox-open { overflow: hidden; }
   text-align: center;
 }
 
-/* Small gold floral divider above the section title.
-   The source PNG has two tiny decorative dots floating on the far
-   left of its canvas that make the whole motif look off-centre; the
-   symmetric clip-path chops those off (and the equivalent empty strip
-   on the right) so the flower sits dead-centre in the card. */
+/* Small gold floral divider above the section title. */
 .divider {
   display: block;
   margin: 0 auto 20px;
   width: min(240px, 60%);
   height: auto;
   opacity: 0.95;
-  clip-path: inset(0 7% 0 7%);
 }
 
 /* Bold uppercase pink section title (matches reference) */
