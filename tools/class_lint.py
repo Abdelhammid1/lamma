@@ -49,8 +49,9 @@ CLASS_WHITELIST: set[str] = {
 
 _JS_CLASSNAME_ASSIGN = re.compile(r"""\.className\s*=\s*(['"])([^'"]*?)\1""")
 _JS_CLASSLIST_METHOD = re.compile(r"""\.classList\.(?:add|remove|toggle|replace)\(\s*(['"])([^'"]*?)\1(?:\s*,\s*(['"])([^'"]*?)\3)?""")
-_JS_CLASS_ATTR       = re.compile(r"""class\s*=\s*(['"])([^'"]*?)\1""")  # inline HTML in template strings
-_JS_TEMPLATE_CLASS   = re.compile(r"""class=['"]([^'"]+)['"]""")         # same thing, broader
+# Classes referenced from inline HTML snippets embedded in JS template
+# strings (`class="..."` or `class='...'`).
+_JS_TEMPLATE_CLASS   = re.compile(r"""class\s*=\s*(['"])([^'"]*?)\1""")
 _HTML_CLASS_ATTR     = re.compile(r"""class\s*=\s*(['"])([^'"]*?)\1""")
 _CSS_SELECTOR_CLASS  = re.compile(r"\.([A-Za-z_][A-Za-z0-9_-]*)")
 
@@ -80,7 +81,7 @@ def extract_js_classes(path: Path) -> set[str]:
         out.add(m.group(2))
         if m.group(4): out.add(m.group(4))
     for m in _JS_TEMPLATE_CLASS.finditer(text):
-        out |= _tokens_from_classlist(m.group(1))
+        out |= _tokens_from_classlist(m.group(2))
     return out
 
 
@@ -99,6 +100,26 @@ def extract_css_classes(path: Path) -> set[str]:
 
 # ---- scanner -----------------------------------------------------------------
 
+_IGNORE_DIRS = {"node_modules", "dist", "build", ".cache", "coverage"}
+
+
+def _iter_template_files(tpl_dir: Path):
+    """Yield only files we author: HTML at the template root, plus js/
+    and css/ files one level deep. Skips vendored or build-output trees
+    so false positives from a dropped-in node_modules can't appear."""
+    for p in tpl_dir.glob("*.html"):
+        yield p
+    for sub in ("js", "css"):
+        subdir = tpl_dir / sub
+        if not subdir.is_dir():
+            continue
+        for p in subdir.iterdir():
+            if p.is_dir() and p.name in _IGNORE_DIRS:
+                continue
+            if p.is_file():
+                yield p
+
+
 def scan_template(tpl_dir: Path) -> dict:
     used: dict[str, set[Path]] = {}
     defined: set[str] = set()
@@ -107,9 +128,7 @@ def scan_template(tpl_dir: Path) -> dict:
         for c in cls_set:
             used.setdefault(c, set()).add(src)
 
-    for p in tpl_dir.rglob("*"):
-        if not p.is_file():
-            continue
+    for p in _iter_template_files(tpl_dir):
         suf = p.suffix.lower()
         if suf in {".js", ".mjs"}:
             _add_used(extract_js_classes(p), p)

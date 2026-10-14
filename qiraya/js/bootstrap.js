@@ -15,7 +15,7 @@ const RENDERER_MODULES = [
   "./venue.js?v=2",
   "./schedule.js?v=7",
   "./contacts.js?v=1",
-  "./guestbook.js?v=2","./view-ping.js",
+  "./guestbook.js?v=2", "./view-ping.js",
   "./reveal.js",
 ];
 

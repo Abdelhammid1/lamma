@@ -35,28 +35,32 @@ form?.addEventListener("submit", async (e) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, message }),
     });
-    if (!r.ok) {
-      const j = await r.json().catch(() => ({}));
-      throw new Error(j.message || `HTTP ${r.status}`);
-    }
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
     form.reset();
     if (statusEl) statusEl.textContent = "Thank you — your wish is saved.";
     loadWishes();
   } catch (err) {
     console.error("[guestbook]", err);
-    if (statusEl) statusEl.textContent = (err && err.message) ? `Couldn't send: ${err.message}` : "Something went wrong. Try again.";
+    if (statusEl) statusEl.textContent = "Something went wrong. Try again.";
   } finally {
     if (submitBtn) submitBtn.disabled = false;
   }
 });
 
 /* ----- poll-based feed ----- */
+// Guard against overlapping fetches so an earlier slow response can't
+// overwrite a newer one with stale rows.
+let gbInFlight = false;
+let gbSeq = 0;
 async function loadWishes() {
-  if (!listEl) return;
+  if (!listEl || gbInFlight) return;
+  gbInFlight = true;
+  const myTicket = ++gbSeq;
   try {
     const r = await fetch(LIST_URL, { credentials: "same-origin" });
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const j = await r.json();
+    if (myTicket !== gbSeq) return;
     listEl.innerHTML = "";
     for (const w of (j.wishes || [])) {
       const li = document.createElement("li");
@@ -75,6 +79,8 @@ async function loadWishes() {
     }
   } catch (err) {
     console.warn("[guestbook]", err);
+  } finally {
+    gbInFlight = false;
   }
 }
 

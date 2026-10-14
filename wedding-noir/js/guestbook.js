@@ -56,10 +56,7 @@ if (form) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, message }),
       });
-      if (!r.ok) {
-        const j = await r.json().catch(() => ({}));
-        throw new Error(j.message || `HTTP ${r.status}`);
-      }
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
       form.reset();
       if (statusEl) {
         statusEl.textContent = "Thank you, your wish has been saved 💌";
@@ -70,7 +67,7 @@ if (form) {
     } catch (err) {
       console.error(err);
       if (statusEl) {
-        statusEl.textContent = (err && err.message) ? `Couldn't send: ${err.message}` : "Something went wrong. Please try again.";
+        statusEl.textContent = "Something went wrong. Please try again.";
         statusEl.className   = "rsvp-status error";
       }
     } finally {
@@ -124,12 +121,22 @@ function renderEntries(entries) {
   }
 }
 
+// Guard against overlapping fetches: a slow earlier response arriving
+// AFTER a newer one would overwrite the fresh list with stale data. The
+// in-flight flag plus an incrementing seq number makes stale responses
+// a no-op even if the browser resolves them out of order.
+let gbInFlight = false;
+let gbSeq = 0;
 async function loadWishes() {
-  if (!listEl) return;
+  if (!listEl || gbInFlight) return;
+  gbInFlight = true;
+  const myTicket = ++gbSeq;
   try {
     const r = await fetch(LIST_URL, { credentials: "same-origin" });
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const j = await r.json();
+    // Another, newer load started between our fetch() and our resolve.
+    if (myTicket !== gbSeq) return;
     const entries = (j.wishes || []).map((w) => ({
       id: w.id,
       name: w.name || "",
@@ -143,15 +150,15 @@ async function loadWishes() {
       emptyEl.hidden = false;
       emptyEl.textContent = "Could not load wishes right now.";
     }
+  } finally {
+    gbInFlight = false;
   }
 }
 
 if (listEl) {
   loadWishes();
   // Pause polling when the tab is hidden to save bandwidth + server load.
-  let pollId = setInterval(() => {
-    if (!document.hidden) loadWishes();
-  }, POLL_MS);
+  setInterval(() => { if (!document.hidden) loadWishes(); }, POLL_MS);
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden) loadWishes();
   });
