@@ -13,6 +13,7 @@ const RENDERER_MODULES = [
   "./details.js",
   "./countdown.js",
   "./venue.js?v=2",
+  "./schedule.js",
   "./guestbook.js",
   "./reveal.js",
 ];
@@ -75,6 +76,8 @@ function mergeInvitation(raw) {
   if (typeof data.blessing    === "string") CONFIG.blessing    = data.blessing;
   if (typeof data.quote       === "string") CONFIG.quote       = data.quote;
   if (typeof data.quoteSource === "string") CONFIG.quoteSource = data.quoteSource;
+  if (Array.isArray(data.schedule))         CONFIG.schedule    = data.schedule
+    .filter((it) => it && typeof it.time === "string" && typeof it.label === "string");
   if (typeof data.music       === "string") CONFIG.music       = data.music;
   if (typeof data.slug        === "string") CONFIG.slug        = data.slug;
 }

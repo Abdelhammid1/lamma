@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,600&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Cairo:wght@400;600;700&family=Manrope:wght@400;500;600;700&display=swap"
       rel="stylesheet" />
-<link rel="stylesheet" href="create.css?v=4" />
+<link rel="stylesheet" href="create.css?v=5" />
 </head>
 <body>
 
@@ -166,6 +166,15 @@
           <label for="f-blessing">Blessing / short message</label>
           <textarea id="f-blessing" rows="3" dir="auto"></textarea>
         </div>
+
+        <!-- Program / schedule — vertical timeline rendered on the
+             invitation page. Each row is one event (time + label);
+             rows are kept in display order which is the order the host
+             typed them (the renderer doesn't re-sort). -->
+        <h2 class="cx-section">Program (optional)</h2>
+        <p class="cx-hint">Timeline items — reception, dinner, first dance, etc. Leave blank to hide the section on the invitation.</p>
+        <div id="schedule-builder"></div>
+        <button type="button" id="add-schedule-btn" class="cx-btn cx-btn-ghost">+ Add item</button>
         <div class="cx-field">
           <label for="f-dress-code">Dress code label</label>
           <input id="f-dress-code" type="text" placeholder="Pink dresses" />
@@ -250,6 +259,6 @@
 
 </main>
 
-<script type="module" src="js/create-form.js?v=23"></script>
+<script type="module" src="js/create-form.js?v=24"></script>
 </body>
 </html>

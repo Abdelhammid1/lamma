@@ -229,6 +229,14 @@
       </a>
     </section>
 
+    <!-- Program / schedule — hidden by schedule.js when CONFIG.schedule
+         is empty, revealed with a vertical timeline otherwise. -->
+    <section class="section schedule reveal" id="schedule" aria-labelledby="schedule-title" hidden>
+      <img class="divider" src="images/divider.png" alt="" aria-hidden="true" />
+      <h2 id="schedule-title" class="section-title-caps">Program</h2>
+      <ol class="timeline" id="schedule-list"></ol>
+    </section>
+
     <!-- Stage 6 · Dress Code -->
     <section class="section dress-code reveal" id="dress-code" aria-labelledby="dress-code-title">
       <img class="divider" src="images/divider.png" alt="" aria-hidden="true" />
@@ -272,7 +280,7 @@
 
   <!-- One entry point: bootstrap.js resolves the slug, fetches Firestore,
        merges into CONFIG, then dynamically imports every renderer. -->
-  <script type="module" src="js/bootstrap.js?v=16"></script>
+  <script type="module" src="js/bootstrap.js?v=17"></script>
 
 </body>
 </html>

@@ -624,3 +624,46 @@ a { color: inherit; }
   }
   .section { transform: none; opacity: 1; }
 }
+
+/* ---- Program / schedule — ivory + rose gold ---------------------- */
+.schedule .timeline {
+  list-style: none; padding: 0; margin: 24px auto 0; max-width: 420px;
+  display: flex; flex-direction: column; gap: 22px; position: relative;
+}
+.schedule .timeline::before {
+  content: ""; position: absolute; top: 10px; bottom: 10px; left: 50%;
+  width: 1px; transform: translateX(-0.5px);
+  background-image: linear-gradient(to bottom, #c9a86a 50%, transparent 50%);
+  background-size: 1px 8px; opacity: 0.55;
+}
+.tl-row { display: grid; grid-template-columns: 1fr 14px 1fr; align-items: center; gap: 10px; }
+.tl-time {
+  text-align: right; padding-right: 12px;
+  font-family: "Cormorant Garamond", serif; font-size: 15px;
+  color: #7a5a2a; font-weight: 500; font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+.tl-marker {
+  justify-self: center; width: 12px; height: 12px; border-radius: 50%;
+  background: #c9a86a; border: 2px solid #fbf7ee;
+  box-shadow: 0 0 0 1px rgba(201,168,106,0.4);
+  position: relative; z-index: 1;
+}
+.tl-label {
+  padding-left: 12px; font-family: "Cormorant Garamond", serif;
+  font-size: 16px; color: #4a3b1f; line-height: 1.4;
+}
+.tl-past   .tl-time, .tl-past .tl-label { opacity: 0.7; }
+.tl-next   .tl-marker {
+  background: #fbf7ee;
+  box-shadow: 0 0 0 2px #a8842f, 0 0 0 6px rgba(201,168,106,0.2);
+  animation: tlPulseEng 2s ease-in-out infinite;
+}
+.tl-next   .tl-time, .tl-next .tl-label { color: #7a5a2a; font-weight: 600; }
+.tl-future .tl-marker { background: #e0d4b2; box-shadow: none; }
+.tl-future .tl-time, .tl-future .tl-label { opacity: 0.55; }
+@keyframes tlPulseEng {
+  0%, 100% { box-shadow: 0 0 0 2px #a8842f, 0 0 0 6px rgba(201,168,106,0.2); }
+  50%      { box-shadow: 0 0 0 2px #a8842f, 0 0 0 10px rgba(201,168,106,0.04); }
+}
+@media (prefers-reduced-motion: reduce) { .tl-next .tl-marker { animation: none; } }

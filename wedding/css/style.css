@@ -1195,3 +1195,86 @@ body.lightbox-open { overflow: hidden; }
 /* ---- Calendar frame PNG rebuilt (was cropped on the right): 634x760 ---- */
 .calendar-frame { aspect-ratio: 634 / 760; }
 .calendar { padding: 20cqw 18.5cqw 17.5cqw; }
+
+/* ---- Program / schedule timeline ---------------------------------
+   Vertical dashed line down the centre, each row = time | marker | label.
+   States set by schedule.js (tl-past / tl-next / tl-future):
+     past  → filled brand marker, time muted
+     next  → hollow marker with a soft pulse ring
+     future→ dim marker, label slightly faded
+---------------------------------------------------------------------- */
+.schedule .timeline {
+  list-style: none;
+  padding: 0;
+  margin: 24px auto 0;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  position: relative;
+}
+.schedule .timeline::before {
+  content: "";
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  left: 50%;
+  width: 1px;
+  background-image: linear-gradient(to bottom, rgba(161,59,88,0.5) 50%, transparent 50%);
+  background-size: 1px 8px;
+  transform: translateX(-0.5px);
+}
+.tl-row {
+  display: grid;
+  grid-template-columns: 1fr 24px 1fr;
+  align-items: center;
+  gap: 10px;
+}
+.tl-time {
+  text-align: right;
+  padding-right: 12px;
+  font-family: var(--font-serif, "Cormorant Garamond", serif);
+  font-size: 15px;
+  letter-spacing: 0.04em;
+  color: #a13b58;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.tl-marker {
+  justify-self: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #a13b58;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px rgba(161,59,88,0.3);
+  position: relative;
+  z-index: 1;
+}
+.tl-label {
+  padding-left: 12px;
+  font-family: var(--font-script, "Cormorant Garamond", serif);
+  font-size: 16px;
+  color: #4a1f2e;
+  line-height: 1.4;
+}
+/* Past — filled, confident */
+.tl-past .tl-marker { background: #a13b58; }
+.tl-past .tl-time, .tl-past .tl-label { color: #4a1f2e; opacity: 0.75; }
+/* Next — hollow with pulse */
+.tl-next .tl-marker {
+  background: #fff;
+  box-shadow: 0 0 0 2px #a13b58, 0 0 0 6px rgba(161,59,88,0.15);
+  animation: tlPulse 2s ease-in-out infinite;
+}
+.tl-next .tl-time, .tl-next .tl-label { color: #a13b58; font-weight: 600; }
+/* Future — dim */
+.tl-future .tl-marker { background: #d8c7cd; box-shadow: none; }
+.tl-future .tl-time, .tl-future .tl-label { color: #a98691; opacity: 0.7; }
+@keyframes tlPulse {
+  0%, 100% { box-shadow: 0 0 0 2px #a13b58, 0 0 0 6px rgba(161,59,88,0.15); }
+  50%      { box-shadow: 0 0 0 2px #a13b58, 0 0 0 10px rgba(161,59,88,0.05); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tl-next .tl-marker { animation: none; }
+}

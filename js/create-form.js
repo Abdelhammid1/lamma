@@ -499,6 +499,33 @@ $("f-wedding-music").addEventListener("change", (e) => {
 
 addGalleryRow();
 
+/* ================= Program / schedule builder ================= */
+
+const scheduleBuilder = $("schedule-builder");
+$("add-schedule-btn").addEventListener("click", () => { addScheduleRow(); schedulePreview(); });
+
+function addScheduleRow(existing) {
+  const row = document.createElement("div");
+  row.className = "sched-row";
+  row.innerHTML = `
+    <input type="time" class="sched-time" aria-label="Time">
+    <input type="text" class="sched-label" dir="auto" placeholder="e.g. Reception / الاستقبال">
+    <button type="button" class="sched-remove" title="Remove item" aria-label="Remove">×</button>
+  `;
+  const timeEl  = row.querySelector(".sched-time");
+  const labelEl = row.querySelector(".sched-label");
+  if (existing && typeof existing === "object") {
+    if (/^\d{1,2}:\d{2}$/.test(existing.time || "")) timeEl.value = existing.time;
+    if (typeof existing.label === "string")          labelEl.value = existing.label;
+  }
+  row.querySelector(".sched-remove").addEventListener("click", () => {
+    row.remove(); schedulePreview();
+  });
+  timeEl.addEventListener("input",  schedulePreview);
+  labelEl.addEventListener("input", schedulePreview);
+  scheduleBuilder.appendChild(row);
+}
+
 /* ================= Live preview ================= */
 
 let previewTimer;
@@ -617,6 +644,14 @@ function collectFormForPreview() {
       // when there is no new file for this row.
       return file ? URL.createObjectURL(file) : (row.dataset.existingUrl || "");
     }).filter(Boolean),
+    // Program / timeline rows the host added. Row display order wins —
+    // the renderer doesn't sort by time (hosts occasionally want an
+    // out-of-order ceremonial sequence). Rows missing a time OR a
+    // label are dropped so the invitation never shows a blank row.
+    schedule: [...scheduleBuilder.querySelectorAll(".sched-row")].map((row) => ({
+      time:  row.querySelector(".sched-time").value.trim(),
+      label: row.querySelector(".sched-label").value.trim(),
+    })).filter((it) => it.time && it.label),
     music:     (() => {
       const f = $("f-wedding-music").files?.[0];
       return f ? URL.createObjectURL(f) : "";
@@ -1040,6 +1075,13 @@ async function loadAdminEditFixtures() {
     if (Array.isArray(p.gallery) && p.gallery.length) {
       galleryBuilder.innerHTML = "";
       for (const url of p.gallery) addGalleryRow(url);
+    }
+    // Rebuild schedule rows from the stored timeline (if any). An
+    // empty schedule leaves the builder blank — host can still add
+    // rows via the + button.
+    if (Array.isArray(p.schedule) && p.schedule.length) {
+      scheduleBuilder.innerHTML = "";
+      for (const it of p.schedule) addScheduleRow(it);
     }
   }
 

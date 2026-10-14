@@ -173,6 +173,41 @@ html, body {
   outline-offset: 2px;
 }
 
+/* Program / schedule row builder — one row per timeline item: time
+   picker on the left (compact), free-text label (grows), × remove. */
+#schedule-builder { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
+.sched-row {
+  display: grid;
+  grid-template-columns: 112px 1fr 32px;
+  gap: 8px;
+  align-items: center;
+}
+.sched-row .sched-time,
+.sched-row .sched-label {
+  padding: 10px 12px;
+  border: 1px solid rgba(74, 32, 51, 0.18);
+  border-radius: 8px;
+  background: #fff;
+  font-family: 'Manrope', sans-serif;
+  font-size: 14px;
+  color: #310b1e;
+}
+.sched-row .sched-time { font-variant-numeric: tabular-nums; }
+.sched-row .sched-time:focus,
+.sched-row .sched-label:focus { outline: 2px solid #4a2033; outline-offset: 1px; border-color: #4a2033; }
+.sched-row .sched-remove {
+  width: 32px; height: 32px;
+  border: 1px solid rgba(74, 32, 51, 0.18);
+  border-radius: 50%;
+  background: #fff;
+  color: #4a2033;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.sched-row .sched-remove:hover { background: #faf7f3; border-color: #4a2033; }
+
 .cx-field label, .cx-field legend, fieldset.cx-field legend {
   font-family: 'Manrope', sans-serif;
   font-size: 11px;

@@ -19,6 +19,7 @@ const RENDERER_MODULES = [
   "./venue.js?v=2",
   "./dress-code.js",
   "./gallery.js",
+  "./schedule.js",
   "./guestbook.js",
   "./reveal.js",
 ];
@@ -80,6 +81,8 @@ function mergeInvitation(raw) {
   if (data.dressCode && typeof data.dressCode === "object") Object.assign(CONFIG.dressCode, data.dressCode);
   if (typeof data.blessing === "string")  CONFIG.blessing = data.blessing;
   if (Array.isArray(data.gallery))        CONFIG.gallery  = data.gallery.filter(Boolean);
+  if (Array.isArray(data.schedule))       CONFIG.schedule = data.schedule
+    .filter((it) => it && typeof it.time === "string" && typeof it.label === "string");
   if (typeof data.music === "string")     CONFIG.music    = data.music;
   if (typeof data.slug === "string")      CONFIG.slug     = data.slug;
 }

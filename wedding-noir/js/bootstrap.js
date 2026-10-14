@@ -25,7 +25,8 @@ const RENDERER_MODULES = [
   "./cover.js",       "./announcement.js", "./gallery.js",
   "./event-info.js",  "./countdown.js",    "./calendar.js",
   "./ics.js",         "./rsvp.js",         "./venue.js?v=2",
-  "./dress-code.js",  "./guestbook.js",    "./reveal.js",
+  "./schedule.js",    "./dress-code.js",   "./guestbook.js",
+  "./reveal.js",
 ];
 
 const RESERVED_SEG = new Set([
@@ -115,6 +116,8 @@ function mergeInvitation(raw) {
   if (data.dressCode && typeof data.dressCode === "object") Object.assign(CONFIG.dressCode, data.dressCode);
   if (typeof data.blessing === "string")  CONFIG.blessing = data.blessing;
   if (Array.isArray(data.gallery))        CONFIG.gallery  = data.gallery.filter(Boolean);
+  if (Array.isArray(data.schedule))       CONFIG.schedule = data.schedule
+    .filter((it) => it && typeof it.time === "string" && typeof it.label === "string");
   if (typeof data.music === "string")     CONFIG.music    = data.music;
   if (typeof data.slug === "string")      CONFIG.slug     = data.slug;
 }
