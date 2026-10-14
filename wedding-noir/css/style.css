@@ -323,12 +323,50 @@ img[src*="calendar-frame"], img[src*="corner"], img[src*="ornament"] { display: 
   max-width: 380px;
 }
 .calendar {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 4px 2px;
+  display: block;
   padding: 16px;
   border: 1px solid var(--rule);
 }
+.calendar .cal-header {
+  font-family: var(--font-body);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: center;
+  padding: 4px 0 12px;
+  font-weight: 600;
+}
+.calendar .cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px 2px;
+}
+.calendar .cal-dow {
+  font-family: var(--font-body);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: center;
+  padding: 6px 0;
+  font-weight: 600;
+}
+.calendar .cal-cell {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--ink-soft);
+  text-align: center;
+  padding: 8px 0;
+  font-variant-numeric: tabular-nums;
+}
+.calendar .cal-cell.cal-event {
+  background: var(--ink);
+  color: var(--cream);
+  border-radius: 50%;
+  font-weight: 600;
+}
+.calendar .cal-cell.cal-blank { color: transparent; }
 .calendar .cal-head {
   font-family: var(--font-body);
   font-size: 10px;
