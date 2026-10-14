@@ -117,15 +117,16 @@
           <div class="occ-chevron">2 styles →</div>
         </button>
 
-        <!-- Engagement (one style → direct link) -->
-        <a href="/create.html?type=engagement" class="occ-card">
+        <!-- Engagement — single style but goes through step 2 for a
+             consistent "see the preview before you commit" flow. -->
+        <button type="button" data-occasion="engagement" class="occ-card">
           <div class="occ-swatch" style="background:linear-gradient(135deg,#f5ead6,#efd8a8);">
             <span class="font-display italic text-[22px]" style="color:#7a5a2a;">Engagement</span>
           </div>
           <div class="occ-title">Engagement</div>
           <div class="occ-ar font-arabic" dir="rtl">خطوبة</div>
-          <div class="occ-chevron">Create →</div>
-        </a>
+          <div class="occ-chevron">Preview →</div>
+        </button>
 
         <!-- Birthday (multi-style → opens style picker) -->
         <button type="button" data-occasion="birthday"
@@ -138,25 +139,25 @@
           <div class="occ-chevron">2 styles →</div>
         </button>
 
-        <!-- قراية فاتحة -->
-        <a href="/create.html?type=qiraya" class="occ-card">
+        <!-- قراية فاتحة — single style, routed through step 2 -->
+        <button type="button" data-occasion="qiraya" class="occ-card">
           <div class="occ-swatch" style="background:#fbf7ee; border:1px solid #d7cfb8;" dir="rtl">
             <span class="font-arabic font-semibold text-[20px]" style="color:#1e3f30;">قراية فاتحة</span>
           </div>
           <div class="occ-title font-arabic" dir="rtl">قراية فاتحة</div>
           <div class="occ-ar">Qiraya Fatiha</div>
-          <div class="occ-chevron">Create →</div>
-        </a>
+          <div class="occ-chevron">Preview →</div>
+        </button>
 
-        <!-- سبوع -->
-        <a href="/create.html?type=sobou" class="occ-card">
+        <!-- سبوع — single style, routed through step 2 -->
+        <button type="button" data-occasion="sobou" class="occ-card">
           <div class="occ-swatch" style="background:linear-gradient(135deg,#fff6e3,#fde4b8);" dir="rtl">
             <span class="font-arabic font-semibold text-[22px]" style="color:#8a5a1a;">سبوع</span>
           </div>
           <div class="occ-title font-arabic" dir="rtl">سبوع</div>
           <div class="occ-ar">Sobou</div>
-          <div class="occ-chevron">Create →</div>
-        </a>
+          <div class="occ-chevron">Preview →</div>
+        </button>
       </div>
     </section>
 
@@ -330,6 +331,53 @@
         },
       ],
     },
+    // Single-style occasions — step 2 still opens so the host sees
+    // the design + has a Preview link before committing.
+    engagement: {
+      titleEn: "Engagement",
+      titleAr: "خطوبة",
+      styles: [
+        {
+          id: "engagement",
+          name: "Classic",
+          hint: "Ivory & rose gold",
+          preview: "/engagement/",
+          swatch: `<div style="background:linear-gradient(135deg,#f5ead6,#efd8a8);width:100%;height:100%;border-radius:inherit;display:grid;place-items:center;">
+                     <span style="font-family:'Playfair Display',serif;font-style:italic;color:#7a5a2a;font-size:26px;">Engagement</span>
+                   </div>`,
+        },
+      ],
+    },
+    qiraya: {
+      titleEn: "قراية فاتحة",
+      titleAr: "Qiraya Fatiha",
+      styles: [
+        {
+          id: "qiraya",
+          name: "Classic",
+          hint: "Ivory & forest green",
+          preview: "/qiraya/",
+          swatch: `<div style="background:#fbf7ee;border:1px solid #d7cfb8;width:100%;height:100%;border-radius:inherit;display:grid;place-items:center;" dir="rtl">
+                     <span style="font-family:'Cairo',sans-serif;font-weight:600;color:#1e3f30;font-size:24px;">قراية فاتحة</span>
+                   </div>`,
+        },
+      ],
+    },
+    sobou: {
+      titleEn: "سبوع",
+      titleAr: "Sobou",
+      styles: [
+        {
+          id: "sobou",
+          name: "Classic",
+          hint: "Cream & candle yellow",
+          preview: "/sobou/",
+          swatch: `<div style="background:linear-gradient(135deg,#fff6e3,#fde4b8);width:100%;height:100%;border-radius:inherit;display:grid;place-items:center;" dir="rtl">
+                     <span style="font-family:'Cairo',sans-serif;font-weight:600;color:#8a5a1a;font-size:28px;">سبوع</span>
+                   </div>`,
+        },
+      ],
+    },
   };
 
   const esc = (s) => String(s).replace(/[<>&"]/g, (c) => ({ "<":"&lt;",">":"&gt;","&":"&amp;",'"':"&quot;" }[c]));
@@ -342,10 +390,14 @@
     sub.textContent = occ.titleAr;
     sub.setAttribute("dir", "rtl");
     const grid = document.getElementById("styles-grid");
+    // Single-style occasions already have the occasion name in the
+    // header above — drop the "Classic" label on the tile so the host
+    // isn't reading "Engagement / Engagement / Classic" vertically.
+    const showStyleName = occ.styles.length > 1;
     grid.innerHTML = occ.styles.map((s) => `
       <div class="style-card">
         <div class="style-swatch">${s.swatch}</div>
-        <div class="style-title">${esc(s.name)}</div>
+        ${showStyleName ? `<div class="style-title">${esc(s.name)}</div>` : ""}
         <div class="style-hint">${esc(s.hint)}</div>
         <div class="style-actions">
           <a class="preview" href="${esc(s.preview)}" target="_blank" rel="noopener">Preview</a>
@@ -353,6 +405,10 @@
         </div>
       </div>
     `).join("");
+    // Also tune the eyebrow label to match the content (one style
+    // doesn't ask the host to "pick" anything, they're just confirming).
+    const eyebrow = document.querySelector("#picker-styles .font-label");
+    if (eyebrow) eyebrow.textContent = showStyleName ? "Pick a style" : "Preview";
     document.getElementById("picker-occasions").hidden = true;
     document.getElementById("picker-styles").hidden    = false;
     window.scrollTo({ top: 0, behavior: "smooth" });
