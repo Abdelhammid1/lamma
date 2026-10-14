@@ -1190,3 +1190,8 @@ body.lightbox-open { overflow: hidden; }
   box-sizing: border-box;
   padding: 20cqw 15cqw 17.5cqw;
 }
+
+
+/* ---- Calendar frame PNG rebuilt (was cropped on the right): 634x760 ---- */
+.calendar-frame { aspect-ratio: 634 / 760; }
+.calendar { padding: 20cqw 18.5cqw 17.5cqw; }
