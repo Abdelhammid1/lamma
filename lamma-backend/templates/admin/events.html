@@ -61,6 +61,9 @@
         {% endif %}
         {% if ev.status != 'deleted' %}
           <a href="/create.html?admin_edit={{ ev.id }}" class="btn btn-outline btn-sm">Edit</a>
+          {% if ev.status == 'published' %}
+            <a href="{{ url_for('admin.event_responses', event_id=ev.id) }}" class="btn btn-ghost btn-sm">Responses</a>
+          {% endif %}
         {% endif %}
         <form method="post" action="{{ url_for('admin.delete_event', event_id=ev.id) }}"
               onsubmit="return confirm('Delete {{ ev.slug }}?')" class="inline">

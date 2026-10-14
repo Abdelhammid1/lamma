@@ -292,7 +292,7 @@ addQuizRow({ question: "", options: ["", "", ""], correctIndex: 0 });
 const memBuilder = $("memories-builder");
 $("add-memory-btn").addEventListener("click", () => { addMemoryRow(); schedulePreview(); });
 
-function addMemoryRow() {
+function addMemoryRow(existing) {
   const idx = memBuilder.querySelectorAll(".mem-row").length;
   const row = document.createElement("div");
   row.className = "mem-row";
@@ -314,6 +314,18 @@ function addMemoryRow() {
   const fileInput = row.querySelector(".mem-file");
   const thumb     = row.querySelector(".mem-thumb");
   const clearBtn  = row.querySelector(".mem-clear");
+  // In edit mode we pre-fill a row with the already-committed photo —
+  // show its thumbnail + stash the URL on the row's dataset so
+  // collectForm can keep it when the host doesn't pick a new file.
+  // Date caption also pre-fills. The × button on the right removes the
+  // whole row (and therefore drops this photo from the payload).
+  // Picking a new file via the <input type="file"> replaces the
+  // thumbnail — the dataset URL is cleared then so the new file wins.
+  if (existing && existing.url) {
+    row.dataset.existingUrl = existing.url;
+    thumb.innerHTML = `<img src="${existing.url}" alt="">`;
+    if (existing.dateLabel) row.querySelector(".mem-date").value = existing.dateLabel;
+  }
   const resetThumb = () => {
     thumb.innerHTML = `<div class="mem-thumb-num">#${idx + 1}</div>`;
     renumberMemories();
@@ -327,6 +339,9 @@ function addMemoryRow() {
       clearBtn.hidden = true;
       return;
     }
+    // A new file replaces an existing cloud photo — drop the stashed
+    // URL so collectForm picks the new upload instead.
+    delete row.dataset.existingUrl;
     thumb.innerHTML = `<img src="${URL.createObjectURL(f)}" alt="">`;
     clearBtn.hidden = false;
     schedulePreview();
@@ -386,7 +401,7 @@ document.querySelectorAll("[data-clear]").forEach((btn) => {
 const galleryBuilder = $("gallery-builder");
 $("add-gallery-btn").addEventListener("click", () => { addGalleryRow(); schedulePreview(); });
 
-function addGalleryRow() {
+function addGalleryRow(existingUrl) {
   const rows = galleryBuilder.querySelectorAll(".mem-row").length;
   if (rows >= 8) { alert("Up to 8 gallery photos."); return; }
   const row = document.createElement("div");
@@ -405,6 +420,12 @@ function addGalleryRow() {
   const fileInput = row.querySelector(".mem-file");
   const thumb     = row.querySelector(".mem-thumb");
   const clearBtn  = row.querySelector(".mem-clear");
+  // Edit mode seed — show the already-committed photo + stash its URL
+  // so publish keeps it when the host doesn't pick a new file.
+  if (existingUrl) {
+    row.dataset.existingUrl = existingUrl;
+    thumb.innerHTML = `<img src="${existingUrl}" alt="">`;
+  }
   const resetThumb = () => {
     const num = [...galleryBuilder.querySelectorAll(".mem-row")].indexOf(row) + 1;
     thumb.innerHTML = `<div class="mem-thumb-num">#${num}</div>`;
@@ -412,6 +433,7 @@ function addGalleryRow() {
   fileInput.addEventListener("change", (e) => {
     const f = guardFileSize(e.target, MAX_MB, "Photo");
     if (!f) { clearBtn.hidden = true; resetThumb(); schedulePreview(); return; }
+    delete row.dataset.existingUrl;
     thumb.innerHTML = `<img src="${URL.createObjectURL(f)}" alt="">`;
     clearBtn.hidden = false;
     schedulePreview();
@@ -487,8 +509,13 @@ function collectFormForPreview() {
       quiz:        readQuiz(),
       memories:    [...memBuilder.querySelectorAll(".mem-row")].map((row) => {
         const file = row.querySelector(".mem-file").files?.[0];
+        // Edit mode: when the host hasn't picked a new file for this
+        // row, fall back to the already-committed photo URL stashed on
+        // the row's dataset — otherwise the preview + save would drop
+        // the existing photo. In create mode dataset.existingUrl is
+        // absent so this is a no-op.
         return {
-          url:       file ? URL.createObjectURL(file) : "",
+          url:       file ? URL.createObjectURL(file) : (row.dataset.existingUrl || ""),
           dateLabel: row.querySelector(".mem-date").value.trim(),
         };
       }),
@@ -548,7 +575,9 @@ function collectFormForPreview() {
     },
     gallery:   [...galleryBuilder.querySelectorAll(".mem-row")].map((row) => {
       const file = row.querySelector(".mem-file").files?.[0];
-      return file ? URL.createObjectURL(file) : "";
+      // Same edit-mode fallback as memories — keep the committed URL
+      // when there is no new file for this row.
+      return file ? URL.createObjectURL(file) : (row.dataset.existingUrl || "");
     }).filter(Boolean),
     music:     (() => {
       const f = $("f-wedding-music").files?.[0];
@@ -924,6 +953,14 @@ async function loadAdminEditFixtures() {
       quizBuilder.innerHTML = "";
       for (const q of p.quiz) addQuizRow(q);
     }
+    // Rebuild memory rows from the stored photos — otherwise the host
+    // sees an empty row and no way to see / delete / caption the ones
+    // they already uploaded. The seed row addMemoryRow() ran at module
+    // init is replaced here.
+    if (Array.isArray(p.memories) && p.memories.length) {
+      memBuilder.innerHTML = "";
+      for (const m of p.memories) addMemoryRow({ url: m?.url, dateLabel: m?.dateLabel });
+    }
   } else {
     const c = p.couple || {};
     setIf("f-groom",         c.groom);
@@ -959,6 +996,13 @@ async function loadAdminEditFixtures() {
         el.value = hex.toLowerCase();
       }
     });
+    // Rebuild gallery rows from the stored photos. The seed row
+    // addGalleryRow() ran at module init is replaced here so the host
+    // doesn't see a stray empty row above their actual photos.
+    if (Array.isArray(p.gallery) && p.gallery.length) {
+      galleryBuilder.innerHTML = "";
+      for (const url of p.gallery) addGalleryRow(url);
+    }
   }
 
   schedulePreview();

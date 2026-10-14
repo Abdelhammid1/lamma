@@ -171,6 +171,24 @@ def events():
     return render_template("events.html", events=rows, q=q, status=status)
 
 
+@bp.get("/events/<event_id>/responses")
+@login_required
+def event_responses(event_id):
+    """Admin view of RSVPs + guestbook wishes for one event.
+
+    The data lives in Firestore (invitations/<slug>/{rsvps,guestbook}),
+    not in the backend DB — guests write directly from the public
+    invitation page. The template renders a shell + loads a tiny client
+    script that queries Firestore and renders the lists; a "Copy as
+    text" button on the page formats everything for pasting into
+    WhatsApp / email to send to the host.
+    """
+    event = db.session.get(Event, event_id)
+    if event is None:
+        abort(404)
+    return render_template("responses.html", event=event)
+
+
 # ---------------------------------------------------------------------------
 # Actions
 # ---------------------------------------------------------------------------

@@ -1,0 +1,283 @@
+{% extends "base.html" %}
+{% block title %}Responses · {{ event.slug }} · Admin{% endblock %}
+{% block content %}
+<div class="page-title-row" style="display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+  <div>
+    <h1 class="page-title" style="margin:0;">Responses · <code>{{ event.slug }}</code></h1>
+    <p class="muted" style="margin:4px 0 0;">RSVPs + guestbook wishes guests sent through the invitation page.</p>
+  </div>
+  <div style="display:flex; gap:8px; flex-wrap:wrap;">
+    <a href="{{ url_for('admin.events') }}" class="btn btn-ghost btn-sm">← Back to events</a>
+    <button type="button" id="copy-btn"  class="btn btn-outline">Copy as text</button>
+    <button type="button" id="print-btn" class="btn btn-primary">Print / save PDF</button>
+  </div>
+</div>
+
+<div class="resp-grid">
+
+  <!-- Summary -->
+  <section class="resp-card">
+    <h2 class="resp-card-title">Summary</h2>
+    <div class="resp-stats" id="stats">
+      <div class="stat"><span class="stat-n" id="stat-attending">—</span><span class="stat-label">Attending</span></div>
+      <div class="stat"><span class="stat-n" id="stat-guests">—</span><span class="stat-label">Total guests</span></div>
+      <div class="stat"><span class="stat-n" id="stat-declined">—</span><span class="stat-label">Declined</span></div>
+      <div class="stat"><span class="stat-n" id="stat-wishes">—</span><span class="stat-label">Wishes</span></div>
+    </div>
+    <p class="muted" id="load-note" style="margin-top:10px;">Loading…</p>
+  </section>
+
+  <!-- RSVPs -->
+  <section class="resp-card">
+    <h2 class="resp-card-title">RSVPs</h2>
+    <table class="resp-table" id="rsvp-table">
+      <thead>
+        <tr><th>Name</th><th>Attending</th><th>Guests</th><th>Received</th></tr>
+      </thead>
+      <tbody id="rsvp-body"></tbody>
+    </table>
+    <p class="resp-empty" id="rsvp-empty" hidden>No RSVPs yet.</p>
+  </section>
+
+  <!-- Guestbook / wishes -->
+  <section class="resp-card">
+    <h2 class="resp-card-title">Wishes</h2>
+    <ul class="resp-wishes" id="wishes-list"></ul>
+    <p class="resp-empty" id="wishes-empty" hidden>No wishes yet.</p>
+  </section>
+
+</div>
+
+<p id="copy-ok" class="copy-toast" hidden>Copied to clipboard — ready to paste into WhatsApp or email.</p>
+
+<style>
+  .muted { color: var(--muted); }
+  .resp-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+    margin-top: 18px;
+  }
+  .resp-card {
+    background: #fff;
+    border: 1px solid var(--rule, #e5e0d7);
+    border-radius: 10px;
+    padding: 18px 20px;
+  }
+  .resp-card-title {
+    margin: 0 0 12px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .resp-stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0,1fr));
+    gap: 12px;
+  }
+  .stat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 10px 14px;
+    background: #faf7f3;
+    border-radius: 8px;
+    border: 1px solid var(--rule, #e5e0d7);
+  }
+  .stat-n     { font-size: 24px; font-weight: 600; color: var(--plum, #310b1e); }
+  .stat-label { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .resp-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .resp-table th, .resp-table td { padding: 10px 12px; border-bottom: 1px solid var(--rule, #e5e0d7); text-align: start; }
+  .resp-table th { font-weight: 600; color: var(--muted); font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .resp-table .pill { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+  .resp-table .pill.yes { background: #e4f3df; color: #2b662a; }
+  .resp-table .pill.no  { background: #fde6e2; color: #a0372a; }
+  .resp-table .when     { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .resp-wishes { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; }
+  .resp-wishes li { background: #faf7f3; border: 1px solid var(--rule, #e5e0d7); border-radius: 8px; padding: 12px 14px; }
+  .resp-wishes .w-top { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 4px; font-size: 12px; color: var(--muted); }
+  .resp-wishes .w-name { font-weight: 600; color: var(--plum, #310b1e); }
+  .resp-wishes .w-msg  { font-size: 15px; line-height: 1.55; white-space: pre-wrap; }
+  .resp-empty { color: var(--muted); font-style: italic; margin: 6px 0 0; }
+  .copy-toast {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: #310b1e; color: #ffdea4;
+    padding: 10px 18px; border-radius: 8px; font-size: 13px;
+    box-shadow: 0 10px 30px -10px rgba(0,0,0,0.35);
+  }
+  @media print {
+    header.topbar, .page-title-row > div:last-child { display: none !important; }
+    .resp-card { border-color: #ccc; box-shadow: none; }
+  }
+</style>
+
+<!-- Firebase modular SDK + the project config shared with every public
+     template. The admin reads invitations/<slug>/{rsvps,guestbook}
+     directly (same collections the public pages write to), so there's
+     no new backend endpoint to maintain. Session is still gated — only
+     signed-in admins can reach this HTML in the first place. -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import { getFirestore, collection, getDocs, query, orderBy } from
+  "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+const SLUG = {{ event.slug | tojson }};
+
+const app = initializeApp({
+  apiKey:            "AIzaSyC4r0MZyLlX5c7UdYZ1j1L90vzUmm2A3co",
+  authDomain:        "weding-dc92e.firebaseapp.com",
+  projectId:         "weding-dc92e",
+  storageBucket:     "weding-dc92e.firebasestorage.app",
+  messagingSenderId: "645238686194",
+  appId:             "1:645238686194:web:c2caf0ebcb31c7cee36b6b",
+}, "admin-responses");
+const db = getFirestore(app);
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[<>&]/g, (c) => ({ "<":"&lt;",">":"&gt;","&":"&amp;" }[c]));
+
+function fmtTime(ts) {
+  const d = ts && typeof ts.toDate === "function" ? ts.toDate() :
+            (ts && ts.seconds ? new Date(ts.seconds * 1000) : null);
+  if (!d) return "—";
+  return d.toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+}
+
+async function fetchCollection(path, orderField) {
+  // The public rsvp.js uses `attending`, `guestCount`, `name`,
+  // `createdAt`; guestbook.js uses `name`, `message`, `createdAt`.
+  // Order by createdAt; fall back to unordered if the index isn't
+  // ready / the field is missing on legacy docs.
+  try {
+    const snap = await getDocs(query(collection(db, path), orderBy(orderField, "desc")));
+    return snap.docs.map((d) => d.data());
+  } catch (_) {
+    const snap = await getDocs(collection(db, path));
+    return snap.docs.map((d) => d.data());
+  }
+}
+
+let STATE = { rsvps: [], wishes: [] };
+
+(async function load() {
+  const base = `invitations/${SLUG}`;
+  const [rsvps, wishes] = await Promise.all([
+    fetchCollection(`${base}/rsvps`,     "createdAt"),
+    fetchCollection(`${base}/guestbook`, "createdAt"),
+  ]);
+  STATE = { rsvps, wishes };
+
+  // Summary
+  const yes = rsvps.filter((r) => (r.attending || "").toString().toLowerCase() === "yes");
+  const no  = rsvps.filter((r) => (r.attending || "").toString().toLowerCase() === "no");
+  const guests = yes.reduce((n, r) => n + Math.max(1, Number(r.guestCount) || 1), 0);
+  $("stat-attending").textContent = yes.length;
+  $("stat-guests").textContent    = guests;
+  $("stat-declined").textContent  = no.length;
+  $("stat-wishes").textContent    = wishes.length;
+  $("load-note").textContent =
+    rsvps.length + wishes.length === 0
+      ? "No responses yet — share the invitation link with guests."
+      : `${rsvps.length} RSVP${rsvps.length === 1 ? "" : "s"} and ${wishes.length} wish${wishes.length === 1 ? "" : "es"} so far.`;
+
+  // RSVP table
+  const body = $("rsvp-body");
+  if (!rsvps.length) {
+    $("rsvp-empty").hidden = false;
+  } else {
+    body.innerHTML = rsvps.map((r) => {
+      const att = (r.attending || "").toString().toLowerCase();
+      const pill = att === "yes" ? `<span class="pill yes">Yes</span>`
+                  : att === "no" ? `<span class="pill no">No</span>`
+                  : `<span class="pill">—</span>`;
+      const g = Math.max(1, Number(r.guestCount) || 1);
+      return `<tr>
+        <td>${esc(r.name) || "<em>Anonymous</em>"}</td>
+        <td>${pill}</td>
+        <td>${att === "yes" ? g : "—"}</td>
+        <td class="when">${esc(fmtTime(r.createdAt))}</td>
+      </tr>`;
+    }).join("");
+  }
+
+  // Wishes list
+  const list = $("wishes-list");
+  if (!wishes.length) {
+    $("wishes-empty").hidden = false;
+  } else {
+    list.innerHTML = wishes.map((w) => `
+      <li>
+        <div class="w-top">
+          <span class="w-name">${esc(w.name) || "Anonymous"}</span>
+          <span>${esc(fmtTime(w.createdAt))}</span>
+        </div>
+        <div class="w-msg" dir="auto">${esc(w.message)}</div>
+      </li>
+    `).join("");
+  }
+})().catch((e) => {
+  console.error("[responses]", e);
+  $("load-note").textContent = "Couldn't load responses: " + (e?.message || e);
+});
+
+// --- "Copy as text" — formatted for pasting into WhatsApp / email ---
+$("copy-btn").addEventListener("click", async () => {
+  const { rsvps, wishes } = STATE;
+  const yes = rsvps.filter((r) => (r.attending || "").toLowerCase() === "yes");
+  const no  = rsvps.filter((r) => (r.attending || "").toLowerCase() === "no");
+  const guests = yes.reduce((n, r) => n + Math.max(1, Number(r.guestCount) || 1), 0);
+
+  const lines = [];
+  lines.push(`Responses for ${SLUG}`);
+  lines.push("");
+  lines.push(`✅ Attending: ${yes.length} (${guests} guest${guests === 1 ? "" : "s"} total)`);
+  lines.push(`❌ Declined:  ${no.length}`);
+  lines.push(`💌 Wishes:    ${wishes.length}`);
+  lines.push("");
+  if (yes.length) {
+    lines.push("— Attending —");
+    for (const r of yes) {
+      const g = Math.max(1, Number(r.guestCount) || 1);
+      lines.push(`• ${r.name || "Anonymous"}${g > 1 ? ` (+${g - 1})` : ""}`);
+    }
+    lines.push("");
+  }
+  if (no.length) {
+    lines.push("— Declined —");
+    for (const r of no) lines.push(`• ${r.name || "Anonymous"}`);
+    lines.push("");
+  }
+  if (wishes.length) {
+    lines.push("— Wishes —");
+    for (const w of wishes) {
+      lines.push(`${w.name || "Anonymous"}:`);
+      lines.push(`  ${w.message || ""}`);
+      lines.push("");
+    }
+  }
+
+  const text = lines.join("\n");
+  try {
+    await navigator.clipboard.writeText(text);
+    const toast = $("copy-ok");
+    toast.hidden = false;
+    setTimeout(() => { toast.hidden = true; }, 2200);
+  } catch (_) {
+    // Fallback for browsers / contexts where clipboard API is blocked.
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    ta.remove();
+    const toast = $("copy-ok");
+    toast.hidden = false;
+    setTimeout(() => { toast.hidden = true; }, 2200);
+  }
+});
+
+$("print-btn").addEventListener("click", () => window.print());
+</script>
+{% endblock %}
