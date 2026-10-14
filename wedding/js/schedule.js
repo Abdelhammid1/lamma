@@ -72,11 +72,13 @@ if (!section || !list || !items.length) {
       `;
     }).join("");
 
-    // Keep the helper children (progress / candle / sweep) by removing
-    // only <li> nodes before injecting the new ones.
+    // Keep the helper children (progress / candle / sweep / cursor) by
+    // removing only <li> nodes before injecting the new ones.
     list.querySelectorAll("li.tl-row").forEach((n) => n.remove());
     list.insertAdjacentHTML("beforeend", rowsHtml);
     updateProgress();
+    // Row positions just moved — re-pin the cursor if it exists.
+    if (typeof scheduleCursor === "function") scheduleCursor();
   }
 
   // ------------------------- progress fill ---------------------------
@@ -101,7 +103,7 @@ if (!section || !list || !items.length) {
   // dashed ::before line without interfering with layout.
   function injectHelpers() {
     if (list.querySelector(".tl-progress")) return;
-    const parts = ["tl-progress", "tl-candle", "tl-sweep"];
+    const parts = ["tl-progress", "tl-candle", "tl-sweep", "tl-cursor"];
     for (const cls of parts) {
       const d = document.createElement("div");
       d.className = cls;
@@ -112,6 +114,55 @@ if (!section || !list || !items.length) {
 
   injectHelpers();
   render();
+
+  // ------------------------- scroll-synced cursor --------------------
+  // A hollow ring that rides down the timeline tracking the viewport
+  // midline. Position runs from the first marker (scroll just reached
+  // the section) to the last marker (section is scrolled past), mapped
+  // onto the inner line and clamped so the ring never leaves the
+  // dashed guide. CSS does the hollow-ring look + a short transition
+  // for a soft follow instead of a hard snap on every tick.
+  //
+  // cursorRaf is a shared batching flag — scheduleCursor() is called
+  // from the first render() too (which runs before this section is
+  // executed top-to-bottom), so the flag MUST exist up here or TDZ
+  // bites. Pre-declare as a var so it exists from function scope.
+  var cursorRaf = 0;
+  function updateCursor() {
+    cursorRaf = 0;
+    const rows = list.querySelectorAll("li.tl-row");
+    if (rows.length < 2) return;
+    const firstMarker = rows[0].querySelector(".tl-marker");
+    const lastMarker  = rows[rows.length - 1].querySelector(".tl-marker");
+    if (!firstMarker || !lastMarker) return;
+
+    const vh = window.innerHeight || document.documentElement.clientHeight;
+    const anchorY = vh * 0.5;                      // viewport midline
+    const listRect  = list.getBoundingClientRect();
+    const firstRect = firstMarker.getBoundingClientRect();
+    const lastRect  = lastMarker.getBoundingClientRect();
+
+    const firstY = firstRect.top + firstRect.height / 2;
+    const lastY  = lastRect.top  + lastRect.height  / 2;
+    const span   = lastY - firstY;
+    if (span <= 0) return;
+
+    const t = Math.max(0, Math.min(1, (anchorY - firstY) / span));
+    const yWithinList = (firstY - listRect.top) + t * span;
+    list.style.setProperty("--tl-cursor-y", yWithinList + "px");
+  }
+  function scheduleCursor() {
+    if (cursorRaf) return;
+    cursorRaf = requestAnimationFrame(updateCursor);
+  }
+  // Listen on both window AND document (capture phase) because this
+  // page uses <body> as the scroll container — scroll events on body
+  // don't bubble to window on every engine. Document in capture phase
+  // catches them regardless of which element scrolls.
+  window.addEventListener("scroll", scheduleCursor, { passive: true });
+  document.addEventListener("scroll", scheduleCursor, { passive: true, capture: true });
+  window.addEventListener("resize", scheduleCursor);
+  requestAnimationFrame(updateCursor);
 
   // ------------------------- entry sequence --------------------------
   // One-shot: when the section first enters the viewport, flip
@@ -138,6 +189,7 @@ if (!section || !list || !items.length) {
     if (section.classList.contains("entered")) return;
     section.classList.add("entered");
     window.removeEventListener("scroll", checkEnter);
+    document.removeEventListener("scroll", checkEnter, true);
     window.removeEventListener("resize", checkEnter);
     if (io) io.disconnect();
   }
@@ -148,6 +200,9 @@ if (!section || !list || !items.length) {
     if (r.top < vh * 0.9 && r.bottom > 20) enter();
   }
   window.addEventListener("scroll", checkEnter, { passive: true });
+  // body is this page's scroll container; its scroll events don't bubble
+  // to window on every engine, so also listen in capture phase on document.
+  document.addEventListener("scroll", checkEnter, { passive: true, capture: true });
   window.addEventListener("resize", checkEnter);
   requestAnimationFrame(checkEnter);
   if ("IntersectionObserver" in window) {
