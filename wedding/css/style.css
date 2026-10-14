@@ -1177,3 +1177,16 @@ body.lightbox-open { overflow: hidden; }
     100% { transform: scale(1);   opacity: 0; }
   }
 }
+
+/* ---- Calendar frame: size from parent width, not viewport (2026-10-14) ---- */
+.calendar-frame {
+  width: 100%;
+  max-width: 400px;
+  min-width: 0;
+  padding: 0;
+  container-type: inline-size;
+}
+.calendar {
+  box-sizing: border-box;
+  padding: 20cqw 15cqw 17.5cqw;
+}
