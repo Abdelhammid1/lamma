@@ -150,6 +150,27 @@ if (!section || !list || !items.length) {
     const t = Math.max(0, Math.min(1, (anchorY - firstY) / span));
     const yWithinList = (firstY - listRect.top) + t * span;
     list.style.setProperty("--tl-cursor-y", yWithinList + "px");
+
+    // Each row is tagged tl-above / tl-below depending on which side of
+    // the cursor its marker sits — CSS paints the above-cursor rows in
+    // the pink "confident" state (already-passed) and the below-cursor
+    // rows in a muted / white state (still to come).
+    const cursorAbsY = listRect.top + yWithinList;
+    rows.forEach((row) => {
+      const m = row.querySelector(".tl-marker");
+      if (!m) return;
+      const r = m.getBoundingClientRect();
+      const midY = r.top + r.height / 2;
+      // 2px tolerance so the exact-match row (cursor landed on it)
+      // reads as "above" (pink) rather than flicker between states.
+      if (midY <= cursorAbsY + 2) {
+        row.classList.add("tl-above");
+        row.classList.remove("tl-below");
+      } else {
+        row.classList.add("tl-below");
+        row.classList.remove("tl-above");
+      }
+    });
   }
   function scheduleCursor() {
     if (cursorRaf) return;

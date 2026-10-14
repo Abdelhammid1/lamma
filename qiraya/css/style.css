@@ -710,10 +710,28 @@ a { color: inherit; }
   100% { top: 100%; opacity: 0; }
 }
 
+/* Scroll-synced cursor + above/below colour flip. */
+.tl-cursor {
+  position: absolute; left: 50%; top: 0;
+  width: 20px; height: 20px; margin: -10px 0 0 -10px;
+  border-radius: 50%;
+  background: #fbf7ee; border: 2px solid #1e3f30;
+  box-shadow: 0 0 0 4px rgba(30, 63, 48, 0.15);
+  pointer-events: none; z-index: 3; opacity: 0;
+  transform: translateY(var(--tl-cursor-y, 0px));
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease-out;
+}
+.schedule.entered .tl-cursor { opacity: 1; }
+.tl-above .tl-time, .tl-above .tl-label  { color: #0f2d1e; opacity: 1; font-weight: 500; transition: color 0.35s, opacity 0.35s; }
+.tl-above .tl-marker                      { background: #1e3f30; box-shadow: 0 0 0 1px rgba(30,63,48,0.3); transition: background 0.35s, box-shadow 0.35s; }
+.tl-below .tl-time, .tl-below .tl-label  { color: #0f2d1e; opacity: 0.45; font-weight: 400; transition: color 0.35s, opacity 0.35s; }
+.tl-below .tl-marker                      { background: #fbf7ee; border-color: #fbf7ee; box-shadow: 0 0 0 1px rgba(30,63,48,0.4); transition: background 0.35s, box-shadow 0.35s, border-color 0.35s; }
+
 @media (prefers-reduced-motion: reduce) {
   .tl-row               { opacity: 1; transform: none; transition: none; }
   .tl-marker::after     { animation: none; opacity: 0; }
   .tl-candle, .tl-sweep { display: none; }
+  .tl-cursor            { transition: none; }
   .schedule.entered .tl-progress { transition: none; }
 }
   .tl-row                      { opacity: 1; transform: none; transition: none; }
