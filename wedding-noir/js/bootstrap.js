@@ -26,7 +26,7 @@ const RENDERER_MODULES = [
   "./event-info.js",  "./countdown.js",    "./calendar.js",
   "./ics.js?v=2",         "./rsvp.js",         "./venue.js?v=2",
   "./schedule.js?v=7",    "./dress-code.js",   "./contacts.js?v=1",
-  "./guestbook.js",   "./reveal.js",
+  "./guestbook.js?v=2","./view-ping.js",   "./reveal.js",
 ];
 
 const RESERVED_SEG = new Set([

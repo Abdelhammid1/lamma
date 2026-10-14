@@ -1,22 +1,16 @@
 // ============================================================================
-//  Guestbook — real-time wishes via Firestore.
-//    - Form: name + message, both required, custom inline errors (no
-//      browser popups), submit writes to the `guestbook` collection
-//    - List: onSnapshot listener → prepends any new wish for anyone with the
-//      page open, no reload
-//    - RTL/Arabic-safe: dir="auto" on inputs and list items
+//  Guestbook — writes + reads go through the Lamma backend (not Firestore),
+//  so the owning host can see wishes in /user/.../responses and no PII is
+//  readable by anonymous clients. Poll-based "live" feed: refresh every 25s
+//  while the tab is visible.
 // ============================================================================
 
-import {
-  addDoc, collection, onSnapshot, query, orderBy, serverTimestamp,
-} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-import { db, isConfigured } from "./firebase-init.js";
 import { CONFIG } from "../config.js";
 
-// Scoped per invitation: invitations/<slug>/guestbook — so each wedding
-// has its own private wishes and none leak across paying customers.
-const SLUG = CONFIG.slug || "demo";
-const COLLECTION = `invitations/${SLUG}/guestbook`;
+const SLUG     = CONFIG.slug || "demo";
+const POST_URL = `/api/invitations/${encodeURIComponent(SLUG)}/wishes`;
+const LIST_URL = `/api/invitations/${encodeURIComponent(SLUG)}/wishes?limit=100`;
+const POLL_MS  = 25000;
 
 const form       = document.getElementById("gb-form");
 const nameEl     = document.getElementById("gb-name");
@@ -36,23 +30,11 @@ function showError(input, errSpan, msg) {
 if (nameEl)    nameEl.addEventListener("input",    () => showError(nameEl,    nameErr,    ""));
 if (messageEl) messageEl.addEventListener("input", () => showError(messageEl, messageErr, ""));
 
-/* ------------------------ Disable when not configured ---------------------- */
-if (!isConfigured() && form && submitBtn) {
-  submitBtn.disabled = true;
-  submitBtn.title    = "Firebase not configured — see README";
-  if (statusEl) {
-    statusEl.textContent = "Guestbook will be enabled once Firebase is configured (see README).";
-    statusEl.className   = "rsvp-status hint";
-  }
-  if (emptyEl) emptyEl.textContent = "Wishes will appear here once Firebase is configured.";
-}
-
-/* ------------------------ Submit → addDoc ---------------------------------- */
+/* ------------------------ Submit → POST /api/wishes ------------------------ */
 if (form) {
   form.setAttribute("novalidate", "");
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    if (!isConfigured() || !db) return;
 
     const name    = (nameEl.value    || "").trim();
     const message = (messageEl.value || "").trim();
@@ -69,20 +51,26 @@ if (form) {
     }
 
     try {
-      await addDoc(collection(db, COLLECTION), {
-        name,
-        message,
-        createdAt: serverTimestamp(),
+      const r = await fetch(POST_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, message }),
       });
+      if (!r.ok) {
+        const j = await r.json().catch(() => ({}));
+        throw new Error(j.message || `HTTP ${r.status}`);
+      }
       form.reset();
       if (statusEl) {
         statusEl.textContent = "Thank you, your wish has been saved 💌";
         statusEl.className   = "rsvp-status success";
       }
+      // Pull the fresh list immediately so the submitter sees their own wish.
+      loadWishes();
     } catch (err) {
       console.error(err);
       if (statusEl) {
-        statusEl.textContent = "Something went wrong. Please try again.";
+        statusEl.textContent = (err && err.message) ? `Couldn't send: ${err.message}` : "Something went wrong. Please try again.";
         statusEl.className   = "rsvp-status error";
       }
     } finally {
@@ -91,7 +79,7 @@ if (form) {
   });
 }
 
-/* ------------------------ Real-time list ----------------------------------- */
+/* ------------------------ Poll-based list render --------------------------- */
 function relativeTime(then) {
   if (!then) return "just now";
   const s = Math.floor((Date.now() - then.getTime()) / 1000);
@@ -136,29 +124,35 @@ function renderEntries(entries) {
   }
 }
 
-if (isConfigured() && db && listEl) {
-  const q = query(collection(db, COLLECTION), orderBy("createdAt", "desc"));
-  onSnapshot(
-    q,
-    (snap) => {
-      const entries = snap.docs.map((d) => {
-        const data = d.data();
-        return {
-          id: d.id,
-          name: data.name || "",
-          message: data.message || "",
-          // serverTimestamp() may briefly be null right after a local write.
-          createdAt: data.createdAt && data.createdAt.toDate ? data.createdAt.toDate() : null,
-        };
-      });
-      renderEntries(entries);
-    },
-    (err) => {
-      console.error(err);
-      if (emptyEl) {
-        emptyEl.hidden = false;
-        emptyEl.textContent = "Could not load wishes right now.";
-      }
+async function loadWishes() {
+  if (!listEl) return;
+  try {
+    const r = await fetch(LIST_URL, { credentials: "same-origin" });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const j = await r.json();
+    const entries = (j.wishes || []).map((w) => ({
+      id: w.id,
+      name: w.name || "",
+      message: w.message || "",
+      createdAt: w.created_at ? new Date(w.created_at) : null,
+    }));
+    renderEntries(entries);
+  } catch (err) {
+    console.warn("[guestbook]", err);
+    if (emptyEl && !listEl.children.length) {
+      emptyEl.hidden = false;
+      emptyEl.textContent = "Could not load wishes right now.";
     }
-  );
+  }
+}
+
+if (listEl) {
+  loadWishes();
+  // Pause polling when the tab is hidden to save bandwidth + server load.
+  let pollId = setInterval(() => {
+    if (!document.hidden) loadWishes();
+  }, POLL_MS);
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) loadWishes();
+  });
 }

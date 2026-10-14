@@ -24,9 +24,10 @@ import { doc, getDoc } from
 const RENDERER_MODULES = [
   "./cover.js",       "./announcement.js", "./gallery.js",
   "./event-info.js",  "./countdown.js",    "./calendar.js",
-  "./ics.js?v=2",         "./rsvp.js",         "./venue.js?v=2",
+  "./ics.js?v=2",         "./rsvp.js?v=2",         "./venue.js?v=2",
   "./schedule.js?v=11",    "./dress-code.js",   "./contacts.js?v=1",
-  "./guestbook.js",   "./reveal.js",
+  "./guestbook.js?v=2",   "./reveal.js",
+  "./view-ping.js",
 ];
 
 const RESERVED_SEG = new Set([

@@ -344,4 +344,7 @@ if (isPreview()) {
   if (!CONFIG.slug) CONFIG.slug = "demo";
 
   renderAll();
+  // Fire the backend view-ping once CONFIG.slug is settled. Loaded as
+  // a side-effect module — it decides for itself whether to send.
+  try { await import("./view-ping.js"); } catch (_) {}
 })();
