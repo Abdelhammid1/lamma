@@ -163,9 +163,8 @@
 
     <!-- Step 2 — styles for the picked occasion (hidden by default) -->
     <section id="picker-styles" class="flex flex-col items-center text-center" hidden>
-      <button type="button" id="picker-back"
-              class="self-start inline-flex items-center gap-1.5 text-[13px] text-primary mb-3">
-        <span aria-hidden="true">←</span>
+      <button type="button" id="picker-back" class="back-pill">
+        <span class="back-arrow" aria-hidden="true">←</span>
         <span>Back</span>
       </button>
       <span class="font-label text-[10px] font-semibold uppercase tracking-widest text-secondary">
@@ -279,6 +278,54 @@
   .style-actions .create  { background: #4a2033; color: #ffdea4; }
   .style-actions .preview:hover { background: rgba(74, 32, 51, 0.06); }
   .style-actions .create:hover  { background: #310b1e; }
+
+  /* Step-2 Back button — a proper pill-shaped control instead of a
+     bare text link. Sits top-left, subtle until hovered. */
+  .back-pill {
+    appearance: none;
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px 8px 12px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(74, 32, 51, 0.18);
+    border-radius: 999px;
+    background: #fff;
+    color: #4a2033;
+    font-family: "Manrope", sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    box-shadow: 0 2px 8px -4px rgba(0, 0, 0, 0.08);
+    transition: background 0.18s ease, border-color 0.18s ease, transform 0.1s ease;
+  }
+  .back-pill .back-arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: rgba(74, 32, 51, 0.08);
+    font-size: 14px;
+    line-height: 1;
+    transition: background 0.18s ease, transform 0.18s ease;
+  }
+  .back-pill:hover {
+    background: #faf7f3;
+    border-color: rgba(74, 32, 51, 0.32);
+  }
+  .back-pill:hover .back-arrow {
+    background: #4a2033;
+    color: #ffdea4;
+    transform: translateX(-2px);
+  }
+  .back-pill:active { transform: translateY(1px); }
+  .back-pill:focus-visible {
+    outline: 2px solid #4a2033;
+    outline-offset: 3px;
+  }
 </style>
 
 <script>
