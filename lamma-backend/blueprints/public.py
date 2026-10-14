@@ -19,7 +19,7 @@ from flask_login import current_user
 from auth import AdminUser, HostUser
 from codes import ActivationError, normalize_code, validate_code_for_event
 from github import GitHubClient, GitHubError
-from models import ActivationCode, Event, Lead, MediaBlob, User, db
+from models import ActivationCode, Event, Lead, MediaBlob, Rsvp, User, db
 from rate_limit import limiter
 from slugs import SlugError, validate
 from uploads import UploadError, stage_upload, total_bytes_for_event
@@ -65,6 +65,54 @@ def record_lead():
         db.session.rollback()
         # Still a 204 — telemetry failures must not break the UX.
     return ("", 204)
+
+
+# --------------------------------------------------------------------------
+# Public RSVP write — guests on a published invitation page
+# --------------------------------------------------------------------------
+
+@bp.post("/invitations/<slug>/rsvp")
+@limiter.limit("20/hour")
+def submit_rsvp(slug):
+    """Guest-facing RSVP submission. The invitation page JS POSTs here
+    instead of writing to Firestore so the owning host can read the
+    responses back through the backend without Firestore rules letting
+    the whole world read PII.
+
+    Body: `{ "name": "...", "attending": "yes"|"no", "guestCount": 1 }`.
+    Returns 201 on success. Rejects if the event isn't published, or if
+    required fields are missing or malformed."""
+    body = request.get_json(silent=True) or {}
+
+    event = db.session.query(Event).filter_by(slug=slug).first()
+    if event is None or event.status != "published":
+        return jsonify(error="not_published", message="This invitation isn't open for RSVPs."), 404
+
+    name = (body.get("name") or "").strip()[:200]
+    attending = (body.get("attending") or "").strip().lower()
+    try:
+        guest_count = int(body.get("guestCount") or 1)
+    except (TypeError, ValueError):
+        guest_count = 1
+    guest_count = max(1, min(20, guest_count))
+
+    if not name:
+        return jsonify(error="missing_name", message="Please tell us your name."), 400
+    if attending not in ("yes", "no"):
+        return jsonify(error="bad_attending", message='attending must be "yes" or "no".'), 400
+
+    row = Rsvp(
+        event_id=event.id,
+        event_slug=event.slug,
+        name=name,
+        attending=attending,
+        guest_count=guest_count if attending == "yes" else 1,
+        ip=request.remote_addr,
+        user_agent=(request.headers.get("User-Agent") or "")[:500] or None,
+    )
+    db.session.add(row)
+    db.session.commit()
+    return jsonify(ok=True, id=row.id), 201
 
 
 # --------------------------------------------------------------------------

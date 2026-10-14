@@ -74,13 +74,15 @@
   }
 </style>
 
-<!-- Same Firestore reader as the admin responses view. -->
+<!-- RSVPs come from Flask (/admin/api/events/<id>/rsvps — owner-aware).
+     Wishes still live in Firestore (public guestbook). -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import { getFirestore, collection, getDocs, query, orderBy } from
   "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const SLUG = {{ event.slug | tojson }};
+const SLUG     = {{ event.slug | tojson }};
+const EVENT_ID = {{ event.id   | tojson }};
 
 const app = initializeApp({
   apiKey:            "AIzaSyC4r0MZyLlX5c7UdYZ1j1L90vzUmm2A3co",
@@ -95,39 +97,48 @@ const db = getFirestore(app);
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[<>&]/g, (c) => ({ "<":"&lt;",">":"&gt;","&":"&amp;" }[c]));
 
-function fmtTime(ts) {
-  const d = ts && typeof ts.toDate === "function" ? ts.toDate() :
-            (ts && ts.seconds ? new Date(ts.seconds * 1000) : null);
+function parseWhen(v) {
+  if (!v) return null;
+  if (typeof v === "string") return new Date(v);
+  if (typeof v.toDate === "function") return v.toDate();
+  if (v.seconds) return new Date(v.seconds * 1000);
+  return null;
+}
+function fmtTime(v) {
+  const d = parseWhen(v);
   if (!d) return "—";
   return d.toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
-async function fetchCollection(path, orderField) {
+async function fetchWishes() {
   try {
-    const snap = await getDocs(query(collection(db, path), orderBy(orderField, "desc")));
+    const snap = await getDocs(query(collection(db, `invitations/${SLUG}/guestbook`), orderBy("createdAt", "desc")));
     return snap.docs.map((d) => d.data());
   } catch (_) {
-    const snap = await getDocs(collection(db, path));
-    return snap.docs.map((d) => d.data());
+    try {
+      const snap = await getDocs(collection(db, `invitations/${SLUG}/guestbook`));
+      return snap.docs.map((d) => d.data());
+    } catch (_) { return []; }
   }
+}
+
+async function fetchRsvps() {
+  const r = await fetch(`/admin/api/events/${EVENT_ID}/rsvps`, { credentials: "include" });
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return r.json();
 }
 
 let STATE = { rsvps: [], wishes: [] };
 
 (async function load() {
-  const base = `invitations/${SLUG}`;
-  const [rsvps, wishes] = await Promise.all([
-    fetchCollection(`${base}/rsvps`,     "createdAt"),
-    fetchCollection(`${base}/guestbook`, "createdAt"),
-  ]);
+  const [rsvpR, wishes] = await Promise.all([fetchRsvps(), fetchWishes()]);
+  const rsvps = rsvpR.rsvps || [];
   STATE = { rsvps, wishes };
 
-  const yes = rsvps.filter((r) => (r.attending || "").toString().toLowerCase() === "yes");
-  const no  = rsvps.filter((r) => (r.attending || "").toString().toLowerCase() === "no");
-  const guests = yes.reduce((n, r) => n + Math.max(1, Number(r.guestCount) || 1), 0);
-  $("stat-attending").textContent = yes.length;
-  $("stat-guests").textContent    = guests;
-  $("stat-declined").textContent  = no.length;
+  const summary = rsvpR.summary || { attending: 0, declined: 0, guests: 0 };
+  $("stat-attending").textContent = summary.attending;
+  $("stat-guests").textContent    = summary.guests;
+  $("stat-declined").textContent  = summary.declined;
   $("stat-wishes").textContent    = wishes.length;
   $("load-note").textContent =
     rsvps.length + wishes.length === 0
@@ -142,12 +153,12 @@ let STATE = { rsvps: [], wishes: [] };
       const att = (r.attending || "").toString().toLowerCase();
       const pillColor = att === "yes" ? "#e4f3df;color:#2b662a" : att === "no" ? "#fde6e2;color:#a0372a" : "#eee;color:#555";
       const pillText  = att === "yes" ? "Yes" : att === "no" ? "No" : "—";
-      const g = Math.max(1, Number(r.guestCount) || 1);
+      const g = Math.max(1, Number(r.guest_count) || 1);
       return `<tr>
         <td style="padding:10px 12px; border-bottom:1px solid var(--rule);">${esc(r.name) || "<em>Anonymous</em>"}</td>
         <td style="padding:10px 12px; border-bottom:1px solid var(--rule);"><span style="padding:2px 10px; border-radius: 999px; font-size: 12px; font-weight:600; background:${pillColor}">${pillText}</span></td>
         <td style="padding:10px 12px; border-bottom:1px solid var(--rule);">${att === "yes" ? g : "—"}</td>
-        <td style="padding:10px 12px; border-bottom:1px solid var(--rule); color: var(--muted); white-space: nowrap;">${esc(fmtTime(r.createdAt))}</td>
+        <td style="padding:10px 12px; border-bottom:1px solid var(--rule); color: var(--muted); white-space: nowrap;">${esc(fmtTime(r.created_at))}</td>
       </tr>`;
     }).join("");
   }
@@ -175,7 +186,7 @@ $("copy-btn").addEventListener("click", async () => {
   const { rsvps, wishes } = STATE;
   const yes = rsvps.filter((r) => (r.attending || "").toLowerCase() === "yes");
   const no  = rsvps.filter((r) => (r.attending || "").toLowerCase() === "no");
-  const guests = yes.reduce((n, r) => n + Math.max(1, Number(r.guestCount) || 1), 0);
+  const guests = yes.reduce((n, r) => n + Math.max(1, Number(r.guest_count) || 1), 0);
   const lines = [];
   lines.push(`Responses for ${SLUG}`); lines.push("");
   lines.push(`✅ Attending: ${yes.length} (${guests} guest${guests === 1 ? "" : "s"} total)`);
@@ -183,7 +194,7 @@ $("copy-btn").addEventListener("click", async () => {
   lines.push(`💌 Wishes:    ${wishes.length}`); lines.push("");
   if (yes.length) {
     lines.push("— Attending —");
-    for (const r of yes) { const g = Math.max(1, Number(r.guestCount) || 1); lines.push(`• ${r.name || "Anonymous"}${g > 1 ? ` (+${g - 1})` : ""}`); }
+    for (const r of yes) { const g = Math.max(1, Number(r.guest_count) || 1); lines.push(`• ${r.name || "Anonymous"}${g > 1 ? ` (+${g - 1})` : ""}`); }
     lines.push("");
   }
   if (no.length) {

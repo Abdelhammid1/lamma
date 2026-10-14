@@ -1,17 +1,13 @@
 // ============================================================================
-//  RSVP form — writes a document to Firestore's `rsvps` collection.
-//  If Firebase isn't configured (db === null), the form disables its submit
-//  and shows a hint instead of throwing.
+//  RSVP form — POSTs to the Lamma backend (/api/invitations/<slug>/rsvp)
+//  so the owning host can read responses back without us exposing PII in
+//  Firestore. Guestbook (wishes) still writes to Firestore.
 // ============================================================================
 
-import { addDoc, collection, serverTimestamp } from
-  "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-import { db, isConfigured } from "./firebase-init.js";
 import { CONFIG } from "../config.js";
 
-// Scoped per invitation: invitations/<slug>/rsvps
 const SLUG = CONFIG.slug || "demo";
-const COLLECTION = `invitations/${SLUG}/rsvps`;
+const ENDPOINT = `/api/invitations/${encodeURIComponent(SLUG)}/rsvp`;
 
 const openBtn     = document.getElementById("rsvp-open");
 const form        = document.getElementById("rsvp-form");
@@ -44,16 +40,6 @@ if (form) {
   syncGuestField();
 }
 
-/* ---------- Disable form entirely when Firebase isn't configured ---------- */
-if (!isConfigured() && form && submitBtn) {
-  submitBtn.disabled = true;
-  submitBtn.title = "Firebase not configured — see README";
-  if (statusEl) {
-    statusEl.textContent = "RSVP will be enabled once Firebase is configured (see README).";
-    statusEl.className = "rsvp-status hint";
-  }
-}
-
 /* ---------- Custom inline validation + submit ---------- */
 function showNameError(msg) {
   if (nameError) nameError.textContent = msg;
@@ -64,7 +50,6 @@ if (form) {
   form.setAttribute("novalidate", "");
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    if (!isConfigured() || !db) return;
 
     const name = (nameInput.value || "").trim();
     if (!name) {
@@ -74,9 +59,9 @@ if (form) {
     }
     showNameError("");
 
-    const attending = form.attending.value === "yes";
-    let guestCount  = 0;
-    if (attending) {
+    const attendingBool = form.attending.value === "yes";
+    let guestCount  = 1;
+    if (attendingBool) {
       guestCount = parseInt(guestsInput.value, 10) || 1;
       if (guestCount < 1) guestCount = 1;
       if (guestCount > 10) guestCount = 10;
@@ -89,14 +74,21 @@ if (form) {
     }
 
     try {
-      await addDoc(collection(db, COLLECTION), {
-        name,
-        attending,
-        guestCount,
-        createdAt: serverTimestamp(),
+      const r = await fetch(ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          attending: attendingBool ? "yes" : "no",
+          guestCount,
+        }),
       });
+      if (!r.ok) {
+        const j = await r.json().catch(() => ({}));
+        throw new Error(j.message || `HTTP ${r.status}`);
+      }
       if (statusEl) {
-        statusEl.textContent = attending
+        statusEl.textContent = attendingBool
           ? "Thank you! Your RSVP has been received — we can't wait to see you."
           : "Thank you for letting us know. You'll be missed.";
         statusEl.className = "rsvp-status success";
@@ -106,7 +98,7 @@ if (form) {
     } catch (err) {
       console.error(err);
       if (statusEl) {
-        statusEl.textContent = "Something went wrong sending your RSVP. Please try again.";
+        statusEl.textContent = (err && err.message) ? `Couldn't send your RSVP: ${err.message}` : "Something went wrong sending your RSVP. Please try again.";
         statusEl.className = "rsvp-status error";
       }
     } finally {

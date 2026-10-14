@@ -100,6 +100,30 @@ class AuditLog(db.Model):
     created_at    = db.Column(db.DateTime,    nullable=False, default=datetime.utcnow, index=True)
 
 
+class Rsvp(db.Model):
+    """A guest's RSVP from a published invitation page.
+
+    Lives in the Flask DB (not Firestore) so the owning host can read
+    their own responses through the backend without us trusting the
+    client's auth. event_slug is denormalized because the public write
+    endpoint knows the slug (/api/invitations/<slug>/rsvp) but the host
+    dashboard reads by event id — the FK gives us the join, the slug
+    column lets us keep RSVPs for an event that was deleted and later
+    re-created with the same slug separate (ondelete=SET NULL).
+    """
+    __tablename__ = "rsvps"
+
+    id          = db.Column(db.String(36), primary_key=True, default=_uuid_str)
+    event_id    = db.Column(db.String(36), db.ForeignKey("events.id", ondelete="SET NULL"), nullable=True, index=True)
+    event_slug  = db.Column(db.String(40), nullable=False, index=True)
+    name        = db.Column(db.String(200), nullable=False)
+    attending   = db.Column(db.String(10),  nullable=False)   # "yes" | "no"
+    guest_count = db.Column(db.Integer,     nullable=False, default=1)
+    ip          = db.Column(db.String(45),  nullable=True)
+    user_agent  = db.Column(db.String(500), nullable=True)
+    created_at  = db.Column(db.DateTime,    nullable=False, default=datetime.utcnow, index=True)
+
+
 class Lead(db.Model):
     """A visitor opened /create.html but has not (yet) finished publishing.
     Logged by the public POST /api/leads so the admin can follow up with

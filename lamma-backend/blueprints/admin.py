@@ -36,7 +36,7 @@ from flask_login import current_user, login_required, login_user, logout_user
 from auth import verify_password, admin_required
 from codes import generate_code, make_expiry
 from github import GitHubClient, GitHubError
-from models import Admin, ActivationCode, AuditLog, Event, MediaBlob, db
+from models import Admin, ActivationCode, AuditLog, Event, MediaBlob, Rsvp, db
 
 
 bp = Blueprint(
@@ -324,6 +324,46 @@ def _can_access_event(event) -> bool:
     if isinstance(current_user, HostUser):
         return event.user_id == current_user.id
     return False
+
+
+@bp.get("/api/events/<event_id>/rsvps")
+@login_required
+def api_event_rsvps(event_id):
+    """RSVPs for one event, newest first. Admin can read any event;
+    host can only read their own (via _can_access_event). Returns a
+    small summary alongside so the host dashboard preview can show
+    counts without a second request."""
+    event = db.session.get(Event, event_id)
+    if event is None:
+        return jsonify(error="not_found"), 404
+    if not _can_access_event(event):
+        return jsonify(error="forbidden",
+                       message="You can only read responses for your own invitations."), 403
+
+    rows = (db.session.query(Rsvp)
+            .filter(Rsvp.event_id == event.id)
+            .order_by(Rsvp.created_at.desc())
+            .all())
+
+    yes = [r for r in rows if r.attending == "yes"]
+    no  = [r for r in rows if r.attending == "no"]
+    total_guests = sum(max(1, r.guest_count or 1) for r in yes)
+
+    return jsonify(
+        slug=event.slug,
+        summary={
+            "attending": len(yes),
+            "declined":  len(no),
+            "guests":    total_guests,
+        },
+        rsvps=[{
+            "id":          r.id,
+            "name":        r.name,
+            "attending":   r.attending,
+            "guest_count": r.guest_count,
+            "created_at":  r.created_at.isoformat() + "Z" if r.created_at else None,
+        } for r in rows],
+    ), 200
 
 
 @bp.get("/api/events/<event_id>")
