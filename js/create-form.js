@@ -782,7 +782,29 @@ async function publish() {
     if (ADMIN_MODE === "create") {
       createBody.host_email = ($("f-host-email")?.value || "").trim().toLowerCase();
     }
-    const evt = await apiJson("POST", "/api/events", createBody);
+    let evt;
+    try {
+      evt = await apiJson("POST", "/api/events", createBody);
+    } catch (err) {
+      // Admin picked an email that's already a registered host — the
+      // backend refuses silent-linking because an attacker could have
+      // squatted the email. Ask the admin to confirm, then retry with
+      // the explicit flag.
+      if (ADMIN_MODE === "create" && err?.status === 409 && err?.data?.error === "existing_account") {
+        const hasPwd = err.data.has_password;
+        const ok = confirm(
+          `An account for ${err.data.email} already exists ` +
+          (hasPwd ? "(the host set a password)."
+                  : "(the host hasn't set a password yet).") +
+          "\n\nAttach this invitation to that account?"
+        );
+        if (!ok) throw err;
+        createBody.host_email_confirm_existing = true;
+        evt = await apiJson("POST", "/api/events", createBody);
+      } else {
+        throw err;
+      }
+    }
     const eventId = evt.event_id;
 
     // 3. Upload each file via multipart POST. XHR gives real byte-

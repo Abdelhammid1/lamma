@@ -12,6 +12,16 @@ def _bool(name: str, default: bool = False) -> bool:
 class Config:
     # --- Core Flask ---
     SECRET_KEY = os.environ.get("SECRET_KEY", "dev-change-me")
+
+    # Session cookie — SameSite=Lax blocks the cookie from being sent on
+    # cross-site POSTs (CSRF defence) while still allowing the normal
+    # top-level navigations. Combined with the per-route csrf_safe_post
+    # origin check in blueprints/user.py, cross-site form submissions
+    # can't ride the host's session.
+    SESSION_COOKIE_SAMESITE = "Lax"
+    SESSION_COOKIE_HTTPONLY = True
+    REMEMBER_COOKIE_SAMESITE = "Lax"
+    REMEMBER_COOKIE_HTTPONLY = True
     JSON_SORT_KEYS = False
     # Headroom over the per-file ceiling in uploads.py (100 MB) +
     # multipart envelope + nginx client_max_body_size (110m). Werkzeug

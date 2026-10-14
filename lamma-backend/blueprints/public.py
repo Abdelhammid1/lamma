@@ -121,13 +121,18 @@ def _resolve_owner_user_id(body) -> tuple[str | None, str | None, tuple | None]:
 
     - Logged-in host → (own_id, None, None).
     - Logged-in admin → must supply `host_email`.
-      * If email is already registered → attach, no claim link needed.
       * If email is new → create a passwordless row with a claim token
         hash stored on it; return the RAW token to the caller so the
         admin can share the /user/claim/<token> link with the host.
-        The row has no password, so simply knowing the email cannot
-        take the account over — the host must prove possession of the
-        token (shared via a side channel: WhatsApp / SMS / email).
+      * If email already belongs to a registered host → REFUSE unless
+        the admin passed `host_email_confirm_existing: true`. This
+        closes the pre-registration squat: anyone could sign up with
+        a guessed email ahead of the admin and silently receive the
+        host's wedding without the admin noticing. The admin must
+        acknowledge they intend to attach to an already-existing
+        account (and verify the account belongs to the right person)
+        before we hand over an event. The 409 response tells the
+        frontend to prompt the admin.
     - Nobody logged in → 401.
 
     Returns (user_id, raw_claim_token or None, error_tuple or None).
@@ -141,6 +146,15 @@ def _resolve_owner_user_id(body) -> tuple[str | None, str | None, tuple | None]:
                                   message="Enter the host's email so the invitation lands in their account."), 400)
         existing = db.session.query(User).filter_by(email=email).first()
         if existing:
+            # Only attach to an existing account on an explicit admin
+            # confirmation — this is the whole account-squat guard.
+            if not bool(body.get("host_email_confirm_existing")):
+                return None, None, (jsonify(
+                    error="existing_account",
+                    email=email,
+                    has_password=bool(existing.password_hash),
+                    message="That email is already registered. Confirm you want to attach this event to the existing account by re-submitting with host_email_confirm_existing: true.",
+                ), 409)
             return existing.id, None, None
         raw, digest, expires = _mint_claim_token()
         row = User(email=email, claim_token_hash=digest, claim_token_expires_at=expires)

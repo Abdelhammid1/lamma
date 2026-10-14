@@ -39,6 +39,44 @@ bp = Blueprint("user", __name__, url_prefix="/user", template_folder="../templat
 
 
 # --------------------------------------------------------------------------
+# CSRF for form-encoded POST routes
+# --------------------------------------------------------------------------
+#
+# The auth endpoints below take application/x-www-form-urlencoded bodies
+# which CORS does NOT preflight — so without an origin check a form on
+# evil.com could cross-site POST to /user/login (session fixation),
+# /user/logout (log the host out), or worst case /user/claim/<token>
+# with an attacker-chosen password (full account takeover of a host
+# whose claim link leaked).
+#
+# Flask's session cookie is also set to SameSite=Lax in config.py, so
+# modern browsers already drop the cookie on a cross-site form POST,
+# but this origin check is the belt to that suspenders — closes legacy
+# browsers + any future proxy/middleware that strips SameSite.
+#
+# @csrf_safe_post:
+#   - GET / HEAD / OPTIONS pass through unchecked
+#   - POST / PUT / PATCH / DELETE must carry an Origin or Referer header
+#     whose netloc matches request.host — otherwise 403
+
+def csrf_safe_post(fn):
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        if request.method not in ("GET", "HEAD", "OPTIONS"):
+            header = request.headers.get("Origin") or request.headers.get("Referer")
+            if not header:
+                abort(403, description="Missing Origin / Referer on state-changing request.")
+            try:
+                got = urlparse(header).netloc.lower()
+            except ValueError:
+                abort(403, description="Malformed Origin / Referer.")
+            if got != request.host.lower():
+                abort(403, description="Cross-origin request rejected.")
+        return fn(*args, **kwargs)
+    return wrapper
+
+
+# --------------------------------------------------------------------------
 # Helpers
 # --------------------------------------------------------------------------
 
@@ -102,6 +140,7 @@ def _safe_next(raw: str | None) -> str:
 # --------------------------------------------------------------------------
 
 @bp.route("/signup", methods=["GET", "POST"])
+@csrf_safe_post
 @limiter.limit("30/hour", methods=["POST"])
 def signup():
     # Already signed in? Jump to the dashboard.
@@ -157,6 +196,7 @@ def signup():
 # --------------------------------------------------------------------------
 
 @bp.route("/claim/<token>", methods=["GET", "POST"])
+@csrf_safe_post
 @limiter.limit("20/hour", methods=["POST"])
 def claim(token):
     """One-shot claim link the admin shares with a host whose account
@@ -210,6 +250,7 @@ def claim(token):
 # --------------------------------------------------------------------------
 
 @bp.route("/login", methods=["GET", "POST"])
+@csrf_safe_post
 @limiter.limit("30/hour", methods=["POST"])
 def login():
     if current_user.is_authenticated and isinstance(current_user, HostUser):
@@ -244,6 +285,7 @@ def login():
 
 
 @bp.post("/logout")
+@csrf_safe_post
 def logout():
     logout_user()
     return redirect(url_for("user.login"))
