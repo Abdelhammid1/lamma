@@ -208,6 +208,44 @@ html, body {
 }
 .sched-row .sched-remove:hover { background: #faf7f3; border-color: #4a2033; }
 
+/* Contacts builder — name / role / phone / remove. On narrow screens
+   collapse to 2 columns + the phone wraps underneath. */
+#contacts-builder { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
+.contact-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 160px 32px;
+  gap: 8px;
+  align-items: center;
+}
+@media (max-width: 640px) {
+  .contact-row { grid-template-columns: 1fr 1fr 32px; }
+  .contact-row .c-phone { grid-column: 1 / 4; }
+}
+.contact-row .c-name,
+.contact-row .c-role,
+.contact-row .c-phone {
+  padding: 10px 12px;
+  border: 1px solid rgba(74, 32, 51, 0.18);
+  border-radius: 8px;
+  background: #fff;
+  font-family: 'Manrope', sans-serif;
+  font-size: 14px;
+  color: #310b1e;
+}
+.contact-row .c-phone { font-variant-numeric: tabular-nums; direction: ltr; }
+.contact-row input:focus { outline: 2px solid #4a2033; outline-offset: 1px; border-color: #4a2033; }
+.contact-row .c-remove {
+  width: 32px; height: 32px;
+  border: 1px solid rgba(74, 32, 51, 0.18);
+  border-radius: 50%;
+  background: #fff;
+  color: #4a2033;
+  font-size: 16px;
+  cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.contact-row .c-remove:hover { background: #faf7f3; border-color: #4a2033; }
+
 .cx-field label, .cx-field legend, fieldset.cx-field legend {
   font-family: 'Manrope', sans-serif;
   font-size: 11px;

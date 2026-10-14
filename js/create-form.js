@@ -504,6 +504,38 @@ addGalleryRow();
 const scheduleBuilder = $("schedule-builder");
 $("add-schedule-btn").addEventListener("click", () => { addScheduleRow(); schedulePreview(); });
 
+/* ================= Contacts builder ================= */
+
+const contactsBuilder = $("contacts-builder");
+$("add-contact-btn").addEventListener("click", () => {
+  if (contactsBuilder.querySelectorAll(".contact-row").length >= 4) {
+    alert("Up to 4 contacts."); return;
+  }
+  addContactRow(); schedulePreview();
+});
+
+function addContactRow(existing) {
+  const row = document.createElement("div");
+  row.className = "contact-row";
+  row.innerHTML = `
+    <input type="text" class="c-name"  dir="auto" placeholder="Name (e.g. Mark Yasser)">
+    <input type="text" class="c-role"  dir="auto" placeholder="Role (e.g. Groom Brother)">
+    <input type="tel"  class="c-phone" dir="ltr"  placeholder="+20 10 1234 5678">
+    <button type="button" class="c-remove" title="Remove" aria-label="Remove">×</button>
+  `;
+  const nameEl  = row.querySelector(".c-name");
+  const roleEl  = row.querySelector(".c-role");
+  const phoneEl = row.querySelector(".c-phone");
+  if (existing && typeof existing === "object") {
+    if (typeof existing.name  === "string") nameEl.value  = existing.name;
+    if (typeof existing.role  === "string") roleEl.value  = existing.role;
+    if (typeof existing.phone === "string") phoneEl.value = existing.phone;
+  }
+  row.querySelector(".c-remove").addEventListener("click", () => { row.remove(); schedulePreview(); });
+  [nameEl, roleEl, phoneEl].forEach((el) => el.addEventListener("input", schedulePreview));
+  contactsBuilder.appendChild(row);
+}
+
 function addScheduleRow(existing) {
   const row = document.createElement("div");
   row.className = "sched-row";
@@ -652,6 +684,14 @@ function collectFormForPreview() {
       time:  row.querySelector(".sched-time").value.trim(),
       label: row.querySelector(".sched-label").value.trim(),
     })).filter((it) => it.time && it.label),
+    // Contacts — WhatsApp + Call buttons per person on the invitation.
+    // Rows missing name OR phone are dropped so the section never
+    // shows a half-row. Role is optional.
+    contacts: [...contactsBuilder.querySelectorAll(".contact-row")].map((row) => ({
+      name:  row.querySelector(".c-name").value.trim(),
+      role:  row.querySelector(".c-role").value.trim(),
+      phone: row.querySelector(".c-phone").value.trim(),
+    })).filter((c) => c.name && c.phone),
     music:     (() => {
       const f = $("f-wedding-music").files?.[0];
       return f ? URL.createObjectURL(f) : "";
@@ -1082,6 +1122,11 @@ async function loadAdminEditFixtures() {
     if (Array.isArray(p.schedule) && p.schedule.length) {
       scheduleBuilder.innerHTML = "";
       for (const it of p.schedule) addScheduleRow(it);
+    }
+    // Rebuild contact rows the same way.
+    if (Array.isArray(p.contacts) && p.contacts.length) {
+      contactsBuilder.innerHTML = "";
+      for (const c of p.contacts) addContactRow(c);
     }
   }
 

@@ -80,3 +80,32 @@ function downloadIcs() {
 
 const btn = document.getElementById("ics-btn");
 if (btn) btn.addEventListener("click", (e) => { e.preventDefault(); downloadIcs(); });
+
+/* ---- Google Calendar deep link ---------------------------------- */
+function gcalDateString(d) {
+  const p = (n) => String(n).padStart(2, "0");
+  return (
+    d.getUTCFullYear() + p(d.getUTCMonth() + 1) + p(d.getUTCDate()) +
+    "T" + p(d.getUTCHours()) + p(d.getUTCMinutes()) + p(d.getUTCSeconds()) + "Z"
+  );
+}
+function buildGcalUrl() {
+  const start = new Date(CONFIG.event.datetimeIso);
+  const end   = new Date(start.getTime() + (CONFIG.event.durationHours || 4) * 3600 * 1000);
+  const title = `${CONFIG.couple.groom} & ${CONFIG.couple.bride} — ${CONFIG.couple.eventType}`;
+  const loc   = `${CONFIG.venue.name}, ${CONFIG.venue.address}`;
+  const q = new URLSearchParams({
+    action:   "TEMPLATE",
+    text:     title,
+    dates:    `${gcalDateString(start)}/${gcalDateString(end)}`,
+    location: loc,
+    details:  CONFIG.blessing || "",
+  });
+  return `https://calendar.google.com/calendar/render?${q.toString()}`;
+}
+const gcalBtn = document.getElementById("gcal-btn");
+if (gcalBtn) {
+  gcalBtn.href   = buildGcalUrl();
+  gcalBtn.target = "_blank";
+  gcalBtn.rel    = "noopener";
+}

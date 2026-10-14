@@ -162,8 +162,11 @@
       </div>
 
       <div class="event-actions">
+        <a href="#" id="gcal-btn" class="btn btn-outline" target="_blank" rel="noopener">
+          <span aria-hidden="true">📅</span> Google Calendar
+        </a>
         <a href="#" id="ics-btn" class="btn btn-outline">
-          <span aria-hidden="true">📅</span> Add to Calendar
+          <span aria-hidden="true">📅</span> Apple / Outlook
         </a>
         <button id="rsvp-open" class="btn btn-primary" type="button">Confirm Attendance</button>
       </div>
@@ -229,6 +232,14 @@
       </a>
     </section>
 
+    <!-- Contacts — WhatsApp + Call buttons per person. contacts.js
+         hides the section when CONFIG.contacts is empty. -->
+    <section class="section contacts reveal" id="contacts" aria-labelledby="contacts-title" hidden>
+      <img class="divider" src="images/divider.png" alt="" aria-hidden="true" />
+      <h2 id="contacts-title" class="section-title-caps">Contacts</h2>
+      <div id="contacts-list" class="contacts-list"></div>
+    </section>
+
     <!-- Program / schedule — hidden by schedule.js when CONFIG.schedule
          is empty, revealed with a vertical timeline otherwise. -->
     <section class="section schedule reveal" id="schedule" aria-labelledby="schedule-title" hidden>
@@ -280,7 +291,7 @@
 
   <!-- One entry point: bootstrap.js resolves the slug, fetches Firestore,
        merges into CONFIG, then dynamically imports every renderer. -->
-  <script type="module" src="js/bootstrap.js?v=17"></script>
+  <script type="module" src="js/bootstrap.js?v=19"></script>
 
 </body>
 </html>

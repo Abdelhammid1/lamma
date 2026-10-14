@@ -10,10 +10,11 @@ import { doc, getDoc } from
 
 const RENDERER_MODULES = [
   "./cover.js",
-  "./details.js",
+  "./details.js?v=2",
   "./countdown.js",
   "./venue.js?v=2",
-  "./schedule.js",
+  "./schedule.js?v=2",
+  "./contacts.js?v=1",
   "./guestbook.js",
   "./reveal.js",
 ];
@@ -78,6 +79,8 @@ function mergeInvitation(raw) {
   if (typeof data.quoteSource === "string") CONFIG.quoteSource = data.quoteSource;
   if (Array.isArray(data.schedule))         CONFIG.schedule    = data.schedule
     .filter((it) => it && typeof it.time === "string" && typeof it.label === "string");
+  if (Array.isArray(data.contacts))         CONFIG.contacts    = data.contacts
+    .filter((c) => c && typeof c.name === "string" && typeof c.phone === "string");
   if (typeof data.music       === "string") CONFIG.music       = data.music;
   if (typeof data.slug        === "string") CONFIG.slug        = data.slug;
 }

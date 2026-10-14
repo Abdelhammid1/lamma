@@ -667,3 +667,75 @@ a { color: inherit; }
   50%      { box-shadow: 0 0 0 2px #a8842f, 0 0 0 10px rgba(201,168,106,0.04); }
 }
 @media (prefers-reduced-motion: reduce) { .tl-next .tl-marker { animation: none; } }
+
+/* ---- Timeline animation on scroll-in -----------------------------
+   .section.schedule gets .in-view (or .is-visible in the wedding
+   template) added by reveal.js when the card enters the viewport.
+   Line draws top → bottom (1.2s), rows fade in with an 80ms stagger
+   so the schedule feels like it is unfolding instead of popping in. */
+.schedule .timeline::before {
+  transform: scaleY(0);
+  transform-origin: top;
+  transition: transform 1.2s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.schedule.in-view .timeline::before,
+.schedule.is-visible .timeline::before { transform: scaleY(1); }
+
+.tl-row {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.schedule.in-view .tl-row,
+.schedule.is-visible .tl-row { opacity: 1; transform: none; }
+.schedule.in-view .tl-row:nth-child(1), .schedule.is-visible .tl-row:nth-child(1) { transition-delay: 0.25s; }
+.schedule.in-view .tl-row:nth-child(2), .schedule.is-visible .tl-row:nth-child(2) { transition-delay: 0.33s; }
+.schedule.in-view .tl-row:nth-child(3), .schedule.is-visible .tl-row:nth-child(3) { transition-delay: 0.41s; }
+.schedule.in-view .tl-row:nth-child(4), .schedule.is-visible .tl-row:nth-child(4) { transition-delay: 0.49s; }
+.schedule.in-view .tl-row:nth-child(5), .schedule.is-visible .tl-row:nth-child(5) { transition-delay: 0.57s; }
+.schedule.in-view .tl-row:nth-child(6), .schedule.is-visible .tl-row:nth-child(6) { transition-delay: 0.65s; }
+.schedule.in-view .tl-row:nth-child(7), .schedule.is-visible .tl-row:nth-child(7) { transition-delay: 0.73s; }
+.schedule.in-view .tl-row:nth-child(8), .schedule.is-visible .tl-row:nth-child(8) { transition-delay: 0.81s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .schedule .timeline::before { transform: scaleY(1); transition: none; }
+  .tl-row                      { opacity: 1; transform: none; transition: none; }
+}
+
+/* Two side-by-side calendar buttons (Google + Apple/Outlook). */
+.cal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin: 0 auto;
+}
+.cal-actions > .btn-ghost { flex: 0 1 auto; }
+
+/* ---- Contacts section — rose gold on ivory ----------------------- */
+.contacts-list { display: flex; flex-direction: column; gap: 14px; margin: 24px auto 0; max-width: 440px; }
+.contact {
+  background: #fff;
+  border: 1px solid rgba(122,90,42,0.2);
+  border-radius: 14px;
+  padding: 14px 16px;
+  box-shadow: 0 6px 18px -14px rgba(122,90,42,0.3);
+  text-align: center;
+}
+.contact-label {
+  font-family: "Cormorant Garamond", serif; font-style: italic;
+  font-size: 16px; color: #4a3b1f; margin-bottom: 10px;
+}
+.contact-label .contact-role { color: #7a5a2a; }
+.contact-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.btn-contact {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 8px; padding: 10px 14px; border-radius: 999px;
+  font-family: 'Manrope', sans-serif; font-size: 12px; font-weight: 600;
+  letter-spacing: 0.08em; text-decoration: none;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+.btn-whatsapp { background: #25D366; color: #fff; }
+.btn-whatsapp:hover { background: #1fa14f; }
+.btn-call     { background: transparent; color: #7a5a2a; border: 1px solid #c9a86a; }
+.btn-call:hover { background: #c9a86a; color: #fff; }

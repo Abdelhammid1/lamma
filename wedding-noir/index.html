@@ -118,7 +118,8 @@
       </div>
 
       <div class="event-actions">
-        <a href="#" id="ics-btn" class="btn btn-outline ics-btn">Add to Calendar</a>
+        <a href="#" id="gcal-btn" class="btn btn-outline" target="_blank" rel="noopener">Google Calendar</a>
+        <a href="#" id="ics-btn" class="btn btn-outline ics-btn">Apple / Outlook</a>
         <button id="rsvp-open" class="btn btn-primary" type="button">Confirm Attendance</button>
       </div>
 
@@ -163,6 +164,12 @@
         ></iframe>
       </div>
       <a id="venue-open" class="btn btn-outline" href="#" target="_blank" rel="noopener noreferrer">Open in Maps</a>
+    </section>
+
+    <!-- Contacts — hidden by contacts.js when CONFIG.contacts empty. -->
+    <section class="section contacts reveal" id="contacts" aria-labelledby="contacts-title" hidden>
+      <h2 id="contacts-title" class="section-title section-title-caps">Contacts</h2>
+      <div id="contacts-list" class="contacts-list"></div>
     </section>
 
     <!-- Program / schedule — hidden by schedule.js when empty. -->
@@ -215,7 +222,7 @@
     <div class="lightbox-counter" id="lightbox-counter" aria-live="polite">1 / 1</div>
   </div>
 
-  <script type="module" src="js/bootstrap.js?v=16"></script>
+  <script type="module" src="js/bootstrap.js?v=18"></script>
 
 </body>
 </html>

@@ -104,7 +104,10 @@
       <div class="countdown-cell"><span class="countdown-num" data-unit="seconds">--</span><span class="countdown-label">ثانية</span></div>
     </div>
 
-    <a id="ics-link" class="btn-ghost" href="#" download="qiraya.ics">أضف إلى التقويم</a>
+    <div class="cal-actions">
+      <a id="gcal-link" class="btn-ghost" href="#" target="_blank" rel="noopener">Google Calendar</a>
+      <a id="ics-link"  class="btn-ghost" href="#" download="qiraya.ics">Apple / Outlook</a>
+    </div>
   </section>
 
   <!-- ─────────────────────────  Venue  ───────────────────────── -->
@@ -138,6 +141,13 @@
   </section>
 
   <!-- ─────────────────────────  Blessing  ───────────────────────── -->
+  <!-- ─────────────────────────  Contacts  ──────────────────────────── -->
+  <section class="section contacts" id="contacts" aria-labelledby="contacts-title" hidden>
+    <p class="eyebrow">للتواصل</p>
+    <h2 class="section-title" id="contacts-title">نسعد بتواصلكم</h2>
+    <div id="contacts-list" class="contacts-list"></div>
+  </section>
+
   <!-- ─────────────────────────  Program / Schedule  ───────────────── -->
   <section class="section schedule" id="schedule" aria-labelledby="schedule-title" hidden>
     <p class="eyebrow">البرنامج</p>
@@ -185,6 +195,6 @@
   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5z" fill="currentColor"/><path d="M15 9c1.5 1.5 1.5 4.5 0 6" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
 </button>
 
-<script type="module" src="js/bootstrap.js?v=16"></script>
+<script type="module" src="js/bootstrap.js?v=18"></script>
 </body>
 </html>

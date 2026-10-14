@@ -71,3 +71,27 @@ if (icsLink && !Number.isNaN(d.getTime())) {
   ].filter(Boolean).join("\r\n");
   icsLink.href = "data:text/calendar;charset=utf-8," + encodeURIComponent(ics);
 }
+
+// Google Calendar deep link — opens calendar.google.com with the
+// event pre-filled. Separate button so iOS / Outlook hosts still get
+// the .ics download above.
+const gcalLink = q("gcal-link");
+if (gcalLink && !Number.isNaN(d.getTime())) {
+  const end = new Date(d.getTime() + (CONFIG.event.durationHours || 2) * 60 * 60 * 1000);
+  const pad = (n) => String(n).padStart(2, "0");
+  const gfmt = (dt) =>
+    dt.getUTCFullYear() + pad(dt.getUTCMonth() + 1) + pad(dt.getUTCDate()) +
+    "T" + pad(dt.getUTCHours()) + pad(dt.getUTCMinutes()) + pad(dt.getUTCSeconds()) + "Z";
+  const title = `${CONFIG.couple.groom || ""} & ${CONFIG.couple.bride || ""} — ${CONFIG.couple.eventType || "Engagement"}`.trim();
+  const loc   = [CONFIG.venue?.name, CONFIG.venue?.address].filter(Boolean).join(", ");
+  const qs = new URLSearchParams({
+    action:   "TEMPLATE",
+    text:     title,
+    dates:    `${gfmt(d)}/${gfmt(end)}`,
+    location: loc,
+    details:  CONFIG.blessing || "",
+  });
+  gcalLink.href   = `https://calendar.google.com/calendar/render?${qs.toString()}`;
+  gcalLink.target = "_blank";
+  gcalLink.rel    = "noopener";
+}

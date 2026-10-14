@@ -1,0 +1,70 @@
+{
+  "slug": "schedule-demo",
+  "couple": {
+    "groom": "Ahmed",
+    "bride": "Sara",
+    "eventType": "Wedding",
+    "groomLabel": "The Groom",
+    "brideLabel": "The Bride"
+  },
+  "event": {
+    "datetimeIso": "2026-10-25T19:00:00+02:00",
+    "welcomeTime": "6:30 PM",
+    "receptionTime": "7:00 PM",
+    "durationHours": 4
+  },
+  "venue": {
+    "name": "Nile Plaza",
+    "address": "Dokki, Giza",
+    "mapsEmbedSrc": "",
+    "mapsDeepLink": ""
+  },
+  "dressCode": {
+    "label": "Pink dresses",
+    "colors": [
+      "#f7d9e1",
+      "#efc8d2",
+      "#a13b58",
+      "#c9a86a"
+    ]
+  },
+  "blessing": "Together with our families, we invite you to share our day.",
+  "gallery": [],
+  "music": "",
+  "schedule": [
+    {
+      "time": "19:00",
+      "label": "الاستقبال"
+    },
+    {
+      "time": "20:00",
+      "label": "كتب الكتاب"
+    },
+    {
+      "time": "20:30",
+      "label": "First dance"
+    },
+    {
+      "time": "21:30",
+      "label": "Dinner"
+    },
+    {
+      "time": "23:00",
+      "label": "Cutting the cake"
+    }
+  ],
+  "contacts": [
+    {
+      "name": "Mark Yasser",
+      "role": "Groom Brother",
+      "phone": "+201012345678"
+    },
+    {
+      "name": "Peter Hady",
+      "role": "Groom Mate",
+      "phone": "+201098765432"
+    }
+  ],
+  "event_type": "wedding",
+  "published_at": "2026-10-14T15:58:36.222498Z"
+}
