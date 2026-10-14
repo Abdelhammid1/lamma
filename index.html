@@ -78,216 +78,299 @@
     </p>
   </header>
 
-  <!-- Product cards -->
-  <div class="w-full flex flex-col gap-7">
+  <!-- ========================================================
+       Occasion picker — two-step, in-page.
+       Step 1 (#picker-occasions): one card per event type the
+         product supports. Each card is a button that either
+         navigates straight to /create.html?type=<id> (for types
+         with only one style — engagement, قراية, سبوع) or
+         switches to the inline style picker (wedding, birthday).
+       Step 2 (#picker-styles)   : a 2-tile grid of the styles
+         available for the occasion that was clicked, each with a
+         Preview link (opens the demo in a new tab) and a Create
+         button that goes to /create.html?type=<style-id>. A back
+         button returns to step 1.
+       Both steps share one data-driven JS block at the bottom so
+       adding a new occasion / style is one array edit.
+       ======================================================== -->
+  <div id="picker" class="w-full">
 
-    <!-- Wedding & Engagement -->
-    <article class="relative bg-surface-container-low rounded-xl p-6 shadow-md flex flex-col items-center text-center overflow-hidden">
-      <img src="images/corner.png" alt="" class="absolute top-1.5 left-1.5  w-8 h-8 pointer-events-none opacity-80"/>
-      <img src="images/corner.png" alt="" class="absolute top-1.5 right-1.5 w-8 h-8 pointer-events-none opacity-80 -scale-x-100"/>
-      <img src="images/corner.png" alt="" class="absolute bottom-1.5 left-1.5  w-8 h-8 pointer-events-none opacity-80 -scale-y-100"/>
-      <img src="images/corner.png" alt="" class="absolute bottom-1.5 right-1.5 w-8 h-8 pointer-events-none opacity-80 -scale-x-100 -scale-y-100"/>
+    <!-- Step 1 — occasions -->
+    <section id="picker-occasions" class="flex flex-col items-center text-center">
+      <span class="font-label text-[10px] font-semibold uppercase tracking-widest text-secondary">
+        Pick an occasion
+      </span>
+      <h2 class="font-display text-[22px] text-primary mt-1">What are you celebrating?</h2>
+      <p class="font-arabic text-[13px] text-on-surface-variant mt-0.5" dir="rtl">
+        اختر المناسبة
+      </p>
 
-      <div class="w-full bg-surface-container-lowest/80 rounded-lg p-5 flex flex-col items-center shadow-sm">
-        <img src="images/lotus-emblem.svg" alt="Lotus ornament"
-             class="w-14 h-14 mb-2 object-contain drop-shadow-sm" />
+      <div class="grid grid-cols-2 gap-3 w-full mt-5">
+        <!-- Wedding (multi-style → opens style picker) -->
+        <button type="button" data-occasion="wedding"
+                class="occ-card">
+          <div class="occ-swatch" style="background:linear-gradient(135deg,#f7d9e1,#a13b58);">
+            <span class="font-display italic text-white text-[20px] drop-shadow">A &amp; S</span>
+          </div>
+          <div class="occ-title">Wedding</div>
+          <div class="occ-ar font-arabic" dir="rtl">زفاف</div>
+          <div class="occ-chevron">2 styles →</div>
+        </button>
 
-        <h2 class="font-display text-[22px] leading-8 font-semibold text-primary">Wedding &amp; Engagement</h2>
-        <div class="font-display font-arabic text-[22px] leading-8 text-secondary mt-0.5" dir="rtl">
-          حفلات الزفاف والخطوبة
-        </div>
+        <!-- Engagement (one style → direct link) -->
+        <a href="/create.html?type=engagement" class="occ-card">
+          <div class="occ-swatch" style="background:linear-gradient(135deg,#f5ead6,#efd8a8);">
+            <span class="font-display italic text-[22px]" style="color:#7a5a2a;">Engagement</span>
+          </div>
+          <div class="occ-title">Engagement</div>
+          <div class="occ-ar font-arabic" dir="rtl">خطوبة</div>
+          <div class="occ-chevron">Create →</div>
+        </a>
 
-        <img src="images/divider.png" alt="" class="w-28 h-5 my-1 object-contain opacity-75"/>
+        <!-- Birthday (multi-style → opens style picker) -->
+        <button type="button" data-occasion="birthday"
+                class="occ-card">
+          <div class="occ-swatch" style="background:linear-gradient(135deg,#fce4e4,#f5c4c9);">
+            <span class="text-[32px]">🎂</span>
+          </div>
+          <div class="occ-title">Birthday</div>
+          <div class="occ-ar font-arabic" dir="rtl">عيد ميلاد</div>
+          <div class="occ-chevron">2 styles →</div>
+        </button>
 
-        <p class="text-[14px] leading-relaxed text-on-surface-variant max-w-xs my-2.5">
-          Immerse your guests in timeless romance with bespoke digital folios,
-          animated wax seals, bilingual RSVP tracking, and live guest concierge.
-        </p>
+        <!-- قراية فاتحة -->
+        <a href="/create.html?type=qiraya" class="occ-card">
+          <div class="occ-swatch" style="background:#fbf7ee; border:1px solid #d7cfb8;" dir="rtl">
+            <span class="font-arabic font-semibold text-[20px]" style="color:#1e3f30;">قراية فاتحة</span>
+          </div>
+          <div class="occ-title font-arabic" dir="rtl">قراية فاتحة</div>
+          <div class="occ-ar">Qiraya Fatiha</div>
+          <div class="occ-chevron">Create →</div>
+        </a>
 
-        <div class="mt-1 mb-5 px-3 py-1 rounded-full bg-surface-container">
-          <span class="font-label text-[10px] font-medium tracking-wide text-on-surface-variant">
-            Bespoke Calligraphy · RSVP &amp; Guestlist · Maps
-          </span>
-        </div>
-
-        <a href="/create.html?type=wedding"
-           class="group w-full py-3.5 px-6 rounded-lg bg-primary-container flex items-center justify-center gap-2 shadow-sm transition active:scale-[0.98]">
-          <span class="font-label text-[14px] font-semibold tracking-wider text-secondary-fixed">Create your invitation</span>
-          <span class="material-symbols-outlined text-[18px] text-secondary-fixed transition-transform group-hover:translate-x-1">arrow_forward</span>
+        <!-- سبوع -->
+        <a href="/create.html?type=sobou" class="occ-card">
+          <div class="occ-swatch" style="background:linear-gradient(135deg,#fff6e3,#fde4b8);" dir="rtl">
+            <span class="font-arabic font-semibold text-[22px]" style="color:#8a5a1a;">سبوع</span>
+          </div>
+          <div class="occ-title font-arabic" dir="rtl">سبوع</div>
+          <div class="occ-ar">Sobou</div>
+          <div class="occ-chevron">Create →</div>
         </a>
       </div>
-    </article>
+    </section>
 
-    <!-- Birthday Celebrations -->
-    <article class="relative bg-surface-container-low rounded-xl p-6 shadow-md flex flex-col items-center text-center overflow-hidden">
-      <img src="images/corner.png" alt="" class="absolute top-1.5 left-1.5  w-8 h-8 pointer-events-none opacity-80"/>
-      <img src="images/corner.png" alt="" class="absolute top-1.5 right-1.5 w-8 h-8 pointer-events-none opacity-80 -scale-x-100"/>
-      <img src="images/corner.png" alt="" class="absolute bottom-1.5 left-1.5  w-8 h-8 pointer-events-none opacity-80 -scale-y-100"/>
-      <img src="images/corner.png" alt="" class="absolute bottom-1.5 right-1.5 w-8 h-8 pointer-events-none opacity-80 -scale-x-100 -scale-y-100"/>
+    <!-- Step 2 — styles for the picked occasion (hidden by default) -->
+    <section id="picker-styles" class="flex flex-col items-center text-center" hidden>
+      <button type="button" id="picker-back"
+              class="self-start inline-flex items-center gap-1.5 text-[13px] text-primary mb-3">
+        <span aria-hidden="true">←</span>
+        <span>Back</span>
+      </button>
+      <span class="font-label text-[10px] font-semibold uppercase tracking-widest text-secondary">
+        Pick a style
+      </span>
+      <h2 id="styles-title" class="font-display text-[22px] text-primary mt-1">—</h2>
+      <p id="styles-sub" class="font-arabic text-[13px] text-on-surface-variant mt-0.5" dir="rtl">—</p>
 
-      <div class="w-full bg-surface-container-lowest/80 rounded-lg p-5 flex flex-col items-center shadow-sm">
-        <img src="images/cake.svg" alt="Birthday cake ornament"
-             class="w-14 h-14 mb-2 object-contain drop-shadow-sm" />
-
-        <h2 class="font-display text-[22px] leading-8 font-semibold text-primary">Birthday Celebrations</h2>
-        <div class="font-display font-arabic text-[22px] leading-8 text-secondary mt-0.5" dir="rtl">
-          أعياد الميلاد والمناسبات السعيدة
-        </div>
-
-        <img src="images/divider.png" alt="" class="w-28 h-5 my-1 object-contain opacity-75"/>
-
-        <p class="text-[14px] leading-relaxed text-on-surface-variant max-w-xs my-2.5">
-          Celebrate cherished milestones with radiant personalized invitations,
-          interactive countdown timers, wish registries, and seamless instant guest messaging.
-        </p>
-
-        <div class="mt-1 mb-5 px-3 py-1 rounded-full bg-surface-container">
-          <span class="font-label text-[10px] font-medium tracking-wide text-on-surface-variant">
-            Milestone Themes · Live Countdown · Interactive Wishes
-          </span>
-        </div>
-
-        <a href="/create.html?type=birthday"
-           class="group w-full py-3.5 px-6 rounded-lg bg-primary-container flex items-center justify-center gap-2 shadow-sm transition active:scale-[0.98]">
-          <span class="font-label text-[14px] font-semibold tracking-wider text-secondary-fixed">Create your birthday</span>
-          <span class="material-symbols-outlined text-[18px] text-secondary-fixed transition-transform group-hover:translate-x-1">arrow_forward</span>
-        </a>
+      <div id="styles-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full mt-5">
+        <!-- Tiles injected by the JS below from the OCCASIONS table. -->
       </div>
-    </article>
+    </section>
   </div>
 
-  <!-- ======== Template gallery ========
-       Lets a visitor pick a specific template style instead of being
-       routed to the default (wedding → pink/ornate, birthday → playful).
-       Each tile links straight into /create.html?type=<id> and offers
-       a "Preview" link that opens the template demo in a new tab. -->
-  <section class="w-full mt-12" aria-labelledby="templates-title">
-    <div class="flex flex-col items-center text-center mb-5">
-      <span class="font-label text-[10px] font-semibold uppercase tracking-widest text-secondary">
-        Choose a Template
-      </span>
-      <h2 id="templates-title" class="font-display text-[22px] text-primary mt-1">
-        Pick the style that fits your day
-      </h2>
-      <p class="font-arabic text-[13px] text-on-surface-variant mt-0.5" dir="rtl">
-        اختر القالب الذي يناسب مناسبتك
-      </p>
-    </div>
+<style>
+  /* Tailwind's .flex sets display:flex which overrides the user-agent
+     [hidden]{display:none} rule, so the step-2 panel would otherwise
+     show through on initial load. Keep the attribute authoritative. */
+  #picker-occasions[hidden], #picker-styles[hidden] { display: none !important; }
 
-    <div class="grid grid-cols-2 gap-3">
-      <!-- Wedding — Classic (pink + ornate) -->
-      <div class="bg-surface-container-low rounded-lg p-3 flex flex-col items-stretch text-center shadow-sm">
-        <div class="rounded-md h-24 flex items-center justify-center mb-2"
-             style="background:linear-gradient(135deg,#f7d9e1,#efc8d2 60%,#a13b58);">
-          <span class="font-display italic text-white text-[18px] drop-shadow">A &amp; S</span>
-        </div>
-        <h3 class="font-display text-[15px] text-primary leading-tight">Wedding · Classic</h3>
-        <p class="text-[11px] text-on-surface-variant mt-0.5 mb-2">Pink &amp; gold, floral</p>
-        <div class="flex gap-1.5 mt-auto">
-          <a href="/wedding/" target="_blank"
-             class="flex-1 py-1.5 rounded border border-outline text-[11px] font-label font-semibold text-on-surface-variant">Preview</a>
-          <a href="/create.html?type=wedding"
-             class="flex-1 py-1.5 rounded bg-primary-container text-[11px] font-label font-semibold text-secondary-fixed">Create</a>
+  /* Occasion + style cards share a card look. Buttons strip default
+     styling so <button> and <a> read identically. */
+  .occ-card {
+    appearance: none;
+    background: #ffffff;
+    border: 1px solid rgba(74, 32, 51, 0.12);
+    border-radius: 12px;
+    padding: 10px 10px 12px;
+    text-align: center;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    box-shadow: 0 8px 20px -14px rgba(0,0,0,0.12);
+    transition: transform 0.15s ease, border-color 0.15s ease;
+    color: #310b1e;
+    text-decoration: none;
+  }
+  .occ-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(74, 32, 51, 0.28);
+  }
+  .occ-card:active { transform: translateY(0); }
+  .occ-swatch {
+    width: 100%;
+    aspect-ratio: 3 / 2;
+    border-radius: 8px;
+    display: grid;
+    place-items: center;
+    margin-bottom: 6px;
+  }
+  .occ-title {
+    font-family: "Playfair Display", serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: #310b1e;
+    line-height: 1.15;
+  }
+  .occ-ar {
+    font-size: 12px;
+    color: #504347;
+  }
+  .occ-chevron {
+    margin-top: 4px;
+    font-family: "Manrope", sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: #67384c;
+  }
+
+  /* Style-picker tile (step 2). Larger preview area, two actions. */
+  .style-card {
+    background: #ffffff;
+    border: 1px solid rgba(74, 32, 51, 0.12);
+    border-radius: 12px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    text-align: center;
+    box-shadow: 0 8px 20px -14px rgba(0,0,0,0.12);
+  }
+  .style-swatch {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    border-radius: 8px;
+    display: grid;
+    place-items: center;
+  }
+  .style-title {
+    font-family: "Playfair Display", serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: #310b1e;
+  }
+  .style-hint { font-size: 12px; color: #504347; margin-top: -2px; }
+  .style-actions { display: flex; gap: 8px; margin-top: 8px; }
+  .style-actions > a {
+    flex: 1;
+    padding: 10px 8px;
+    border-radius: 8px;
+    font-family: "Manrope", sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-decoration: none;
+  }
+  .style-actions .preview { border: 1px solid rgba(74, 32, 51, 0.3); color: #4a2033; background: #fff; }
+  .style-actions .create  { background: #4a2033; color: #ffdea4; }
+  .style-actions .preview:hover { background: rgba(74, 32, 51, 0.06); }
+  .style-actions .create:hover  { background: #310b1e; }
+</style>
+
+<script>
+  // One source of truth for the picker. New template? Add an entry
+  // under styles[] — the step-2 grid builds from this.
+  const OCCASIONS = {
+    wedding: {
+      titleEn: "Wedding",
+      titleAr: "زفاف",
+      styles: [
+        {
+          id: "wedding",
+          name: "Classic",
+          hint: "Pink & gold, floral",
+          preview: "/wedding/",
+          swatch: `<div style="background:linear-gradient(135deg,#f7d9e1,#efc8d2 60%,#a13b58);width:100%;height:100%;border-radius:inherit;display:grid;place-items:center;">
+                     <span style="font-family:'Playfair Display',serif;font-style:italic;color:#fff;font-size:28px;text-shadow:0 1px 4px rgba(0,0,0,0.15);">A &amp; S</span>
+                   </div>`,
+        },
+        {
+          id: "wedding-noir",
+          name: "Noir",
+          hint: "Minimalist cream & black",
+          preview: "/wedding-noir/",
+          swatch: `<div style="background:#f5f1ea;border:1px solid #d8d2c4;width:100%;height:100%;border-radius:inherit;display:grid;place-items:center;">
+                     <span style="font-family:'Playfair Display',serif;font-style:italic;color:#1a1a1a;font-size:26px;">A <span style="color:#a84a3a;">&amp;</span> S</span>
+                   </div>`,
+        },
+      ],
+    },
+    birthday: {
+      titleEn: "Birthday",
+      titleAr: "عيد ميلاد",
+      styles: [
+        {
+          id: "birthday",
+          name: "Classic",
+          hint: "Playful, with quiz & letter",
+          preview: "/birthday.html",
+          swatch: `<div style="background:linear-gradient(135deg,#fce4e4,#f5c4c9);width:100%;height:100%;border-radius:inherit;display:grid;place-items:center;font-size:40px;">🎂</div>`,
+        },
+        {
+          id: "birthday-elegant",
+          name: "Elegant",
+          hint: "Formal, bone & brass",
+          preview: "/birthday-elegant/",
+          swatch: `<div style="background:#f3eee6;border:1px solid #d4ccbe;width:100%;height:100%;border-radius:inherit;display:grid;place-items:center;">
+                     <span style="font-family:'Playfair Display',serif;font-style:italic;color:#1c1a17;font-size:28px;">Layla</span>
+                   </div>`,
+        },
+      ],
+    },
+  };
+
+  const esc = (s) => String(s).replace(/[<>&"]/g, (c) => ({ "<":"&lt;",">":"&gt;","&":"&amp;",'"':"&quot;" }[c]));
+
+  function openStyles(key) {
+    const occ = OCCASIONS[key];
+    if (!occ) return;
+    document.getElementById("styles-title").textContent = occ.titleEn;
+    const sub = document.getElementById("styles-sub");
+    sub.textContent = occ.titleAr;
+    sub.setAttribute("dir", "rtl");
+    const grid = document.getElementById("styles-grid");
+    grid.innerHTML = occ.styles.map((s) => `
+      <div class="style-card">
+        <div class="style-swatch">${s.swatch}</div>
+        <div class="style-title">${esc(s.name)}</div>
+        <div class="style-hint">${esc(s.hint)}</div>
+        <div class="style-actions">
+          <a class="preview" href="${esc(s.preview)}" target="_blank" rel="noopener">Preview</a>
+          <a class="create"  href="/create.html?type=${esc(s.id)}">Create</a>
         </div>
       </div>
+    `).join("");
+    document.getElementById("picker-occasions").hidden = true;
+    document.getElementById("picker-styles").hidden    = false;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
 
-      <!-- Wedding — Noir (new) -->
-      <div class="bg-surface-container-low rounded-lg p-3 flex flex-col items-stretch text-center shadow-sm">
-        <div class="rounded-md h-24 flex items-center justify-center mb-2"
-             style="background:#f5f1ea; border:1px solid #d8d2c4;">
-          <span class="font-display italic text-[18px]" style="color:#1a1a1a;">A <span style="color:#a84a3a;">&amp;</span> S</span>
-        </div>
-        <h3 class="font-display text-[15px] text-primary leading-tight">Wedding · Noir</h3>
-        <p class="text-[11px] text-on-surface-variant mt-0.5 mb-2">Minimalist cream &amp; black</p>
-        <div class="flex gap-1.5 mt-auto">
-          <a href="/wedding-noir/" target="_blank"
-             class="flex-1 py-1.5 rounded border border-outline text-[11px] font-label font-semibold text-on-surface-variant">Preview</a>
-          <a href="/create.html?type=wedding-noir"
-             class="flex-1 py-1.5 rounded bg-primary-container text-[11px] font-label font-semibold text-secondary-fixed">Create</a>
-        </div>
-      </div>
+  function backToOccasions() {
+    document.getElementById("picker-styles").hidden    = true;
+    document.getElementById("picker-occasions").hidden = false;
+  }
 
-      <!-- Birthday — Classic (playful) -->
-      <div class="bg-surface-container-low rounded-lg p-3 flex flex-col items-stretch text-center shadow-sm">
-        <div class="rounded-md h-24 flex items-center justify-center mb-2"
-             style="background:linear-gradient(135deg,#fce4e4,#f5c4c9);">
-          <span class="text-[26px]">🎂</span>
-        </div>
-        <h3 class="font-display text-[15px] text-primary leading-tight">Birthday · Classic</h3>
-        <p class="text-[11px] text-on-surface-variant mt-0.5 mb-2">Playful with quiz &amp; letter</p>
-        <div class="flex gap-1.5 mt-auto">
-          <a href="/birthday.html" target="_blank"
-             class="flex-1 py-1.5 rounded border border-outline text-[11px] font-label font-semibold text-on-surface-variant">Preview</a>
-          <a href="/create.html?type=birthday"
-             class="flex-1 py-1.5 rounded bg-primary-container text-[11px] font-label font-semibold text-secondary-fixed">Create</a>
-        </div>
-      </div>
-
-      <!-- Birthday — Elegant (new) -->
-      <div class="bg-surface-container-low rounded-lg p-3 flex flex-col items-stretch text-center shadow-sm">
-        <div class="rounded-md h-24 flex items-center justify-center mb-2"
-             style="background:#f3eee6; border:1px solid #d4ccbe;">
-          <span class="font-display italic text-[22px]" style="color:#1c1a17;">Layla</span>
-        </div>
-        <h3 class="font-display text-[15px] text-primary leading-tight">Birthday · Elegant</h3>
-        <p class="text-[11px] text-on-surface-variant mt-0.5 mb-2">Formal, bone &amp; brass</p>
-        <div class="flex gap-1.5 mt-auto">
-          <a href="/birthday-elegant/" target="_blank"
-             class="flex-1 py-1.5 rounded border border-outline text-[11px] font-label font-semibold text-on-surface-variant">Preview</a>
-          <a href="/create.html?type=birthday-elegant"
-             class="flex-1 py-1.5 rounded bg-primary-container text-[11px] font-label font-semibold text-secondary-fixed">Create</a>
-        </div>
-      </div>
-
-      <!-- Engagement -->
-      <div class="bg-surface-container-low rounded-lg p-3 flex flex-col items-stretch text-center shadow-sm">
-        <div class="rounded-md h-24 flex items-center justify-center mb-2"
-             style="background:linear-gradient(135deg,#f5ead6,#efd8a8);">
-          <span class="font-display italic text-[20px]" style="color:#7a5a2a;">Engagement</span>
-        </div>
-        <h3 class="font-display text-[15px] text-primary leading-tight">Engagement</h3>
-        <p class="text-[11px] text-on-surface-variant mt-0.5 mb-2">Ivory &amp; rose gold</p>
-        <div class="flex gap-1.5 mt-auto">
-          <a href="/engagement/" target="_blank"
-             class="flex-1 py-1.5 rounded border border-outline text-[11px] font-label font-semibold text-on-surface-variant">Preview</a>
-          <a href="/create.html?type=engagement"
-             class="flex-1 py-1.5 rounded bg-primary-container text-[11px] font-label font-semibold text-secondary-fixed">Create</a>
-        </div>
-      </div>
-
-      <!-- قراية فاتحة -->
-      <div class="bg-surface-container-low rounded-lg p-3 flex flex-col items-stretch text-center shadow-sm">
-        <div class="rounded-md h-24 flex items-center justify-center mb-2"
-             style="background:#fbf7ee; border:1px solid #d7cfb8;" dir="rtl">
-          <span class="font-arabic font-semibold text-[18px]" style="color:#1e3f30;">قراية فاتحة</span>
-        </div>
-        <h3 class="font-display text-[15px] text-primary leading-tight">قراية فاتحة</h3>
-        <p class="text-[11px] text-on-surface-variant mt-0.5 mb-2">Ivory &amp; forest green</p>
-        <div class="flex gap-1.5 mt-auto">
-          <a href="/qiraya/" target="_blank"
-             class="flex-1 py-1.5 rounded border border-outline text-[11px] font-label font-semibold text-on-surface-variant">Preview</a>
-          <a href="/create.html?type=qiraya"
-             class="flex-1 py-1.5 rounded bg-primary-container text-[11px] font-label font-semibold text-secondary-fixed">Create</a>
-        </div>
-      </div>
-
-      <!-- سبوع -->
-      <div class="bg-surface-container-low rounded-lg p-3 flex flex-col items-stretch text-center shadow-sm">
-        <div class="rounded-md h-24 flex items-center justify-center mb-2"
-             style="background:linear-gradient(135deg,#fff6e3,#fde4b8);" dir="rtl">
-          <span class="font-arabic font-semibold text-[20px]" style="color:#8a5a1a;">سبوع</span>
-        </div>
-        <h3 class="font-display text-[15px] text-primary leading-tight">سبوع</h3>
-        <p class="text-[11px] text-on-surface-variant mt-0.5 mb-2">Cream &amp; candle yellow</p>
-        <div class="flex gap-1.5 mt-auto">
-          <a href="/sobou/" target="_blank"
-             class="flex-1 py-1.5 rounded border border-outline text-[11px] font-label font-semibold text-on-surface-variant">Preview</a>
-          <a href="/create.html?type=sobou"
-             class="flex-1 py-1.5 rounded bg-primary-container text-[11px] font-label font-semibold text-secondary-fixed">Create</a>
-        </div>
-      </div>
-    </div>
-  </section>
+  document.querySelectorAll("[data-occasion]").forEach((el) => {
+    el.addEventListener("click", (e) => {
+      e.preventDefault();
+      openStyles(el.dataset.occasion);
+    });
+  });
+  document.getElementById("picker-back").addEventListener("click", backToOccasions);
+</script>
 
   <!-- Trust footer -->
   <footer class="max-w-md mt-10 mb-2 flex flex-col items-center">
