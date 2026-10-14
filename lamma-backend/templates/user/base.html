@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}لمة · LAMMA{% endblock %}</title>
+<link rel="icon" href="/logo.jpg" type="image/jpeg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Manrope:wght@400;500;600;700&family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --plum:      #310b1e;
+    --plum-2:    #4a2033;
+    --accent:    #ffdea4;
+    --bg:        #fbf9f6;
+    --surface:   #ffffff;
+    --rule:      #e5e0d7;
+    --ink:       #1b1c1a;
+    --muted:     #504347;
+    --danger:    #a0372a;
+    color-scheme: light;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 0;
+    background: var(--bg); color: var(--ink);
+    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 15px; line-height: 1.5;
+  }
+  a { color: var(--plum); }
+  .topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--rule);
+    padding: 14px 24px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 20px; flex-wrap: wrap;
+  }
+  .brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: var(--plum); }
+  .brand-mark { font-size: 22px; }
+  .brand-name { font-family: 'Playfair Display', serif; font-weight: 600; font-size: 18px; }
+  .brand-sub  { color: var(--muted); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; margin-left: 6px; }
+  .topbar nav a {
+    text-decoration: none; color: var(--muted); margin-right: 14px;
+    font-size: 14px; padding-bottom: 4px;
+  }
+  .topbar nav a.on { color: var(--plum); border-bottom: 2px solid var(--plum); }
+  .who { display: inline-flex; align-items: center; gap: 10px; font-size: 13px; color: var(--muted); }
+  .shell { max-width: 920px; margin: 32px auto; padding: 0 20px; }
+  .page-title { font-family: 'Playfair Display', serif; font-size: 24px; margin: 0; color: var(--plum); }
+  .muted { color: var(--muted); }
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 9px 16px; border-radius: 8px; border: 1px solid transparent;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+    font-family: inherit; text-decoration: none;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .btn-primary { background: var(--plum); color: #fff; }
+  .btn-primary:hover { background: var(--plum-2); }
+  .btn-outline { background: transparent; color: var(--plum); border-color: var(--plum); }
+  .btn-outline:hover { background: var(--plum); color: #fff; }
+  .btn-ghost   { background: transparent; color: var(--muted); }
+  .btn-ghost:hover { color: var(--plum); }
+  .btn-sm      { padding: 5px 10px; font-size: 12px; }
+  .btn-danger  { background: var(--danger); color: #fff; }
+  input[type="email"], input[type="password"], input[type="text"] {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--rule);
+    border-radius: 8px; font: inherit; background: #fff;
+  }
+  input:focus { outline: 2px solid var(--plum); outline-offset: 1px; border-color: var(--plum); }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; font-weight: 500; }
+  .flash { padding: 10px 14px; border-radius: 8px; margin-bottom: 16px; font-size: 14px; }
+  .flash-info  { background: #eaf3fb; color: #285a7a; }
+  .flash-warn  { background: #fdefd5; color: #7a5222; }
+  .flash-err   { background: #fde6e2; color: var(--danger); }
+  .error       { color: var(--danger); font-size: 13px; margin-top: 4px; }
+  .card {
+    background: var(--surface); border: 1px solid var(--rule);
+    border-radius: 12px; padding: 24px;
+    box-shadow: 0 10px 30px -22px rgba(0,0,0,0.3);
+  }
+  .center { max-width: 420px; margin: 60px auto; }
+</style>
+</head>
+<body>
+
+{% if current_user.is_authenticated and current_user.__class__.__name__ == 'HostUser' %}
+<header class="topbar">
+  <a href="/" class="brand">
+    <span class="brand-mark">🌸</span>
+    <span class="brand-name">لمة · LAMMA</span>
+    <span class="brand-sub">Host</span>
+  </a>
+  <nav>
+    <a href="{{ url_for('user.dashboard') }}" {% if request.endpoint == 'user.dashboard' %}class="on"{% endif %}>My events</a>
+  </nav>
+  <div class="who">
+    <span>{{ current_user.email }}</span>
+    <form action="{{ url_for('user.logout') }}" method="post" style="display:inline">
+      <button type="submit" class="btn btn-ghost btn-sm">Sign out</button>
+    </form>
+  </div>
+</header>
+{% endif %}
+
+<main class="shell">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}
+      <div class="flash flash-{{ cat }}">{{ msg }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  {% block content %}{% endblock %}
+</main>
+</body>
+</html>

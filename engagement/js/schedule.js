@@ -118,29 +118,46 @@ if (!section || !list || !items.length) {
   // .entered on the section — all the entry animations (sweep + per-
   // row drop + ripple) are keyed to that class in CSS.
   // Fire the entry sequence the first time the section is actually
-  // visible in the viewport. IntersectionObserver would be ideal here
-  // but the schedule renders inside #invitation which starts with
-  // max-height:0; some engines then never re-check IO after the
-  // body.opened CSS flip even though the section becomes visible.
-  // A plain rect check on scroll + an initial check covers both cases.
+  // visible in the viewport. Three detection paths, any one wins:
+  //
+  //   1. IntersectionObserver — the clean path. Catches the CSS-layout
+  //      visibility change when body.opened flips max-height from 0
+  //      to auto (works in all modern engines).
+  //   2. Scroll + resize listeners — the belt-and-suspenders path.
+  //      IO doesn't fire if the section expands without crossing a
+  //      scroll boundary (user clicks Open while already scrolled to
+  //      where the schedule will land).
+  //   3. One-shot requestAnimationFrame on boot — for the short-page
+  //      / direct-link-into-open-invitation case where the section is
+  //      already visible with no scroll or layout change needed.
+  //
+  // Whichever fires first adds .entered and removes all other hooks
+  // so the animation never re-plays mid-session.
+  let io = null;
+  function enter() {
+    if (section.classList.contains("entered")) return;
+    section.classList.add("entered");
+    window.removeEventListener("scroll", checkEnter);
+    window.removeEventListener("resize", checkEnter);
+    if (io) io.disconnect();
+  }
   function checkEnter() {
     if (section.classList.contains("entered")) return;
     const r = section.getBoundingClientRect();
     const vh = window.innerHeight || document.documentElement.clientHeight;
-    // Fire when the top of the card has risen into the bottom 90% of
-    // the viewport — gives the entry animation room before the user
-    // is reading it, without being so eager it plays off-screen.
-    if (r.top < vh * 0.9 && r.bottom > 20) {
-      section.classList.add("entered");
-      window.removeEventListener("scroll", checkEnter);
-      window.removeEventListener("resize", checkEnter);
-    }
+    if (r.top < vh * 0.9 && r.bottom > 20) enter();
   }
   window.addEventListener("scroll", checkEnter, { passive: true });
   window.addEventListener("resize", checkEnter);
-  // One initial check for the case where the schedule is already in
-  // view (short pages / landing on an open invitation link).
   requestAnimationFrame(checkEnter);
+  if ("IntersectionObserver" in window) {
+    io = new IntersectionObserver((entries) => {
+      for (const e of entries) {
+        if (e.isIntersecting) { enter(); break; }
+      }
+    }, { threshold: 0.05, rootMargin: "0px 0px -40px 0px" });
+    io.observe(section);
+  }
 
   // Advance the "next" state every 60s during the event. Full rebuild
   // keeps the row DOM in sync with current time; the entered class is

@@ -715,14 +715,19 @@ function updatePublishGate() {
   // Admin modes don't require an activation code — Flask-Login's
   // session cookie is the auth.
   const codeOk = ADMIN_MODE ? true : codeInput.value.trim().length >= 6;
-  const canPublish = nameOk && slugOk && codeOk;
+  // Admin-create also needs the host email (an owner on the account
+  // this event is being published into). Trim + ultra-light regex.
+  const hostEmailEl = $("f-host-email");
+  const hostEmailOk = ADMIN_MODE !== "create" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((hostEmailEl?.value || "").trim());
+  const canPublish = nameOk && slugOk && codeOk && hostEmailOk;
   $("publish-btn").disabled = !canPublish;
   $("publish-hint").hidden  = canPublish;
   if (!canPublish) {
     const bits = [];
-    if (!nameOk) bits.push("name");
-    if (!slugOk) bits.push("valid available slug");
-    if (!codeOk) bits.push("activation code");
+    if (!nameOk)      bits.push("name");
+    if (!slugOk)      bits.push("valid available slug");
+    if (!codeOk)      bits.push("activation code");
+    if (!hostEmailOk) bits.push("host email");
     $("publish-hint").textContent = "Fill in: " + bits.join(", ") + ".";
   }
 }
@@ -769,11 +774,15 @@ async function publish() {
     //    reserves the slug in its DB here (unique constraint) — this is
     //    what supersedes the old Firestore slug-lock.
     setProgress(5, "Reserving your name…");
-    const evt = await apiJson("POST", "/api/events", {
-      slug,
-      event_type: type,
-      payload_json: finalCfg,
-    });
+    // Admin-create passes the host's email so the backend creates (or
+    // finds) a User row and attaches it to this event. Non-admin flows
+    // use the signed-in host from the session cookie — the backend
+    // takes current_user.id automatically.
+    const createBody = { slug, event_type: type, payload_json: finalCfg };
+    if (ADMIN_MODE === "create") {
+      createBody.host_email = ($("f-host-email")?.value || "").trim().toLowerCase();
+    }
+    const evt = await apiJson("POST", "/api/events", createBody);
     const eventId = evt.event_id;
 
     // 3. Upload each file via multipart POST. XHR gives real byte-
@@ -1167,6 +1176,33 @@ applyType(ALL_TYPES.has(initialType) ? initialType : "birthday");
 
 applyAdminChrome();
 loadAdminEditFixtures();
+
+// Admin create needs to know which host account the invitation
+// belongs to — show the Host email field and gate Publish on it.
+if (ADMIN_MODE === "create") {
+  const wrap = $("host-email-wrapper");
+  if (wrap) wrap.style.display = "";
+  // Re-check the publish gate when the host email changes.
+  $("f-host-email")?.addEventListener("input", updatePublishGate);
+}
+
+// Non-admin flow: the host must be signed in BEFORE they can start a
+// publish. Bounce to /user/login if they aren't. We check once on load
+// so the host doesn't fill a long form only to lose it on submit; the
+// backend re-checks on POST /api/events as the real guard.
+if (!ADMIN_MODE) {
+  (async () => {
+    try {
+      const r = await fetch("/user/me", { credentials: "include" });
+      if (!r.ok) return; // backend not up / unexpected — don't bounce
+      const j = await r.json();
+      if (!j.authenticated) {
+        const next = location.pathname + location.search;
+        location.replace("/user/login?next=" + encodeURIComponent(next));
+      }
+    } catch (_) { /* backend offline — let them keep filling, publish will prompt */ }
+  })();
+}
 
 // Telemetry: tell the backend that someone opened the create form so
 // the admin's Leads tab can surface visitors who didn't make it to

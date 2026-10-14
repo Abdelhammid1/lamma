@@ -1,0 +1,57 @@
+{% extends "user/base.html" %}
+{% block title %}My events · لمة · LAMMA{% endblock %}
+{% block content %}
+<div style="display:flex; align-items:center; justify-content:space-between; gap: 16px; flex-wrap: wrap;">
+  <div>
+    <h1 class="page-title">My events</h1>
+    <p class="muted" style="margin: 4px 0 0;">
+      Everything you've created. Click an event to edit it, see who's coming, or share the link.
+    </p>
+  </div>
+  <a href="/" class="btn btn-primary">+ Create new</a>
+</div>
+
+{% if events %}
+<div style="display:grid; gap: 12px; margin-top: 24px;">
+  {% for ev in events %}
+    <div class="card" style="padding: 18px 20px;">
+      <div style="display:flex; align-items:flex-start; justify-content:space-between; gap: 12px; flex-wrap: wrap;">
+        <div>
+          <div style="font-family:'Playfair Display',serif; font-size:18px; color: var(--plum);">
+            <code style="font-family:'Manrope',sans-serif; font-size: 14px;">{{ ev.slug }}</code>
+            <span class="muted" style="font-size: 12px; margin-left: 8px;">· {{ ev.event_type }}</span>
+          </div>
+          <div class="muted" style="font-size: 12px; margin-top: 4px;">
+            {% if ev.status == 'published' %}
+              <span style="color:#2b662a; font-weight: 600;">● Published</span>
+              · {{ ev.activated_at.strftime('%Y-%m-%d') if ev.activated_at else '' }}
+            {% elif ev.status == 'awaiting_code' %}
+              <span style="color:#7a5222; font-weight: 600;">● Awaiting activation</span>
+              · {{ ev.created_at.strftime('%Y-%m-%d') if ev.created_at else '' }}
+            {% elif ev.status == 'draft' %}
+              <span style="color: var(--muted); font-weight: 600;">● Draft</span>
+            {% else %}
+              {{ ev.status }}
+            {% endif %}
+          </div>
+        </div>
+        <div style="display:flex; gap: 6px; flex-wrap: wrap;">
+          {% if ev.status == 'published' %}
+            {% set prefix = ev.event_type %}
+            {% set public_href = '/' ~ prefix ~ '/' ~ ev.slug if prefix in ('wedding','wedding-noir','birthday-elegant','engagement','qiraya','sobou') else '/' ~ ev.slug %}
+            <a href="{{ public_href }}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">View live</a>
+            <a href="{{ url_for('user.event_responses', event_id=ev.id) }}" class="btn btn-outline btn-sm">Responses</a>
+          {% endif %}
+          <a href="/create.html?admin_edit={{ ev.id }}" class="btn btn-outline btn-sm">Edit</a>
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="card" style="text-align: center; margin-top: 32px;">
+  <p style="margin: 0 0 12px; font-size: 15px;">You haven't created an invitation yet.</p>
+  <a href="/" class="btn btn-primary">+ Create your first invitation</a>
+</div>
+{% endif %}
+{% endblock %}

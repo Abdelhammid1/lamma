@@ -27,6 +27,31 @@ class Event(db.Model):
     created_at            = db.Column(db.DateTime,    nullable=False, default=datetime.utcnow, index=True)
     activated_at          = db.Column(db.DateTime,    nullable=True)
     published_commit_sha  = db.Column(db.String(64),  nullable=True)
+    # Nullable so existing (pre-accounts) events keep working. New
+    # events published through /api/events get this filled in from the
+    # logged-in User or from the host_email the admin supplied.
+    user_id               = db.Column(db.String(36),  db.ForeignKey("users.id"), nullable=True, index=True)
+
+
+class User(db.Model):
+    """Customer / host account — the person whose event is published.
+    Separate from Admin so admin privileges never leak into a host's
+    session even if someone reuses an email."""
+    __tablename__ = "users"
+
+    id            = db.Column(db.String(36),  primary_key=True, default=_uuid_str)
+    email         = db.Column(db.String(200), unique=True, nullable=False, index=True)
+    # password_hash is NULL on an admin-created account until the host
+    # claims it via a single-use `claim_token_hash` link the admin
+    # shares out-of-band. Signup refuses to touch an existing row, so
+    # knowing the email alone can't take the account over.
+    password_hash          = db.Column(db.String(200), nullable=True)
+    claim_token_hash       = db.Column(db.String(200), nullable=True, index=True)
+    claim_token_expires_at = db.Column(db.DateTime,    nullable=True)
+    name                   = db.Column(db.String(200), nullable=True)
+    phone                  = db.Column(db.String(50),  nullable=True)
+    created_at             = db.Column(db.DateTime,    nullable=False, default=datetime.utcnow)
+    last_login_at          = db.Column(db.DateTime,    nullable=True)
 
 
 class ActivationCode(db.Model):

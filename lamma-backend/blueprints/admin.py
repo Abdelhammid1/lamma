@@ -33,7 +33,7 @@ from flask import (
 )
 from flask_login import current_user, login_required, login_user, logout_user
 
-from auth import verify_password
+from auth import verify_password, admin_required
 from codes import generate_code, make_expiry
 from github import GitHubClient, GitHubError
 from models import Admin, ActivationCode, AuditLog, Event, MediaBlob, db
@@ -144,7 +144,7 @@ def logout():
 # ---------------------------------------------------------------------------
 
 @bp.get("/")
-@login_required
+@admin_required
 def dashboard():
     counts = _status_counts()
     recent = (
@@ -157,7 +157,7 @@ def dashboard():
 
 
 @bp.get("/events")
-@login_required
+@admin_required
 def events():
     q = (request.args.get("q") or "").strip().lower()
     status = request.args.get("status") or ""
@@ -172,7 +172,7 @@ def events():
 
 
 @bp.get("/leads")
-@login_required
+@admin_required
 def leads():
     """List of visitors who opened /create.html but haven't published
     yet. Newest first. Uses a simple page size since lead volume is low;
@@ -191,7 +191,7 @@ def leads():
 
 
 @bp.get("/events/<event_id>/responses")
-@login_required
+@admin_required
 def event_responses(event_id):
     """Admin view of RSVPs + guestbook wishes for one event.
 
@@ -213,7 +213,7 @@ def event_responses(event_id):
 # ---------------------------------------------------------------------------
 
 @bp.post("/events/<event_id>/generate-code")
-@login_required
+@admin_required
 def generate_code_for_event(event_id):
     event = db.session.get(Event, event_id)
     if event is None:
@@ -243,7 +243,7 @@ def generate_code_for_event(event_id):
 
 
 @bp.post("/codes/generate-unbound")
-@login_required
+@admin_required
 def generate_unbound_code():
     """Mint a code with no event_id — the customer can then use it on
     whatever slug they choose in /create. First activation binds it.
@@ -273,7 +273,7 @@ def generate_unbound_code():
 
 
 @bp.post("/events/<event_id>/delete")
-@login_required
+@admin_required
 def delete_event(event_id):
     event = db.session.get(Event, event_id)
     if event is None:
@@ -314,14 +314,30 @@ def delete_event(event_id):
 # /admin/api/ so Flask-Login (session-cookie backed) protects them for
 # free — no second auth system to maintain.
 
+def _can_access_event(event) -> bool:
+    """Admin → always. Host → only their own events. Everyone else → no."""
+    if not current_user.is_authenticated:
+        return False
+    from auth import AdminUser, HostUser
+    if isinstance(current_user, AdminUser):
+        return True
+    if isinstance(current_user, HostUser):
+        return event.user_id == current_user.id
+    return False
+
+
 @bp.get("/api/events/<event_id>")
 @login_required
 def api_get_event(event_id):
     """Return the stored payload + metadata so the /create form can
-    pre-fill when the admin opens `?admin_edit=<id>`."""
+    pre-fill when the admin opens `?admin_edit=<id>` or the host opens
+    the Edit link from their dashboard."""
     event = db.session.get(Event, event_id)
     if event is None:
         return jsonify(error="not_found"), 404
+    if not _can_access_event(event):
+        return jsonify(error="forbidden",
+                       message="You can only edit your own invitations."), 403
     try:
         payload = json.loads(event.payload_json) if event.payload_json else {}
     except (TypeError, ValueError):
@@ -342,10 +358,16 @@ def api_get_event(event_id):
 def api_update_event(event_id):
     """Rewrite the stored payload. If the event is already published,
     also re-write <DATA_SERVE_DIR>/<slug>.json so guests see the edit
-    immediately (media moves still go through the public upload path)."""
+    immediately (media moves still go through the public upload path).
+
+    Owner-aware: the admin can edit any event; a host can only edit
+    the events they own."""
     event = db.session.get(Event, event_id)
     if event is None:
         return jsonify(error="not_found"), 404
+    if not _can_access_event(event):
+        return jsonify(error="forbidden",
+                       message="You can only edit your own invitations."), 403
     if event.status == "deleted":
         return jsonify(error="deleted",
                        message="Can't edit a deleted event."), 409
@@ -373,12 +395,17 @@ def api_update_event(event_id):
             return jsonify(error="storage_failed",
                            message="Saved to DB but couldn't rewrite the public file."), 500
 
-    _audit(current_user.id, "admin_edit_event", event.id)
+    # Only the admin's own edits land in the admin audit log; a host
+    # editing their own event doesn't need to show up there (and the
+    # FK admin_id → admins.id would reject a host UUID anyway).
+    from auth import AdminUser
+    if isinstance(current_user, AdminUser):
+        _audit(current_user.id, "admin_edit_event", event.id)
     return jsonify(event_id=event.id, slug=event.slug, status=event.status), 200
 
 
 @bp.post("/api/events/<event_id>/publish")
-@login_required
+@admin_required
 @admin_json_csrf
 def api_publish_event(event_id):
     """Admin override — move the event to `published` and commit media

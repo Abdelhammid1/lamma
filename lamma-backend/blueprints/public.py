@@ -9,13 +9,17 @@ Stages implemented here:
 
 import json
 import os
+import re
 from datetime import datetime
 
 from flask import Blueprint, current_app, jsonify, request
 
+from flask_login import current_user
+
+from auth import AdminUser, HostUser
 from codes import ActivationError, normalize_code, validate_code_for_event
 from github import GitHubClient, GitHubError
-from models import ActivationCode, Event, Lead, MediaBlob, db
+from models import ActivationCode, Event, Lead, MediaBlob, User, db
 from rate_limit import limiter
 from slugs import SlugError, validate
 from uploads import UploadError, stage_upload, total_bytes_for_event
@@ -90,11 +94,72 @@ def check_slug():
 # Stage 2 — Event creation, media upload, status polling
 # --------------------------------------------------------------------------
 
+_EMAIL_RE = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
+
+
+import hashlib
+import secrets
+from datetime import timedelta
+
+# Claim-token lifespan — admin should share the link soon after
+# creating the account; 7 days is comfortable but still forces a
+# refresh if the host sits on an unopened email.
+_CLAIM_TOKEN_TTL_DAYS = 7
+
+
+def _mint_claim_token() -> tuple[str, str, datetime]:
+    """Generate a single-use high-entropy claim token. Returns
+    (raw_token_for_the_url, sha256_hash_for_the_db, expiry)."""
+    raw = secrets.token_urlsafe(32)
+    digest = hashlib.sha256(raw.encode("ascii")).hexdigest()
+    expires = datetime.utcnow() + timedelta(days=_CLAIM_TOKEN_TTL_DAYS)
+    return raw, digest, expires
+
+
+def _resolve_owner_user_id(body) -> tuple[str | None, str | None, tuple | None]:
+    """Figure out which User owns this new event.
+
+    - Logged-in host → (own_id, None, None).
+    - Logged-in admin → must supply `host_email`.
+      * If email is already registered → attach, no claim link needed.
+      * If email is new → create a passwordless row with a claim token
+        hash stored on it; return the RAW token to the caller so the
+        admin can share the /user/claim/<token> link with the host.
+        The row has no password, so simply knowing the email cannot
+        take the account over — the host must prove possession of the
+        token (shared via a side channel: WhatsApp / SMS / email).
+    - Nobody logged in → 401.
+
+    Returns (user_id, raw_claim_token or None, error_tuple or None).
+    """
+    if current_user.is_authenticated and isinstance(current_user, HostUser):
+        return current_user.id, None, None
+    if current_user.is_authenticated and isinstance(current_user, AdminUser):
+        email = (body.get("host_email") or "").strip().lower()
+        if not _EMAIL_RE.match(email):
+            return None, None, (jsonify(error="host_email_required",
+                                  message="Enter the host's email so the invitation lands in their account."), 400)
+        existing = db.session.query(User).filter_by(email=email).first()
+        if existing:
+            return existing.id, None, None
+        raw, digest, expires = _mint_claim_token()
+        row = User(email=email, claim_token_hash=digest, claim_token_expires_at=expires)
+        db.session.add(row)
+        db.session.commit()
+        return row.id, raw, None
+    return None, None, (jsonify(error="auth_required",
+                          message="Please sign in to publish an invitation."), 401)
+
+
 @bp.post("/events")
 @limiter.limit("20/hour")
 def create_event():
-    """Body: `{ slug, event_type, contact?, payload_json? }` →
-    `{ event_id, slug, status }`.
+    """Body: `{ slug, event_type, contact?, payload_json?, host_email? }`
+    → `{ event_id, slug, status }`.
+
+    Requires a logged-in host (preferred) or a logged-in admin who
+    supplied `host_email` so the event has an owner. See
+    `_resolve_owner_user_id` for the rules.
 
     Slug is re-validated server-side even though the client already ran
     `/check-slug` — network races mean two clients could try the same
@@ -106,6 +171,10 @@ def create_event():
     verbatim on activation).
     """
     body = request.get_json(silent=True) or {}
+
+    user_id, claim_token, err = _resolve_owner_user_id(body)
+    if err:
+        return err
 
     event_type = (body.get("event_type") or "").strip().lower()
     if event_type not in VALID_EVENT_TYPES:
@@ -133,6 +202,7 @@ def create_event():
         status="awaiting_code",     # created + awaiting an activation code
         contact=contact,
         payload_json=payload_str,
+        user_id=user_id,
     )
     db.session.add(event)
     try:
@@ -141,12 +211,18 @@ def create_event():
         db.session.rollback()
         return jsonify(error="taken", message="That name was just taken."), 409
 
-    return jsonify(
-        event_id=event.id,
-        slug=event.slug,
-        event_type=event.event_type,
-        status=event.status,
-    ), 201
+    resp = {
+        "event_id":   event.id,
+        "slug":       event.slug,
+        "event_type": event.event_type,
+        "status":     event.status,
+    }
+    # Admin-created a brand-new account for the host → include the
+    # one-shot claim URL so the admin can forward it (WhatsApp, SMS,
+    # etc.) and the host can set their own password.
+    if claim_token:
+        resp["claim_url"] = "/user/claim/" + claim_token
+    return jsonify(resp), 201
 
 
 @bp.post("/events/<event_id>/media")

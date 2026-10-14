@@ -1,0 +1,210 @@
+{% extends "user/base.html" %}
+{% block title %}Responses · {{ event.slug }} · لمة · LAMMA{% endblock %}
+{% block content %}
+<div style="display:flex; align-items:center; justify-content:space-between; gap: 16px; flex-wrap: wrap;">
+  <div>
+    <h1 class="page-title">Responses · <code>{{ event.slug }}</code></h1>
+    <p class="muted" style="margin: 4px 0 0;">RSVPs + guestbook wishes guests sent through your invitation.</p>
+  </div>
+  <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+    <a href="{{ url_for('user.dashboard') }}" class="btn btn-ghost btn-sm">← My events</a>
+    <button type="button" id="copy-btn"  class="btn btn-outline">Copy as text</button>
+    <button type="button" id="print-btn" class="btn btn-primary">Print / save PDF</button>
+  </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr; gap: 16px; margin-top: 20px;">
+
+  <!-- Summary -->
+  <section class="card">
+    <h2 style="margin: 0 0 12px; font-size: 14px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);">Summary</h2>
+    <div style="display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px;">
+      <div style="padding: 10px 14px; background:#faf7f3; border-radius: 8px; border: 1px solid var(--rule); display: flex; flex-direction: column; gap: 2px;">
+        <span id="stat-attending" style="font-size: 24px; font-weight: 600; color: var(--plum);">—</span>
+        <span style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);">Attending</span>
+      </div>
+      <div style="padding: 10px 14px; background:#faf7f3; border-radius: 8px; border: 1px solid var(--rule); display: flex; flex-direction: column; gap: 2px;">
+        <span id="stat-guests" style="font-size: 24px; font-weight: 600; color: var(--plum);">—</span>
+        <span style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);">Total guests</span>
+      </div>
+      <div style="padding: 10px 14px; background:#faf7f3; border-radius: 8px; border: 1px solid var(--rule); display: flex; flex-direction: column; gap: 2px;">
+        <span id="stat-declined" style="font-size: 24px; font-weight: 600; color: var(--plum);">—</span>
+        <span style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);">Declined</span>
+      </div>
+      <div style="padding: 10px 14px; background:#faf7f3; border-radius: 8px; border: 1px solid var(--rule); display: flex; flex-direction: column; gap: 2px;">
+        <span id="stat-wishes" style="font-size: 24px; font-weight: 600; color: var(--plum);">—</span>
+        <span style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);">Wishes</span>
+      </div>
+    </div>
+    <p class="muted" id="load-note" style="margin: 10px 0 0;">Loading…</p>
+  </section>
+
+  <!-- RSVPs -->
+  <section class="card">
+    <h2 style="margin: 0 0 12px; font-size: 14px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);">RSVPs</h2>
+    <table style="width:100%; border-collapse: collapse; font-size: 14px;" id="rsvp-table">
+      <thead>
+        <tr>
+          <th style="padding: 10px 12px; border-bottom: 1px solid var(--rule); text-align: left; color: var(--muted); font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase;">Name</th>
+          <th style="padding: 10px 12px; border-bottom: 1px solid var(--rule); text-align: left; color: var(--muted); font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase;">Attending</th>
+          <th style="padding: 10px 12px; border-bottom: 1px solid var(--rule); text-align: left; color: var(--muted); font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase;">Guests</th>
+          <th style="padding: 10px 12px; border-bottom: 1px solid var(--rule); text-align: left; color: var(--muted); font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase;">Received</th>
+        </tr>
+      </thead>
+      <tbody id="rsvp-body"></tbody>
+    </table>
+    <p class="muted" id="rsvp-empty" style="font-style: italic; margin: 6px 0 0;" hidden>No RSVPs yet.</p>
+  </section>
+
+  <!-- Wishes -->
+  <section class="card">
+    <h2 style="margin: 0 0 12px; font-size: 14px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);">Wishes</h2>
+    <ul id="wishes-list" style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px;"></ul>
+    <p class="muted" id="wishes-empty" style="font-style: italic; margin: 6px 0 0;" hidden>No wishes yet.</p>
+  </section>
+
+</div>
+
+<p id="copy-ok" style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--plum); color: var(--accent); padding: 10px 18px; border-radius: 8px; font-size: 13px; box-shadow: 0 10px 30px -10px rgba(0,0,0,0.35);" hidden>Copied to clipboard — ready to paste.</p>
+
+<style>
+  @media print {
+    header.topbar, .page-title + * .btn, button.btn { display: none !important; }
+    .card { border-color: #ccc; box-shadow: none; }
+  }
+</style>
+
+<!-- Same Firestore reader as the admin responses view. -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import { getFirestore, collection, getDocs, query, orderBy } from
+  "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+const SLUG = {{ event.slug | tojson }};
+
+const app = initializeApp({
+  apiKey:            "AIzaSyC4r0MZyLlX5c7UdYZ1j1L90vzUmm2A3co",
+  authDomain:        "weding-dc92e.firebaseapp.com",
+  projectId:         "weding-dc92e",
+  storageBucket:     "weding-dc92e.firebasestorage.app",
+  messagingSenderId: "645238686194",
+  appId:             "1:645238686194:web:c2caf0ebcb31c7cee36b6b",
+}, "user-responses");
+const db = getFirestore(app);
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[<>&]/g, (c) => ({ "<":"&lt;",">":"&gt;","&":"&amp;" }[c]));
+
+function fmtTime(ts) {
+  const d = ts && typeof ts.toDate === "function" ? ts.toDate() :
+            (ts && ts.seconds ? new Date(ts.seconds * 1000) : null);
+  if (!d) return "—";
+  return d.toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+}
+
+async function fetchCollection(path, orderField) {
+  try {
+    const snap = await getDocs(query(collection(db, path), orderBy(orderField, "desc")));
+    return snap.docs.map((d) => d.data());
+  } catch (_) {
+    const snap = await getDocs(collection(db, path));
+    return snap.docs.map((d) => d.data());
+  }
+}
+
+let STATE = { rsvps: [], wishes: [] };
+
+(async function load() {
+  const base = `invitations/${SLUG}`;
+  const [rsvps, wishes] = await Promise.all([
+    fetchCollection(`${base}/rsvps`,     "createdAt"),
+    fetchCollection(`${base}/guestbook`, "createdAt"),
+  ]);
+  STATE = { rsvps, wishes };
+
+  const yes = rsvps.filter((r) => (r.attending || "").toString().toLowerCase() === "yes");
+  const no  = rsvps.filter((r) => (r.attending || "").toString().toLowerCase() === "no");
+  const guests = yes.reduce((n, r) => n + Math.max(1, Number(r.guestCount) || 1), 0);
+  $("stat-attending").textContent = yes.length;
+  $("stat-guests").textContent    = guests;
+  $("stat-declined").textContent  = no.length;
+  $("stat-wishes").textContent    = wishes.length;
+  $("load-note").textContent =
+    rsvps.length + wishes.length === 0
+      ? "No responses yet — share your invitation link with your guests."
+      : `${rsvps.length} RSVP${rsvps.length === 1 ? "" : "s"} and ${wishes.length} wish${wishes.length === 1 ? "" : "es"} so far.`;
+
+  const body = $("rsvp-body");
+  if (!rsvps.length) {
+    $("rsvp-empty").hidden = false;
+  } else {
+    body.innerHTML = rsvps.map((r) => {
+      const att = (r.attending || "").toString().toLowerCase();
+      const pillColor = att === "yes" ? "#e4f3df;color:#2b662a" : att === "no" ? "#fde6e2;color:#a0372a" : "#eee;color:#555";
+      const pillText  = att === "yes" ? "Yes" : att === "no" ? "No" : "—";
+      const g = Math.max(1, Number(r.guestCount) || 1);
+      return `<tr>
+        <td style="padding:10px 12px; border-bottom:1px solid var(--rule);">${esc(r.name) || "<em>Anonymous</em>"}</td>
+        <td style="padding:10px 12px; border-bottom:1px solid var(--rule);"><span style="padding:2px 10px; border-radius: 999px; font-size: 12px; font-weight:600; background:${pillColor}">${pillText}</span></td>
+        <td style="padding:10px 12px; border-bottom:1px solid var(--rule);">${att === "yes" ? g : "—"}</td>
+        <td style="padding:10px 12px; border-bottom:1px solid var(--rule); color: var(--muted); white-space: nowrap;">${esc(fmtTime(r.createdAt))}</td>
+      </tr>`;
+    }).join("");
+  }
+
+  const list = $("wishes-list");
+  if (!wishes.length) {
+    $("wishes-empty").hidden = false;
+  } else {
+    list.innerHTML = wishes.map((w) => `
+      <li style="background: #faf7f3; border: 1px solid var(--rule); border-radius: 8px; padding: 12px 14px;">
+        <div style="display: flex; justify-content: space-between; gap: 10px; margin-bottom: 4px; font-size: 12px; color: var(--muted);">
+          <span style="font-weight: 600; color: var(--plum);">${esc(w.name) || "Anonymous"}</span>
+          <span>${esc(fmtTime(w.createdAt))}</span>
+        </div>
+        <div style="font-size: 15px; line-height: 1.55; white-space: pre-wrap;" dir="auto">${esc(w.message)}</div>
+      </li>
+    `).join("");
+  }
+})().catch((e) => {
+  console.error("[responses]", e);
+  $("load-note").textContent = "Couldn't load responses: " + (e?.message || e);
+});
+
+$("copy-btn").addEventListener("click", async () => {
+  const { rsvps, wishes } = STATE;
+  const yes = rsvps.filter((r) => (r.attending || "").toLowerCase() === "yes");
+  const no  = rsvps.filter((r) => (r.attending || "").toLowerCase() === "no");
+  const guests = yes.reduce((n, r) => n + Math.max(1, Number(r.guestCount) || 1), 0);
+  const lines = [];
+  lines.push(`Responses for ${SLUG}`); lines.push("");
+  lines.push(`✅ Attending: ${yes.length} (${guests} guest${guests === 1 ? "" : "s"} total)`);
+  lines.push(`❌ Declined:  ${no.length}`);
+  lines.push(`💌 Wishes:    ${wishes.length}`); lines.push("");
+  if (yes.length) {
+    lines.push("— Attending —");
+    for (const r of yes) { const g = Math.max(1, Number(r.guestCount) || 1); lines.push(`• ${r.name || "Anonymous"}${g > 1 ? ` (+${g - 1})` : ""}`); }
+    lines.push("");
+  }
+  if (no.length) {
+    lines.push("— Declined —");
+    for (const r of no) lines.push(`• ${r.name || "Anonymous"}`);
+    lines.push("");
+  }
+  if (wishes.length) {
+    lines.push("— Wishes —");
+    for (const w of wishes) { lines.push(`${w.name || "Anonymous"}:`); lines.push(`  ${w.message || ""}`); lines.push(""); }
+  }
+  const text = lines.join("\n");
+  try { await navigator.clipboard.writeText(text); }
+  catch (_) {
+    const ta = document.createElement("textarea"); ta.value = text;
+    document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove();
+  }
+  const toast = $("copy-ok"); toast.hidden = false;
+  setTimeout(() => { toast.hidden = true; }, 2200);
+});
+
+$("print-btn").addEventListener("click", () => window.print());
+</script>
+{% endblock %}

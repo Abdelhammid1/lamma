@@ -1,0 +1,29 @@
+{% extends "user/base.html" %}
+{% block title %}Claim your account · لمة · LAMMA{% endblock %}
+{% block content %}
+<div class="center">
+  <div class="card">
+    {% if valid %}
+      <h1 class="page-title" style="margin-bottom: 4px;">Claim your account</h1>
+      <p class="muted" style="margin-top: 0; margin-bottom: 20px; font-size: 14px;">
+        An invitation is waiting for you at <code>{{ email }}</code>. Set a password to continue.
+      </p>
+
+      <form method="post" novalidate>
+        <div class="field">
+          <label for="password">Password <span class="muted">(8+ characters)</span></label>
+          <input id="password" name="password" type="password" autocomplete="new-password" minlength="8" required autofocus>
+        </div>
+        {% if error %}<div class="error">{{ error }}</div>{% endif %}
+        <button type="submit" class="btn btn-primary" style="width:100%; margin-top: 8px;">Set password &amp; continue</button>
+      </form>
+    {% else %}
+      <h1 class="page-title" style="margin-bottom: 10px;">Link not valid</h1>
+      <p class="muted" style="margin: 0 0 16px; font-size: 14px;">
+        {{ error or "This claim link is invalid or has expired. Ask the admin to send you a fresh one." }}
+      </p>
+      <a href="{{ url_for('user.login') }}" class="btn btn-outline">Sign in instead</a>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
