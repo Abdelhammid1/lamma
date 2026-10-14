@@ -704,10 +704,11 @@ body.lightbox-open { overflow: hidden; }
 /* Calendar wrapped in ornate gold PNG frame */
 .calendar-frame {
   position: relative;
-  max-width: 400px;
-  aspect-ratio: 5 / 6;                       /* match the frame PNG */
+  width: min(92vw, 400px);
+  box-sizing: border-box;
+  aspect-ratio: 640 / 760;                   /* exact frame PNG ratio */
   margin: 0 auto 32px;
-  padding: 80px 60px 70px;                   /* clear the frame's inset border */
+  padding: min(80px, 18.4vw) min(60px, 13.8vw) min(70px, 16.1vw);  /* scales with frame */
   display: flex;
   flex-direction: column;
 }
