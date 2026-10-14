@@ -19,7 +19,7 @@ from flask_login import current_user
 from auth import AdminUser, HostUser
 from codes import ActivationError, normalize_code, validate_code_for_event
 from github import GitHubClient, GitHubError
-from models import ActivationCode, Event, Lead, MediaBlob, Rsvp, User, db
+from models import ActivationCode, Event, Lead, MediaBlob, Rsvp, User, View, Wish, db
 from rate_limit import limiter
 from slugs import SlugError, validate
 from uploads import UploadError, stage_upload, total_bytes_for_event
@@ -113,6 +113,159 @@ def submit_rsvp(slug):
     db.session.add(row)
     db.session.commit()
     return jsonify(ok=True, id=row.id), 201
+
+
+# --------------------------------------------------------------------------
+# Public wishes write + read — guestbook on the invitation page
+# --------------------------------------------------------------------------
+
+@bp.post("/invitations/<slug>/wishes")
+@limiter.limit("30/hour")
+def submit_wish(slug):
+    """Guest-facing guestbook submission. The invitation page JS POSTs
+    here instead of writing to Firestore so the owning host can read
+    the wishes back through the backend without us publishing PII in a
+    collection anyone can read.
+
+    Body: `{ "name": "...", "message": "..." }`. Returns 201 on success.
+    Rejects if the event isn't published, or if required fields are
+    missing. Name is clamped to 200 chars, message to 1000."""
+    body = request.get_json(silent=True) or {}
+
+    event = db.session.query(Event).filter_by(slug=slug).first()
+    if event is None or event.status != "published":
+        return jsonify(error="not_published", message="This invitation isn't open for wishes."), 404
+
+    name    = (body.get("name")    or "").strip()[:200]
+    message = (body.get("message") or "").strip()[:1000]
+
+    if not name:
+        return jsonify(error="missing_name",    message="Please tell us your name."), 400
+    if not message:
+        return jsonify(error="missing_message", message="Please leave a wish."), 400
+
+    row = Wish(
+        event_id=event.id,
+        event_slug=event.slug,
+        name=name,
+        message=message,
+        ip=request.remote_addr,
+        user_agent=(request.headers.get("User-Agent") or "")[:500] or None,
+    )
+    db.session.add(row)
+    db.session.commit()
+    return jsonify(ok=True, id=row.id), 201
+
+
+@bp.get("/invitations/<slug>/wishes")
+@limiter.limit("120/hour")
+def list_wishes(slug):
+    """Public read — the invitation page polls this instead of using
+    Firestore's onSnapshot. Returns the newest `limit` wishes (default
+    50, capped at 200) so clients render the feed immediately."""
+    try:
+        limit = max(1, min(200, int(request.args.get("limit", "50"))))
+    except (TypeError, ValueError):
+        limit = 50
+    rows = (db.session.query(Wish)
+            .filter(Wish.event_slug == slug)
+            .order_by(Wish.created_at.desc())
+            .limit(limit)
+            .all())
+    return jsonify(wishes=[{
+        "id":         w.id,
+        "name":       w.name,
+        "message":    w.message,
+        "created_at": w.created_at.isoformat() + "Z" if w.created_at else None,
+    } for w in rows]), 200
+
+
+# --------------------------------------------------------------------------
+# View ping — one lightweight record per page open
+# --------------------------------------------------------------------------
+
+import hashlib
+from datetime import date as _date
+
+_BOT_UA_RE = re.compile(
+    r"\b(bot|crawl|spider|slurp|facebookexternalhit|preview|headless|lighthouse|monitoring|axios|python-urllib|curl|wget)\b",
+    re.IGNORECASE,
+)
+
+
+def _visitor_hash(slug: str) -> str:
+    """sha256 of (slug + ip + ua + day-stamp + app secret). Keeps PII
+    out of the DB — only a derived hash is stored, bucketed per day so
+    the same visitor across two days produces two different hashes,
+    which is how we count "unique today" vs "unique lifetime"."""
+    secret = (current_app.config.get("SECRET_KEY") or "lamma-dev-salt")
+    day = _date.today().isoformat()
+    raw = f"{slug}|{request.remote_addr or ''}|{request.headers.get('User-Agent') or ''}|{day}|{secret}"
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()
+
+
+@bp.post("/invitations/<slug>/view")
+@limiter.limit("240/hour")
+def record_view(slug):
+    """Lightweight view ping fired by the invitation page on load via
+    navigator.sendBeacon. Always returns 204 — the browser doesn't
+    inspect the body and we don't want to leak event metadata to a
+    scanner.
+
+    Skips bot user-agents (crude but good enough), ?preview=1 cover
+    previews, and visits where the host-cookie is present (the host
+    pre-viewing their own event shouldn't inflate their own counters).
+    De-dupes to one "unique" record per visitor_hash per day via a
+    cheap SELECT; a second same-day visit still records a row but with
+    is_unique=False so we can tell apart raw hits from unique visitors.
+    """
+    # Signal from the page or the admin preview flow — don't record.
+    if request.args.get("preview") == "1":
+        return ("", 204)
+
+    ua = request.headers.get("User-Agent") or ""
+    if _BOT_UA_RE.search(ua):
+        return ("", 204)
+
+    # Host preview exemption — if the request carries the host's
+    # session cookie and that user owns this event, skip the count.
+    if current_user.is_authenticated:
+        from auth import HostUser, AdminUser
+        event = db.session.query(Event).filter_by(slug=slug).first()
+        if event is not None:
+            if isinstance(current_user, AdminUser):
+                return ("", 204)
+            if isinstance(current_user, HostUser) and event.user_id == current_user.id:
+                return ("", 204)
+
+    event = db.session.query(Event).filter_by(slug=slug).first()
+    # Still record the raw hit even if the event isn't published yet —
+    # it's useful signal for pre-launch share tests. But if there's no
+    # row at all, there's nothing to attribute, so drop it.
+    if event is None:
+        return ("", 204)
+
+    vh = _visitor_hash(slug)
+    today = datetime.utcnow().date()
+    # Count a visitor as "unique" only once per calendar day.
+    already_today = db.session.query(View.id).filter(
+        View.event_slug == slug,
+        View.visitor_hash == vh,
+        View.created_at >= datetime(today.year, today.month, today.day),
+    ).first()
+
+    row = View(
+        event_id=event.id,
+        event_slug=slug,
+        visitor_hash=vh,
+        is_unique=(already_today is None),
+    )
+    db.session.add(row)
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+    return ("", 204)
 
 
 # --------------------------------------------------------------------------

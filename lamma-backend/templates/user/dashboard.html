@@ -46,6 +46,9 @@
             <span data-metric="wishes">
               <span class="num" style="color: var(--plum); font-weight: 600;">·</span> wishes
             </span>
+            <span data-metric="views" title="unique / total">
+              <span class="num" style="color: var(--plum); font-weight: 600;">·</span> views
+            </span>
             <span data-metric="latest" style="font-style: italic; color: var(--muted);"></span>
           </div>
         </div>
@@ -62,41 +65,32 @@
 </div>
 
 <script type="module">
-// RSVPs come from Flask (/admin/api/events/<id>/rsvps — owner-aware,
-// also serves hosts for their own events). Wishes still come from
-// Firestore (public guestbook feed on the invitation page).
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-import { getFirestore, collection, getDocs } from
-  "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-
-const app = initializeApp({
-  apiKey:            "AIzaSyC4r0MZyLlX5c7UdYZ1j1L90vzUmm2A3co",
-  authDomain:        "weding-dc92e.firebaseapp.com",
-  projectId:         "weding-dc92e",
-  storageBucket:     "weding-dc92e.firebasestorage.app",
-  messagingSenderId: "645238686194",
-  appId:             "1:645238686194:web:c2caf0ebcb31c7cee36b6b",
-}, "user-dashboard");
-const db = getFirestore(app);
-
+// Everything comes from Flask now — RSVPs, wishes and views via the
+// owner-aware /admin/api/events/<id>/{rsvps,wishes,views} endpoints.
+// No Firestore access from this page.
 function parseWhen(v) {
   if (!v) return null;
   if (typeof v === "string") return new Date(v);
-  if (v.toDate) return v.toDate();
-  if (v.seconds) return new Date(v.seconds * 1000);
+  if (v && v.toDate) return v.toDate();
+  if (v && v.seconds) return new Date(v.seconds * 1000);
   return null;
 }
-
+async function jget(url) {
+  const r = await fetch(url, { credentials: "include" });
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return r.json();
+}
 async function loadCard(card) {
   const slug = card.dataset.slug;
   const eventId = card.dataset.eventId;
   try {
-    const [rsvpR, wishSnap] = await Promise.all([
-      fetch(`/admin/api/events/${eventId}/rsvps`, { credentials: "include" }).then((r) => r.ok ? r.json() : { rsvps: [], summary: { attending: 0, guests: 0 } }),
-      getDocs(collection(db, `invitations/${slug}/guestbook`)).catch(() => ({ docs: [] })),
+    const [rsvpR, wishR, viewR] = await Promise.all([
+      jget(`/admin/api/events/${eventId}/rsvps`).catch(() => ({ rsvps: [], summary: { attending: 0, guests: 0 } })),
+      jget(`/admin/api/events/${eventId}/wishes`).catch(() => ({ wishes: [] })),
+      jget(`/admin/api/events/${eventId}/views`).catch(() => ({ total: 0, unique_lifetime: 0 })),
     ]);
-    const rsvps  = rsvpR.rsvps || [];
-    const wishes = wishSnap.docs.map((d) => d.data());
+    const rsvps  = rsvpR.rsvps  || [];
+    const wishes = wishR.wishes || [];
 
     const set = (metric, value) => {
       const el = card.querySelector(`[data-metric="${metric}"] .num`);
@@ -105,10 +99,11 @@ async function loadCard(card) {
     set("attending", rsvpR.summary ? rsvpR.summary.attending : 0);
     set("guests",    rsvpR.summary ? rsvpR.summary.guests    : 0);
     set("wishes",    wishes.length);
+    set("views",     `${viewR.unique_lifetime} / ${viewR.total}`);
 
     const latest = [
       ...rsvps.map((r) => ({ name: r.name, when: parseWhen(r.created_at) })),
-      ...wishes.map((w) => ({ name: w.name, when: parseWhen(w.createdAt) })),
+      ...wishes.map((w) => ({ name: w.name, when: parseWhen(w.created_at) })),
     ].filter((r) => r.when && r.name).sort((a, b) => b.when - a.when)[0];
     if (latest) {
       const el = card.querySelector('[data-metric="latest"]');

@@ -106,9 +106,9 @@ Group=lamma
 WorkingDirectory=$BACKEND_DIR
 EnvironmentFile=$ENV_FILE
 ExecStart=$BACKEND_DIR/.venv/bin/gunicorn \\
-    --bind 127.0.0.1:8010 \\
+    --bind 172.18.0.1:8010 \\
     --workers 2 \\
-    --timeout 300 \\
+    --timeout 900 \\
     --access-logfile - \\
     --error-logfile - \\
     wsgi:app
@@ -131,8 +131,8 @@ systemctl restart "${SERVICE_NAME}.service"
 sleep 1
 systemctl --no-pager --lines=10 status "${SERVICE_NAME}.service" || true
 
-echo "==> 8/8  Sanity check — Flask should be answering on 127.0.0.1:8010"
-if curl -fsS -X POST http://127.0.0.1:8010/api/check-slug \
+echo "==> 8/8  Sanity check — Flask should be answering on 172.18.0.1:8010"
+if curl -fsS -X POST http://172.18.0.1:8010/api/check-slug \
      -H 'content-type: application/json' \
      -d '{"slug":"ping"}' >/dev/null; then
   echo "  Flask OK ✓"

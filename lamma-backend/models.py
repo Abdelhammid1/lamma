@@ -124,6 +124,42 @@ class Rsvp(db.Model):
     created_at  = db.Column(db.DateTime,    nullable=False, default=datetime.utcnow, index=True)
 
 
+class Wish(db.Model):
+    """A guestbook wish from a published invitation page.
+
+    Same shape as Rsvp — kept in the Flask DB (not Firestore) so the
+    owning host can read them back through the backend. Message is
+    stored verbatim (we escape on render); length is clamped at write
+    time by the public endpoint."""
+    __tablename__ = "wishes"
+
+    id          = db.Column(db.String(36),  primary_key=True, default=_uuid_str)
+    event_id    = db.Column(db.String(36),  db.ForeignKey("events.id", ondelete="SET NULL"), nullable=True, index=True)
+    event_slug  = db.Column(db.String(40),  nullable=False, index=True)
+    name        = db.Column(db.String(200), nullable=False)
+    message     = db.Column(db.String(1000), nullable=False)
+    ip          = db.Column(db.String(45),  nullable=True)
+    user_agent  = db.Column(db.String(500), nullable=True)
+    created_at  = db.Column(db.DateTime,    nullable=False, default=datetime.utcnow, index=True)
+
+
+class View(db.Model):
+    """A page-view ping from a public invitation page.
+
+    is_unique is set by the write endpoint — true for the first visit
+    from a given visitor_hash in a day, false for repeat visits that
+    same day. visitor_hash is sha256(ip + ua + salt + yyyy-mm-dd) so we
+    never store raw IP/UA alongside the hash."""
+    __tablename__ = "views"
+
+    id            = db.Column(db.Integer,     primary_key=True, autoincrement=True)
+    event_id      = db.Column(db.String(36),  db.ForeignKey("events.id", ondelete="SET NULL"), nullable=True, index=True)
+    event_slug    = db.Column(db.String(40),  nullable=False, index=True)
+    visitor_hash  = db.Column(db.String(64),  nullable=False, index=True)
+    is_unique     = db.Column(db.Boolean,     nullable=False, default=False)
+    created_at    = db.Column(db.DateTime,    nullable=False, default=datetime.utcnow, index=True)
+
+
 class Lead(db.Model):
     """A visitor opened /create.html but has not (yet) finished publishing.
     Logged by the public POST /api/leads so the admin can follow up with

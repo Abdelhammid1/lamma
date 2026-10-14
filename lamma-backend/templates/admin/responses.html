@@ -23,6 +23,7 @@
       <div class="stat"><span class="stat-n" id="stat-guests">—</span><span class="stat-label">Total guests</span></div>
       <div class="stat"><span class="stat-n" id="stat-declined">—</span><span class="stat-label">Declined</span></div>
       <div class="stat"><span class="stat-n" id="stat-wishes">—</span><span class="stat-label">Wishes</span></div>
+      <div class="stat" title="unique / total"><span class="stat-n" id="stat-views">—</span><span class="stat-label">Views</span></div>
     </div>
     <p class="muted" id="load-note" style="margin-top:10px;">Loading…</p>
   </section>
@@ -74,7 +75,7 @@
   }
   .resp-stats {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0,1fr));
+    grid-template-columns: repeat(5, minmax(0,1fr));
     gap: 12px;
   }
   .stat {
@@ -126,24 +127,14 @@ import { getFirestore, collection, getDocs, query, orderBy } from
 const SLUG     = {{ event.slug | tojson }};
 const EVENT_ID = {{ event.id   | tojson }};
 
-const app = initializeApp({
-  apiKey:            "AIzaSyC4r0MZyLlX5c7UdYZ1j1L90vzUmm2A3co",
-  authDomain:        "weding-dc92e.firebaseapp.com",
-  projectId:         "weding-dc92e",
-  storageBucket:     "weding-dc92e.firebasestorage.app",
-  messagingSenderId: "645238686194",
-  appId:             "1:645238686194:web:c2caf0ebcb31c7cee36b6b",
-}, "admin-responses");
-const db = getFirestore(app);
-
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[<>&]/g, (c) => ({ "<":"&lt;",">":"&gt;","&":"&amp;" }[c]));
 
 function parseWhen(v) {
   if (!v) return null;
   if (typeof v === "string") return new Date(v);
-  if (typeof v.toDate === "function") return v.toDate();
-  if (v.seconds) return new Date(v.seconds * 1000);
+  if (v && typeof v.toDate === "function") return v.toDate();
+  if (v && v.seconds) return new Date(v.seconds * 1000);
   return null;
 }
 function fmtTime(v) {
@@ -152,36 +143,30 @@ function fmtTime(v) {
   return d.toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
-async function fetchWishes() {
-  try {
-    const snap = await getDocs(query(collection(db, `invitations/${SLUG}/guestbook`), orderBy("createdAt", "desc")));
-    return snap.docs.map((d) => d.data());
-  } catch (_) {
-    try {
-      const snap = await getDocs(collection(db, `invitations/${SLUG}/guestbook`));
-      return snap.docs.map((d) => d.data());
-    } catch (_) { return []; }
-  }
-}
-
-async function fetchRsvps() {
-  const r = await fetch(`/admin/api/events/${EVENT_ID}/rsvps`, { credentials: "include" });
+async function fetchJson(url) {
+  const r = await fetch(url, { credentials: "include" });
   if (!r.ok) throw new Error(`HTTP ${r.status}`);
   return r.json();
 }
+const fetchRsvps  = () => fetchJson(`/admin/api/events/${EVENT_ID}/rsvps`);
+const fetchWishes = () => fetchJson(`/admin/api/events/${EVENT_ID}/wishes`);
+const fetchViews  = () => fetchJson(`/admin/api/events/${EVENT_ID}/views`).catch(() => ({ total: 0, unique_lifetime: 0, unique_today: 0 }));
 
-let STATE = { rsvps: [], wishes: [] };
+let STATE = { rsvps: [], wishes: [], views: null };
 
 (async function load() {
-  const [rsvpR, wishes] = await Promise.all([fetchRsvps(), fetchWishes()]);
-  const rsvps = rsvpR.rsvps || [];
-  STATE = { rsvps, wishes };
+  const [rsvpR, wishR, viewR] = await Promise.all([fetchRsvps(), fetchWishes(), fetchViews()]);
+  const rsvps  = rsvpR.rsvps  || [];
+  const wishes = wishR.wishes || [];
+  STATE = { rsvps, wishes, views: viewR };
 
   const summary = rsvpR.summary || { attending: 0, declined: 0, guests: 0 };
   $("stat-attending").textContent = summary.attending;
   $("stat-guests").textContent    = summary.guests;
   $("stat-declined").textContent  = summary.declined;
   $("stat-wishes").textContent    = wishes.length;
+  const viewsEl = $("stat-views");
+  if (viewsEl && viewR) viewsEl.textContent = `${viewR.unique_lifetime} / ${viewR.total}`;
   $("load-note").textContent =
     rsvps.length + wishes.length === 0
       ? "No responses yet — share the invitation link with guests."
@@ -215,7 +200,7 @@ let STATE = { rsvps: [], wishes: [] };
       <li>
         <div class="w-top">
           <span class="w-name">${esc(w.name) || "Anonymous"}</span>
-          <span>${esc(fmtTime(w.createdAt))}</span>
+          <span>${esc(fmtTime(w.created_at))}</span>
         </div>
         <div class="w-msg" dir="auto">${esc(w.message)}</div>
       </li>

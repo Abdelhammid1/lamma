@@ -16,7 +16,7 @@ JSON API (used by /create's admin modes — see js/create-form.js):
 """
 
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from functools import wraps
 from urllib.parse import urlparse
 
@@ -36,7 +36,7 @@ from flask_login import current_user, login_required, login_user, logout_user
 from auth import verify_password, admin_required
 from codes import generate_code, make_expiry
 from github import GitHubClient, GitHubError
-from models import Admin, ActivationCode, AuditLog, Event, MediaBlob, Rsvp, db
+from models import Admin, ActivationCode, AuditLog, Event, MediaBlob, Rsvp, View, Wish, db
 
 
 bp = Blueprint(
@@ -324,6 +324,71 @@ def _can_access_event(event) -> bool:
     if isinstance(current_user, HostUser):
         return event.user_id == current_user.id
     return False
+
+
+@bp.get("/api/events/<event_id>/wishes")
+@login_required
+def api_event_wishes(event_id):
+    """Wishes for one event, newest first. Admin can read any event;
+    host can only read their own via _can_access_event."""
+    event = db.session.get(Event, event_id)
+    if event is None:
+        return jsonify(error="not_found"), 404
+    if not _can_access_event(event):
+        return jsonify(error="forbidden",
+                       message="You can only read responses for your own invitations."), 403
+
+    rows = (db.session.query(Wish)
+            .filter(Wish.event_id == event.id)
+            .order_by(Wish.created_at.desc())
+            .all())
+
+    return jsonify(
+        slug=event.slug,
+        summary={"count": len(rows)},
+        wishes=[{
+            "id":         w.id,
+            "name":       w.name,
+            "message":    w.message,
+            "created_at": w.created_at.isoformat() + "Z" if w.created_at else None,
+        } for w in rows],
+    ), 200
+
+
+@bp.get("/api/events/<event_id>/views")
+@login_required
+def api_event_views(event_id):
+    """Per-event view stats: total hits, unique-lifetime (distinct
+    visitor_hashes), unique-today, unique-7d. Owner-or-admin."""
+    event = db.session.get(Event, event_id)
+    if event is None:
+        return jsonify(error="not_found"), 404
+    if not _can_access_event(event):
+        return jsonify(error="forbidden",
+                       message="You can only read stats for your own invitations."), 403
+
+    from sqlalchemy import distinct, func
+    now = datetime.utcnow()
+    today_start = datetime(now.year, now.month, now.day)
+    week_start  = today_start - timedelta(days=7)
+
+    base = db.session.query(View).filter(View.event_id == event.id)
+    total  = base.count()
+    uniq_lifetime = base.with_entities(func.count(distinct(View.visitor_hash))).scalar() or 0
+    uniq_today = base.filter(View.created_at >= today_start).with_entities(
+        func.count(distinct(View.visitor_hash))
+    ).scalar() or 0
+    uniq_7d = base.filter(View.created_at >= week_start).with_entities(
+        func.count(distinct(View.visitor_hash))
+    ).scalar() or 0
+
+    return jsonify(
+        slug=event.slug,
+        total=total,
+        unique_lifetime=uniq_lifetime,
+        unique_today=uniq_today,
+        unique_7d=uniq_7d,
+    ), 200
 
 
 @bp.get("/api/events/<event_id>/rsvps")
