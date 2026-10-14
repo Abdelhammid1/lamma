@@ -537,6 +537,12 @@ img[src*="calendar-frame"], img[src*="corner"], img[src*="ornament"] { display: 
   margin: 0 auto 36px;
   text-align: left;
 }
+/* `display: flex` above overrides the user-agent `[hidden]{display:none}`
+   rule, so the RSVP form (which starts with the `hidden` attribute set
+   in the HTML and only reveals when the host clicks "Confirm
+   Attendance") would otherwise show immediately. Keep the attribute
+   authoritative. */
+.gb-form[hidden], .rsvp-form[hidden], form[hidden] { display: none !important; }
 .field, label.field, .gb-field, .rsvp-field { display: flex; flex-direction: column; gap: 8px; }
 .field-label, .gb-field label, .rsvp-field label {
   font-family: var(--font-body);
@@ -581,12 +587,24 @@ img[src*="calendar-frame"], img[src*="corner"], img[src*="ornament"] { display: 
   gap: 1px;
   text-align: left;
 }
-.gb-list li, .wishes-list li {
+/* guestbook.js emits <li class="wish"> with inner .wish-header /
+   .wish-name / .wish-when / .wish-body. Target the explicit .wish
+   class (not just `.gb-list li`) so later markup changes that reparent
+   wishes keep the styling. */
+.gb-list li, .wishes-list li, .wish {
   background: transparent;
   border: 0;
   border-bottom: 1px solid var(--rule);
   border-radius: 0;
   padding: 20px 4px;
+  list-style: none;
+}
+.wish-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 6px;
 }
 .gb-list .wish-name, .gb-list .gb-name, .wish-name {
   display: block;
@@ -751,17 +769,23 @@ img[src*="calendar-frame"], img[src*="corner"], img[src*="ornament"] { display: 
   font-size: 15px;
 }
 
-/* --- Lightbox --------------------------------------------------- */
+/* --- Lightbox ---------------------------------------------------
+   gallery.js toggles the lightbox via `.classList.add("open")` and
+   `.classList.remove("open")`, not the `hidden` attribute. Default to
+   hidden; .open flips it on. [hidden] stays as a defensive guard so
+   the markup's inline `hidden` attribute isn't ignored before the JS
+   loads. */
 .lightbox {
   position: fixed;
   inset: 0;
   background: rgba(26, 26, 26, 0.94);
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: center;
   z-index: 100;
   padding: 24px;
 }
+.lightbox.open { display: flex; }
 .lightbox[hidden] { display: none !important; }
 .lightbox img {
   max-width: 100%;
