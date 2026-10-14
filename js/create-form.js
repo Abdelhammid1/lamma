@@ -322,8 +322,16 @@ function addMemoryRow(existing) {
   // Picking a new file via the <input type="file"> replaces the
   // thumbnail — the dataset URL is cleared then so the new file wins.
   if (existing && existing.url) {
+    // Assign .src via createElement (not an interpolated innerHTML
+    // template literal) — the stored URL came from the host's own
+    // published payload, so a crafted value like `" onerror="…`
+    // interpolated into an src="…" attribute would break out and run
+    // when another admin opens the event for editing.
     row.dataset.existingUrl = existing.url;
-    thumb.innerHTML = `<img src="${existing.url}" alt="">`;
+    const img = document.createElement("img");
+    img.src = existing.url;
+    img.alt = "";
+    thumb.replaceChildren(img);
     if (existing.dateLabel) row.querySelector(".mem-date").value = existing.dateLabel;
   }
   const resetThumb = () => {
@@ -422,9 +430,15 @@ function addGalleryRow(existingUrl) {
   const clearBtn  = row.querySelector(".mem-clear");
   // Edit mode seed — show the already-committed photo + stash its URL
   // so publish keeps it when the host doesn't pick a new file.
+  // Assign .src via createElement (not interpolated innerHTML) — the
+  // stored URL is host-controlled, so `" onerror="…` interpolated into
+  // src="…" would run when another admin opens this event.
   if (existingUrl) {
     row.dataset.existingUrl = existingUrl;
-    thumb.innerHTML = `<img src="${existingUrl}" alt="">`;
+    const img = document.createElement("img");
+    img.src = existingUrl;
+    img.alt = "";
+    thumb.replaceChildren(img);
   }
   const resetThumb = () => {
     const num = [...galleryBuilder.querySelectorAll(".mem-row")].indexOf(row) + 1;
