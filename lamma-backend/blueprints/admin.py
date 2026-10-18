@@ -345,6 +345,7 @@ def api_event_wishes(event_id):
 
     return jsonify(
         slug=event.slug,
+        event_status=event.status,
         summary={"count": len(rows)},
         wishes=[{
             "id":         w.id,
@@ -384,6 +385,7 @@ def api_event_views(event_id):
 
     return jsonify(
         slug=event.slug,
+        event_status=event.status,
         total=total,
         unique_lifetime=uniq_lifetime,
         unique_today=uniq_today,
@@ -416,6 +418,7 @@ def api_event_rsvps(event_id):
 
     return jsonify(
         slug=event.slug,
+        event_status=event.status,
         summary={
             "attending": len(yes),
             "declined":  len(no),

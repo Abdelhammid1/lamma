@@ -167,6 +167,19 @@ let STATE = { rsvps: [], wishes: [], views: null };
   $("stat-wishes").textContent    = wishes.length;
   const viewsEl = $("stat-views");
   if (viewsEl && viewR) viewsEl.textContent = `${viewR.unique_lifetime} / ${viewR.total}`;
+
+  // Diagnostic: distinguish "no activity yet" from "activity CAN'T happen yet".
+  const status = rsvpR.event_status || wishR.event_status || viewR.event_status;
+  const anyActivity = rsvps.length + wishes.length + (viewR?.total || 0) > 0;
+  if (!anyActivity && status && status !== "published") {
+    const label = status === "awaiting_code" ? "Awaiting activation"
+                : status === "draft"         ? "Still a draft"
+                : status;
+    const note = $("load-note");
+    if (note) note.innerHTML =
+      `<strong style="color:#7a5222;">${esc(label)}</strong> — this invitation isn't live yet, so guests can't RSVP or leave wishes.`;
+    return;
+  }
   $("load-note").textContent =
     rsvps.length + wishes.length === 0
       ? "No responses yet — share the invitation link with guests."
