@@ -278,3 +278,22 @@ def test_patch_refuses_blob_urls(logged_in, session):
     assert res.status_code == 400
     assert res.get_json()["error"] == "blob_url"
     assert "blob:" not in (db.session.get(Event, ev.id).payload_json or "")
+
+
+def test_edit_upload_enforces_event_quota_across_committed_files(app, logged_in, session, tmp_path):
+    import io
+    from models import MediaBlob
+    from uploads import MAX_EVENT_BYTES
+    app.config["MEDIA_SERVE_DIR"] = str(tmp_path / "media")
+    app.config["UPLOAD_STAGING_DIR"] = str(tmp_path / "staging")
+    ev = _make_event(session, slug="farhetna", status="published")
+    session.add(MediaBlob(event_id=ev.id, path="farhetna/big.mp4",
+                          size_bytes=MAX_EVENT_BYTES, content_hash="x" * 64))
+    session.commit()
+    res = logged_in.post(
+        f"/admin/api/events/{ev.id}/media",
+        data={"file": (io.BytesIO(b"ID3fake-mp3"), "music-x-song.mp3", "audio/mpeg")},
+        content_type="multipart/form-data", headers=_SAME_ORIGIN,
+    )
+    assert res.status_code == 413
+    assert res.get_json()["error"] == "event_quota"

@@ -543,7 +543,8 @@ def api_upload_event_media(event_id):
     same-origin check alone blocks cross-site form posts."""
     import os
     import shutil
-    from uploads import UploadError, stage_upload
+    from sqlalchemy import func
+    from uploads import MAX_EVENT_BYTES, UploadError, stage_upload
 
     if not _is_same_origin():
         return jsonify(error="csrf_blocked",
@@ -557,6 +558,16 @@ def api_upload_event_media(event_id):
     if event.status == "deleted":
         return jsonify(error="deleted",
                        message="Can't edit a deleted event."), 409
+
+    # stage_upload's quota only sees files still in staging — published
+    # edits move straight out of it, so count every blob ever recorded
+    # for this event instead.
+    used = db.session.query(
+        func.coalesce(func.sum(MediaBlob.size_bytes), 0)
+    ).filter(MediaBlob.event_id == event.id).scalar() or 0
+    if used + (request.content_length or 0) > MAX_EVENT_BYTES:
+        return jsonify(error="event_quota",
+                       message=f"This event's media limit is {MAX_EVENT_BYTES // (1024 * 1024)} MB."), 413
 
     try:
         meta = stage_upload(event.id, request.files.get("file"))
