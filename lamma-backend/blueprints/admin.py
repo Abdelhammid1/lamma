@@ -485,6 +485,13 @@ def api_update_event(event_id):
     if not isinstance(new_payload, (dict, list, str)):
         return jsonify(error="bad_payload",
                        message="payload_json must be an object, array, or JSON string."), 400
+    # A blob: URL only exists inside the editor's browser tab — saving one
+    # is how farhetna lost its song and a gallery photo. Refuse instead of
+    # publishing a link no guest can open (a stale cached create-form.js
+    # would otherwise keep doing it).
+    if _contains_blob_url(new_payload):
+        return jsonify(error="blob_url",
+                       message="A photo or song wasn't uploaded. Reload the editor (Ctrl+Shift+R) and save again."), 400
     event.payload_json = (
         new_payload if isinstance(new_payload, str)
         else json.dumps(new_payload, ensure_ascii=False)
@@ -510,6 +517,89 @@ def api_update_event(event_id):
     if isinstance(current_user, AdminUser):
         _audit(current_user.id, "admin_edit_event", event.id)
     return jsonify(event_id=event.id, slug=event.slug, status=event.status), 200
+
+
+def _contains_blob_url(obj) -> bool:
+    if isinstance(obj, str):
+        return "blob:" in obj
+    if isinstance(obj, dict):
+        return any(_contains_blob_url(v) for v in obj.values())
+    if isinstance(obj, list):
+        return any(_contains_blob_url(v) for v in obj)
+    return False
+
+
+@bp.post("/api/events/<event_id>/media")
+@login_required
+def api_upload_event_media(event_id):
+    """Edit-mode upload — one file per request, form field `file`.
+    Returns `{ url }` to bake into the payload before the PATCH.
+
+    Published events get the file straight into <MEDIA_SERVE_DIR>/<slug>/
+    so the URL works the moment the PATCH lands. Unpublished ones keep it
+    in staging with a MediaBlob row; activate moves it like any other.
+
+    Multipart, so admin_json_csrf (JSON-only) can't wrap it — the
+    same-origin check alone blocks cross-site form posts."""
+    import os
+    import shutil
+    from uploads import UploadError, stage_upload
+
+    if not _is_same_origin():
+        return jsonify(error="csrf_blocked",
+                       message="Cross-origin request rejected."), 403
+    event = db.session.get(Event, event_id)
+    if event is None:
+        return jsonify(error="not_found"), 404
+    if not _can_access_event(event):
+        return jsonify(error="forbidden",
+                       message="You can only edit your own invitations."), 403
+    if event.status == "deleted":
+        return jsonify(error="deleted",
+                       message="Can't edit a deleted event."), 409
+
+    try:
+        meta = stage_upload(event.id, request.files.get("file"))
+    except UploadError as e:
+        return jsonify(error=e.reason, message=e.message), 400
+
+    filename = meta["filename"]
+    blob_path = meta["path"]
+    if event.status == "published":
+        staging_root = current_app.config["UPLOAD_STAGING_DIR"]
+        media_dir = os.path.join(current_app.config["MEDIA_SERVE_DIR"], event.slug)
+        os.makedirs(media_dir, exist_ok=True)
+        src = os.path.join(staging_root, event.id, filename)
+        dst = os.path.join(media_dir, filename)
+        if os.path.exists(dst):
+            # Never overwrite a committed file — the old payload (or a
+            # guest's cached page) may still point at it.
+            stem, ext = os.path.splitext(filename)
+            filename = f"{stem}-{meta['content_hash'][:8]}{ext}"
+            dst = os.path.join(media_dir, filename)
+        tmp = dst + ".tmp"
+        try:
+            shutil.copy2(src, tmp)
+            os.replace(tmp, dst)
+        except OSError:
+            current_app.logger.exception("edit upload commit failed for %s", event.slug)
+            return jsonify(error="storage_failed",
+                           message="Couldn't save the file. Please try again."), 500
+        try:
+            os.remove(src)
+        except OSError:
+            pass
+        blob_path = f"{event.slug}/{filename}"
+
+    db.session.add(MediaBlob(
+        event_id=event.id,
+        path=blob_path,
+        size_bytes=meta["size_bytes"],
+        content_hash=meta["content_hash"],
+    ))
+    db.session.commit()
+    return jsonify(url=f"/media/{event.slug}/{filename}",
+                   size_bytes=meta["size_bytes"]), 201
 
 
 @bp.post("/api/events/<event_id>/publish")

@@ -234,3 +234,47 @@ def test_admin_root_redirects_to_dashboard(client):
     """Bare /admin (no slash) → dashboard (which then redirects to login)."""
     res = client.get("/admin", follow_redirects=False)
     assert res.status_code in (301, 302, 308)
+
+
+# --- edit-mode media + blob guard --------------------------------------------
+
+_SAME_ORIGIN = {"Origin": "http://localhost"}
+
+
+def test_edit_upload_into_published_event_lands_in_media_dir(app, logged_in, session, tmp_path):
+    import io, os
+    app.config["MEDIA_SERVE_DIR"] = str(tmp_path / "media")
+    app.config["UPLOAD_STAGING_DIR"] = str(tmp_path / "staging")
+    ev = _make_event(session, slug="farhetna", status="published")
+    res = logged_in.post(
+        f"/admin/api/events/{ev.id}/media",
+        data={"file": (io.BytesIO(b"ID3fake-mp3"), "music-x-song.mp3", "audio/mpeg")},
+        content_type="multipart/form-data", headers=_SAME_ORIGIN,
+    )
+    assert res.status_code == 201, res.get_json()
+    url = res.get_json()["url"]
+    assert url == "/media/farhetna/music-x-song.mp3"
+    assert os.path.exists(tmp_path / "media" / "farhetna" / "music-x-song.mp3")
+
+
+def test_edit_upload_rejects_cross_origin(logged_in, session):
+    import io
+    ev = _make_event(session, slug="farhetna", status="published")
+    res = logged_in.post(
+        f"/admin/api/events/{ev.id}/media",
+        data={"file": (io.BytesIO(b"x"), "a.mp3", "audio/mpeg")},
+        content_type="multipart/form-data", headers={"Origin": "https://evil.example"},
+    )
+    assert res.status_code == 403
+
+
+def test_patch_refuses_blob_urls(logged_in, session):
+    ev = _make_event(session, slug="farhetna", status="draft")
+    res = logged_in.patch(
+        f"/admin/api/events/{ev.id}",
+        json={"payload_json": {"music": "blob:https://lamma.manasety.ai/abc"}},
+        headers=_SAME_ORIGIN,
+    )
+    assert res.status_code == 400
+    assert res.get_json()["error"] == "blob_url"
+    assert "blob:" not in (db.session.get(Event, ev.id).payload_json or "")

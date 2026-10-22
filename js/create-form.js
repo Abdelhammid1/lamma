@@ -594,7 +594,10 @@ $("preview-open").addEventListener("click", () => {
 
 /* ================= Collect + validate ================= */
 
-function collectFormForPreview() {
+// `fileUrl` turns a picked File into the URL baked into the payload:
+// a throwaway blob: URL for the live preview, or the uploaded
+// /media/<slug>/… URL when edit mode saves (see publishAdminEdit).
+function collectFormForPreview(fileUrl = (f) => URL.createObjectURL(f)) {
   const name = $("f-name").value.trim();
   if (BIRTHDAY_TYPES.has(state.type)) {
     const videoFile = $("f-video-file").files?.[0];
@@ -612,7 +615,7 @@ function collectFormForPreview() {
         // the existing photo. In create mode dataset.existingUrl is
         // absent so this is a no-op.
         return {
-          url:       file ? URL.createObjectURL(file) : (row.dataset.existingUrl || ""),
+          url:       file ? fileUrl(file) : (row.dataset.existingUrl || ""),
           dateLabel: row.querySelector(".mem-date").value.trim(),
         };
       }),
@@ -620,8 +623,8 @@ function collectFormForPreview() {
       letterEn:    $("f-letterEn").value,
       signatureEn: $("f-signatureEn").value,
       signatureAr: $("f-signatureAr").value,
-      videoUrl:    videoFile ? URL.createObjectURL(videoFile) : $("f-video-url").value.trim(),
-      musicUrl:    musicFile ? URL.createObjectURL(musicFile) : "",
+      videoUrl:    videoFile ? fileUrl(videoFile) : $("f-video-url").value.trim(),
+      musicUrl:    musicFile ? fileUrl(musicFile) : ($("f-music-file").dataset.existingUrl || ""),
     };
   }
   // wedding
@@ -674,7 +677,7 @@ function collectFormForPreview() {
       const file = row.querySelector(".mem-file").files?.[0];
       // Same edit-mode fallback as memories — keep the committed URL
       // when there is no new file for this row.
-      return file ? URL.createObjectURL(file) : (row.dataset.existingUrl || "");
+      return file ? fileUrl(file) : (row.dataset.existingUrl || "");
     }).filter(Boolean),
     // Program / timeline rows the host added. Row display order wins —
     // the renderer doesn't sort by time (hosts occasionally want an
@@ -693,8 +696,11 @@ function collectFormForPreview() {
       phone: row.querySelector(".c-phone").value.trim(),
     })).filter((c) => c.name && c.phone),
     music:     (() => {
-      const f = $("f-wedding-music").files?.[0];
-      return f ? URL.createObjectURL(f) : "";
+      // Edit mode: no new file picked → keep the song already on the
+      // invitation instead of saving an empty one.
+      const input = $("f-wedding-music");
+      const f = input.files?.[0];
+      return f ? fileUrl(f) : (input.dataset.existingUrl || "");
     })(),
   };
 }
@@ -1091,7 +1097,8 @@ async function loadAdminEditFixtures() {
     setIf("f-letterEn",    p.letterEn);
     setIf("f-signatureEn", p.signatureEn);
     setIf("f-signatureAr", p.signatureAr);
-    setIf("f-video-url",   p.videoUrl);
+    setIf("f-video-url",   isLiveUrl(p.videoUrl) ? p.videoUrl : "");
+    showExistingAudio("f-music-file", p.musicUrl);
     // Rebuild quiz rows from stored data.
     if (Array.isArray(p.quiz) && p.quiz.length) {
       quizBuilder.innerHTML = "";
@@ -1103,7 +1110,9 @@ async function loadAdminEditFixtures() {
     // init is replaced here.
     if (Array.isArray(p.memories) && p.memories.length) {
       memBuilder.innerHTML = "";
-      for (const m of p.memories) addMemoryRow({ url: m?.url, dateLabel: m?.dateLabel });
+      for (const m of p.memories) {
+        addMemoryRow({ url: isLiveUrl(m?.url) ? m.url : "", dateLabel: m?.dateLabel });
+      }
     }
   } else {
     const c = p.couple || {};
@@ -1143,10 +1152,12 @@ async function loadAdminEditFixtures() {
     // Rebuild gallery rows from the stored photos. The seed row
     // addGalleryRow() ran at module init is replaced here so the host
     // doesn't see a stray empty row above their actual photos.
-    if (Array.isArray(p.gallery) && p.gallery.length) {
+    const gallery = Array.isArray(p.gallery) ? p.gallery.filter(isLiveUrl) : [];
+    if (gallery.length) {
       galleryBuilder.innerHTML = "";
-      for (const url of p.gallery) addGalleryRow(url);
+      for (const url of gallery) addGalleryRow(url);
     }
+    showExistingAudio("f-wedding-music", p.music);
     // Rebuild schedule rows from the stored timeline (if any). An
     // empty schedule leaves the builder blank — host can still add
     // rows via the + button.
@@ -1165,21 +1176,86 @@ async function loadAdminEditFixtures() {
   updatePublishGate();
 }
 
-/* Edit-mode "Save changes" handler — PATCHes the payload. Does NOT
- * handle new file uploads in this iteration (text edits only). */
+/* A blob: URL only lives inside the tab that created it — older saves
+ * baked those into the payload, so treat them as missing. */
+function isLiveUrl(u) {
+  return typeof u === "string" && u !== "" && !u.startsWith("blob:");
+}
+
+/* Edit mode: a file input can't be pre-filled, so show the song that's
+ * already on the invitation next to it and keep its URL on the input's
+ * dataset — collectFormForPreview falls back to it when no new file is
+ * picked. "Remove song" is the only way to drop it. */
+function showExistingAudio(inputId, url) {
+  const input = $(inputId);
+  if (!input || !isLiveUrl(url)) return;
+  input.dataset.existingUrl = url;
+  const note = document.createElement("div");
+  note.className = "cx-hint";
+  const label = document.createElement("span");
+  label.textContent = `Current song: ${decodeURIComponent(url.split("/").pop())} — pick a file to replace it. `;
+  const rm = document.createElement("button");
+  rm.type = "button";
+  rm.className = "cx-btn cx-btn-ghost";
+  rm.textContent = "Remove song";
+  rm.addEventListener("click", () => {
+    delete input.dataset.existingUrl;
+    note.remove();
+    schedulePreview();
+  });
+  note.append(label, rm);
+  input.insertAdjacentElement("afterend", note);
+}
+
+/* Every File currently picked anywhere in the form. */
+function pickedFiles() {
+  const out = [];
+  const push = (f, field) => { if (f) out.push({ file: f, field }); };
+  memBuilder.querySelectorAll(".mem-row .mem-file").forEach((el) => push(el.files?.[0], "photo"));
+  galleryBuilder.querySelectorAll(".mem-row .mem-file").forEach((el) => push(el.files?.[0], "gallery"));
+  push($("f-video-file").files?.[0], "video");
+  push($("f-music-file").files?.[0], "music");
+  push($("f-wedding-music").files?.[0], "music");
+  return out;
+}
+
+/* Edit-mode "Save changes" handler. Uploads any newly picked files
+ * first, then PATCHes the payload with their real /media/<slug>/… URLs
+ * (never the preview's blob: URLs). Files the host didn't touch keep
+ * their stored URL via the rows' / inputs' dataset.existingUrl. */
 async function publishAdminEdit() {
   const btn = $("publish-btn");
   btn.disabled = true;
   btn.textContent = "Saving…";
   try {
-    // Reuse the preview builder — it already produces the right shape
-    // for both birthday and wedding, with the file-URL fields pointing
-    // at the live /media/<slug>/… paths that were committed last time.
-    const nextPayload = collectFormForPreview();
-    setProgress(50, "Saving changes…");
+    const picked = pickedFiles();
+    const uploaded = new Map();
+    const stamp = Date.now().toString(36);
+    for (let i = 0; i < picked.length; i++) {
+      const { file, field } = picked[i];
+      setProgress(5 + Math.round((i / picked.length) * 80),
+                  `Uploading ${i + 1} of ${picked.length}…`);
+      // Unique name per save so a re-upload never collides with (or
+      // overwrites) a file the live page already points at.
+      const name = safeFilename(`${field}-${stamp}-${i + 1}-${file.name}`);
+      const res = await uploadFileWithProgress(
+        `/admin/api/events/${ADMIN_EDIT_ID}/media`,
+        new File([file], name, { type: file.type }),
+        () => {},
+      );
+      uploaded.set(file, res.url);
+    }
+    const nextPayload = collectFormForPreview((f) => uploaded.get(f) || "");
+    if (Array.isArray(nextPayload.memories)) {
+      nextPayload.memories = nextPayload.memories.filter((m) => m.url);
+    }
+    setProgress(90, "Saving changes…");
     await apiJson("PATCH", `/admin/api/events/${ADMIN_EDIT_ID}`, {
       payload_json: nextPayload,
     });
+    // Uploaded files are now the "existing" ones — clear the inputs so
+    // a second Save doesn't upload them again.
+    reseedAfterSave(uploaded);
     setProgress(100, "Saved.");
     setTimeout(() => { hideProgress(); btn.textContent = "Save changes"; btn.disabled = false; }, 600);
   } catch (err) {
@@ -1188,6 +1264,36 @@ async function publishAdminEdit() {
     hideProgress();
     btn.textContent = "Save changes";
     btn.disabled = false;
+  }
+}
+
+function reseedAfterSave(uploaded) {
+  document.querySelectorAll(".mem-row").forEach((row) => {
+    const input = row.querySelector(".mem-file");
+    const url = uploaded.get(input?.files?.[0]);
+    if (!url) return;
+    row.dataset.existingUrl = url;
+    input.value = "";
+    const clr = row.querySelector(".mem-clear");
+    if (clr) clr.hidden = true;
+  });
+  for (const id of ["f-music-file", "f-wedding-music"]) {
+    const input = $(id);
+    const url = uploaded.get(input.files?.[0]);
+    if (!url) continue;
+    input.value = "";
+    syncClearButton(input);
+    input.parentElement.querySelectorAll(".cx-hint").forEach((n) => {
+      if (n.textContent.startsWith("Current song")) n.remove();
+    });
+    showExistingAudio(id, url);
+  }
+  const v = $("f-video-file");
+  const vUrl = uploaded.get(v.files?.[0]);
+  if (vUrl) {
+    $("f-video-url").value = vUrl;
+    v.value = "";
+    syncClearButton(v);
   }
 }
 
