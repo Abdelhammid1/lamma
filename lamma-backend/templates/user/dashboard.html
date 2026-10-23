@@ -27,11 +27,14 @@
             {% if ev.status == 'published' %}
               <span style="color:#2b662a; font-weight: 600;">● Published</span>
               · {{ ev.activated_at.strftime('%Y-%m-%d') if ev.activated_at else '' }}
-            {% elif ev.status == 'awaiting_code' %}
+            {% elif ev.status in ('awaiting_code', 'draft') %}
               <span style="color:#7a5222; font-weight: 600;">● Awaiting activation</span>
-              · {{ ev.created_at.strftime('%Y-%m-%d') if ev.created_at else '' }}
-            {% elif ev.status == 'draft' %}
-              <span style="color: var(--muted); font-weight: 600;">● Draft</span>
+              {% if ev.id in hours_left %}
+                · <span style="color:#7a5222;">enter your code within {{ hours_left[ev.id] }} h, or it expires and the uploads are deleted</span>
+              {% endif %}
+            {% elif ev.status == 'expired' %}
+              <span style="color: var(--muted); font-weight: 600;">● Expired</span>
+              · not activated within 48 h — create it again to publish
             {% else %}
               {{ ev.status }}
             {% endif %}
@@ -60,6 +63,15 @@
           <a href="/create.html?admin_edit={{ ev.id }}" class="btn btn-outline btn-sm">Edit</a>
         </div>
       </div>
+      {% if ev.status in ('awaiting_code', 'draft') %}
+        <form class="activate-form" data-event-id="{{ ev.id }}" style="display:flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 12px;">
+          <label for="code-{{ ev.id }}" class="muted" style="font-size: 12px;">Activation code</label>
+          <input id="code-{{ ev.id }}" name="code" type="text" autocomplete="off" spellcheck="false"
+                 placeholder="XXXX-XXXX-XXXX" style="width: 170px; font-family: monospace; text-transform: uppercase;">
+          <button type="submit" class="btn btn-primary btn-sm">Activate</button>
+          <span class="activate-msg" role="status" style="font-size: 12px; color: #a33;"></span>
+        </form>
+      {% endif %}
     </div>
   {% endfor %}
 </div>
@@ -115,6 +127,34 @@ async function loadCard(card) {
 }
 
 document.querySelectorAll(".event-card").forEach(loadCard);
+
+// Activate an invitation that was created but never got its code —
+// same /activate endpoint the create page calls.
+document.querySelectorAll(".activate-form").forEach((form) => {
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const msg = form.querySelector(".activate-msg");
+    const btn = form.querySelector("button");
+    const code = form.querySelector("input").value.trim();
+    if (!code) { msg.textContent = "Enter the code we sent you."; return; }
+    btn.disabled = true;
+    msg.textContent = "";
+    try {
+      const r = await fetch(`/api/events/${form.dataset.eventId}/activate`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code }),
+      });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j.message || "Something went wrong. Please try again.");
+      location.reload();
+    } catch (err) {
+      msg.textContent = err.message;
+      btn.disabled = false;
+    }
+  });
+});
 </script>
 {% else %}
 <div class="card" style="text-align: center; margin-top: 32px;">

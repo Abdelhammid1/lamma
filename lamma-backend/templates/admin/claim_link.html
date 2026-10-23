@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Password link · Admin{% endblock %}
+{% block content %}
+<h1 class="page-title">Password link</h1>
+
+<div class="card success-card">
+  <p class="hint">Send this to <strong>{{ user.email }}</strong>. Opening it lets them
+    {{ 'reset' if user.password_hash else 'set' }} their password and signs them in.
+    It works once; any earlier link for this host has stopped working.</p>
+
+  <p class="big-code" title="Click to select" style="font-size: 15px; word-break: break-all;">{{ claim_url }}</p>
+
+  <dl class="meta">
+    <dt>Host</dt>    <dd>{{ user.email }}</dd>
+    <dt>Expires</dt> <dd>{{ expires_at.strftime('%Y-%m-%d %H:%M UTC') }}</dd>
+  </dl>
+
+  <p>
+    <a href="{{ url_for('admin.events') }}" class="btn btn-outline">Events</a>
+  </p>
+</div>
+{% endblock %}

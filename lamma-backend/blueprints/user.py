@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import hashlib
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 from functools import wraps
 from urllib.parse import urlparse
 
@@ -302,7 +302,16 @@ def dashboard():
             .filter(Event.user_id == current_user.id)
             .order_by(Event.created_at.desc())
             .all())
-    return render_template("user/dashboard.html", events=rows)
+    # Hours left before the cleanup job expires an unactivated event and
+    # deletes its uploads — shown on the card so it's never a surprise.
+    from scheduler import CLEANUP_AFTER_HOURS
+    now = datetime.utcnow()
+    hours_left = {
+        ev.id: max(0, int(((ev.created_at + timedelta(hours=CLEANUP_AFTER_HOURS)) - now).total_seconds() // 3600))
+        for ev in rows
+        if ev.status in ("draft", "awaiting_code") and ev.created_at
+    }
+    return render_template("user/dashboard.html", events=rows, hours_left=hours_left)
 
 
 @bp.get("/events/<event_id>/responses")

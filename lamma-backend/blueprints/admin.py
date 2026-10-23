@@ -168,7 +168,36 @@ def events():
         like = f"%{q}%"
         query = query.filter(Event.slug.ilike(like))
     rows = query.order_by(Event.created_at.desc()).all()
-    return render_template("events.html", events=rows, q=q, status=status)
+    from models import User
+    owner_ids = {ev.user_id for ev in rows if ev.user_id}
+    owners = ({u.id: u for u in db.session.query(User).filter(User.id.in_(owner_ids))}
+              if owner_ids else {})
+    return render_template("events.html", events=rows, q=q, status=status, owners=owners)
+
+
+@bp.post("/users/<user_id>/claim-link")
+@admin_required
+def new_claim_link(user_id):
+    """Mint a fresh one-time link for a host to set (or reset) their
+    password. The raw token is shown once and only its hash is stored,
+    so a lost link is replaced, never recovered. Minting a new one
+    invalidates the previous link."""
+    from models import User
+    from blueprints.public import _mint_claim_token
+    row = db.session.get(User, user_id)
+    if row is None:
+        abort(404)
+    raw, digest, expires = _mint_claim_token()
+    row.claim_token_hash = digest
+    row.claim_token_expires_at = expires
+    db.session.commit()
+    _audit(current_user.id, "new_claim_link", None, {"user_email": row.email})
+    return render_template(
+        "claim_link.html",
+        user=row,
+        claim_url=request.host_url.rstrip("/") + "/user/claim/" + raw,
+        expires_at=expires,
+    )
 
 
 @bp.get("/leads")

@@ -770,6 +770,20 @@ async function publish() {
   const type = state.type;
 
   try {
+    // 0. Check the code BEFORE reserving the name or uploading anything,
+    //    so a typo costs one round-trip instead of every upload plus a
+    //    name that then reads as "taken". Activate re-checks and burns it.
+    if (!ADMIN_MODE) {
+      setProgress(3, "Checking your code…");
+      const chk = await apiJson("POST", "/api/check-code", { code });
+      if (!chk.valid) {
+        showCodeErr(chk.message || "Invalid activation code.");
+        hideProgress();
+        btn.disabled = false;
+        return;
+      }
+    }
+
     // 1. Rename each staged File so the backend commits it at a
     //    predictable path (`<type>/media/<slug>/<name>`) and the payload
     //    we send in step 2 can reference that URL directly.
@@ -856,6 +870,19 @@ async function publish() {
     const publicUrl = act.public_url || `${location.origin}${slugPath}`;
     $("success-url").href = publicUrl;
     $("success-url").textContent = publicUrl;
+    // Admin created a brand-new host account: this one-time link is the
+    // only way the host can set a password (only its hash is stored).
+    if (evt.claim_url) {
+      const claimUrl = `${location.origin}${evt.claim_url}`;
+      $("claim-url").textContent = claimUrl;
+      $("claim-block").hidden = false;
+      $("copy-claim-btn").onclick = async () => {
+        try {
+          await navigator.clipboard.writeText(claimUrl);
+          $("copy-claim-btn").textContent = "Copied ✓";
+        } catch (_) { /* ignore */ }
+      };
+    }
     $("editor-screen").hidden = true;
     $("success-screen").hidden = false;
     hideProgress();

@@ -38,7 +38,7 @@
       <th>Slug</th>
       <th>Type</th>
       <th>Status</th>
-      <th>Contact</th>
+      <th>Host</th>
       <th>Created</th>
       <th>Actions</th>
     </tr>
@@ -49,7 +49,19 @@
       <td><code>{{ ev.slug }}</code></td>
       <td>{{ ev.event_type }}</td>
       <td><span class="status status-{{ ev.status }}">{{ ev.status }}</span></td>
-      <td>{{ ev.contact or '—' }}</td>
+      <td>
+        {% set owner = owners.get(ev.user_id) %}
+        {% if owner %}
+          {{ owner.email }}
+          {% if not owner.password_hash %}<span class="hint">· no password yet</span>{% endif %}
+          <form method="post" action="{{ url_for('admin.new_claim_link', user_id=owner.id) }}" class="inline">
+            <button type="submit" class="btn btn-ghost btn-sm"
+                    title="One-time link to set or reset the host's password">Password link</button>
+          </form>
+        {% else %}
+          {{ ev.contact or '—' }}
+        {% endif %}
+      </td>
       <td class="when">{{ ev.created_at.strftime('%Y-%m-%d %H:%M') if ev.created_at else '' }}</td>
       <td class="actions">
         {% if ev.status in ('draft', 'awaiting_code') %}

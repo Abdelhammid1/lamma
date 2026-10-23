@@ -22,6 +22,7 @@ from github import GitHubClient, GitHubError
 from models import ActivationCode, Event, Lead, MediaBlob, Rsvp, User, View, Wish, db
 from rate_limit import limiter
 from slugs import SlugError, validate
+from slugs import normalize as normalize_slug
 from uploads import UploadError, stage_upload, total_bytes_for_event
 
 
@@ -291,6 +292,31 @@ def check_slug():
     return jsonify(available=True, slug=slug), 200
 
 
+@bp.post("/check-code")
+@limiter.limit("20/hour")
+def check_code():
+    """Body: `{ "code": "AH3F-9K2P-XZLB", "event_id"? }` →
+    `{ "valid": bool, "reason"?, "message"? }`.
+
+    Lets /create reject a bad code BEFORE it reserves the name and
+    uploads every file. Doesn't burn the code — activate still re-checks
+    and burns it. Same rate limit as a human retyping a code; 12 random
+    characters can't be guessed at 20/hour."""
+    body = request.get_json(silent=True) or {}
+    raw_code = normalize_code(body.get("code"))
+    if not raw_code:
+        return jsonify(valid=False, reason="missing_code",
+                       message="Please enter your activation code."), 200
+    code_row = db.session.get(ActivationCode, raw_code)
+    try:
+        # A brand-new event has no id yet; an unbound code is fine for
+        # it, a code minted for some other event is not.
+        validate_code_for_event(code_row, body.get("event_id") or "")
+    except ActivationError as e:
+        return jsonify(valid=False, reason=e.reason, message=e.message), 200
+    return jsonify(valid=True), 200
+
+
 # --------------------------------------------------------------------------
 # Stage 2 — Event creation, media upload, status polling
 # --------------------------------------------------------------------------
@@ -396,11 +422,6 @@ def create_event():
         return jsonify(error="bad_event_type",
                        message=f"event_type must be one of {sorted(VALID_EVENT_TYPES)}"), 400
 
-    try:
-        slug = validate(body.get("slug"), db_session=db.session)
-    except SlugError as e:
-        return jsonify(error=e.reason, message=e.message), 400
-
     contact = (body.get("contact") or "").strip()[:120] or None
 
     payload = body.get("payload_json")
@@ -410,6 +431,22 @@ def create_event():
     payload_str = None
     if payload is not None:
         payload_str = payload if isinstance(payload, str) else json.dumps(payload, ensure_ascii=False)
+
+    # Retry after a failed publish (wrong code, dropped upload, reload):
+    # the name is already held by this same owner's unfinished event.
+    # Hand that event back with the new payload instead of "taken", and
+    # drop its staged files — the client re-uploads the current ones.
+    resumed = _resume_own_event(normalize_slug(body.get("slug")), user_id,
+                                event_type, contact, payload_str)
+    if resumed is not None:
+        return jsonify(event_id=resumed.id, slug=resumed.slug,
+                       event_type=resumed.event_type, status=resumed.status,
+                       resumed=True), 200
+
+    try:
+        slug = validate(body.get("slug"), db_session=db.session)
+    except SlugError as e:
+        return jsonify(error=e.reason, message=e.message), 400
 
     event = Event(
         slug=slug,
@@ -581,6 +618,30 @@ def _local_staging_path(event_id: str, blob_path: str) -> str:
     if blob_path.startswith(f"{event_id}/"):
         return os.path.join(root, blob_path)
     return os.path.join(root, event_id, os.path.basename(blob_path))
+
+
+def _resume_own_event(slug, user_id, event_type, contact, payload_str):
+    """Return this owner's unfinished event holding `slug`, refreshed
+    with the new submission, or None when there isn't one."""
+    if not slug or not user_id:
+        return None
+    event = (db.session.query(Event)
+             .filter(Event.slug == slug,
+                     Event.user_id == user_id,
+                     Event.status.in_(("draft", "awaiting_code")))
+             .first())
+    if event is None:
+        return None
+    event.event_type = event_type
+    event.contact = contact
+    event.payload_json = payload_str
+    # The previous attempt's staged files are superseded by this one's
+    # uploads — leaving them would let activate commit stale files and
+    # count them against the media quota.
+    db.session.query(MediaBlob).filter_by(event_id=event.id).delete()
+    db.session.commit()
+    _cleanup_staging(event.id)
+    return event
 
 
 def _cleanup_staging(event_id: str) -> None:

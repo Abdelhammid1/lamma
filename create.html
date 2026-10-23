@@ -35,7 +35,7 @@
       <div class="cx-field" id="host-email-wrapper" style="display:none;">
         <label for="f-host-email">Host email <span class="cx-hint" style="font-weight:400;">(the account this invitation will land in)</span></label>
         <input id="f-host-email" type="email" autocomplete="off" placeholder="host@example.com" />
-        <span class="cx-hint">If this email isn't registered yet we'll create the account for the host — they can set a password later by signing up at <code>/user/signup</code> with the same email.</span>
+        <span class="cx-hint">If this email isn't registered yet we'll create the account for the host — after publishing you'll get a one-time link to send them so they can set their password.</span>
       </div>
 
       <h1 class="cx-title" id="cx-title">Create your invitation</h1>
@@ -274,11 +274,16 @@
         <button type="button" id="copy-url-btn"    class="cx-btn cx-btn-primary">Copy link</button>
         <a href="/create.html" class="cx-btn cx-btn-ghost">Create another</a>
       </div>
+      <div id="claim-block" hidden style="margin-top: 24px;">
+        <p class="cx-lede">Send this link to the host so they can set their password and see their invitation. It works once and shows only now (you can make a new one from Admin → Events → Password link):</p>
+        <p><code id="claim-url" style="word-break: break-all;"></code></p>
+        <button type="button" id="copy-claim-btn" class="cx-btn cx-btn-ghost">Copy host link</button>
+      </div>
     </div>
   </div>
 
 </main>
 
-<script type="module" src="js/create-form.js?v=27"></script>
+<script type="module" src="js/create-form.js?v=28"></script>
 </body>
 </html>
