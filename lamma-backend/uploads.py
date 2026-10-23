@@ -10,6 +10,7 @@ events after 48 h.
 import hashlib
 import os
 import re
+from contextlib import contextmanager
 
 from flask import current_app
 
@@ -70,6 +71,30 @@ def _file_sha256(path: str) -> str:
         for chunk in iter(lambda: f.read(_CHUNK), b""):
             h.update(chunk)
     return h.hexdigest()
+
+
+@contextmanager
+def event_upload_lock(event_id: str):
+    """Serialise uploads to one event across gunicorn workers and threads.
+
+    The per-event quota is "bytes already stored + this file <= limit";
+    two uploads checking at once could both pass and together exceed it.
+    Callers hold this around the whole check → write → record sequence.
+    flock is per open file, so threads of one worker also exclude each
+    other. Without fcntl (Windows dev) it is a no-op."""
+    try:
+        import fcntl
+    except ImportError:
+        yield
+        return
+    lock_dir = os.path.join(current_app.config["UPLOAD_STAGING_DIR"], ".locks")
+    os.makedirs(lock_dir, exist_ok=True)
+    with open(os.path.join(lock_dir, f"{event_id}.lock"), "a") as f:
+        fcntl.flock(f, fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            fcntl.flock(f, fcntl.LOCK_UN)
 
 
 class UploadError(ValueError):
@@ -148,7 +173,8 @@ def stage_upload(event_id: str, file_storage) -> dict:
     # Stream to a temp file in 1 MB chunks, hashing and counting as we
     # go. Reading the whole upload into memory (as before) held up to
     # 300 MB per request in RAM — two big uploads at once could starve
-    # the server.
+    # the server. Callers hold event_upload_lock, so `existing` can't
+    # change under us.
     existing = total_bytes_for_event(event_id)
     dest_dir = _staging_dir_for(event_id)
     tmp_path = os.path.join(dest_dir, f".upload-{os.getpid()}-{id(file_storage)}.part")

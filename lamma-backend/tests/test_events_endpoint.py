@@ -207,3 +207,28 @@ def test_status_counts_media(client):
 def test_status_unknown_event_404(client):
     res = client.get("/api/events/no-such-id/status")
     assert res.status_code == 404
+
+
+@pytest.mark.skipif(os.name == "nt", reason="flock-based lock is a no-op on Windows")
+def test_event_upload_lock_serialises_uploads(app):
+    """Two uploads to one event must not check the quota at the same time."""
+    import threading
+    import time
+    from uploads import event_upload_lock
+
+    order = []
+
+    def hold():
+        with app.app_context(), event_upload_lock("ev-1"):
+            order.append("first-in")
+            time.sleep(0.3)
+            order.append("first-out")
+
+    t = threading.Thread(target=hold)
+    with app.app_context():
+        t.start()
+        time.sleep(0.05)
+        with event_upload_lock("ev-1"):
+            order.append("second-in")
+    t.join()
+    assert order == ["first-in", "first-out", "second-in"]

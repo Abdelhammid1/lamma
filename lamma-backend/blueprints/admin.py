@@ -586,7 +586,7 @@ def api_upload_event_media(event_id):
     import os
     import shutil
     from sqlalchemy import func
-    from uploads import MAX_EVENT_BYTES, UploadError, stage_upload
+    from uploads import MAX_EVENT_BYTES, UploadError, event_upload_lock, stage_upload
 
     if not _is_same_origin():
         return jsonify(error="csrf_blocked",
@@ -601,58 +601,59 @@ def api_upload_event_media(event_id):
         return jsonify(error="deleted",
                        message="Can't edit a deleted event."), 409
 
-    # stage_upload's quota only sees files still in staging — published
-    # edits move straight out of it, so count every blob ever recorded
-    # for this event instead.
-    used = db.session.query(
-        func.coalesce(func.sum(MediaBlob.size_bytes), 0)
-    ).filter(MediaBlob.event_id == event.id).scalar() or 0
-    if used + (request.content_length or 0) > MAX_EVENT_BYTES:
-        return jsonify(error="event_quota",
-                       message=f"This event's media limit is {MAX_EVENT_BYTES // (1024 * 1024)} MB."), 413
+    with event_upload_lock(event.id):
+        # stage_upload's quota only sees files still in staging — published
+        # edits move straight out of it, so count every blob ever recorded
+        # for this event instead.
+        used = db.session.query(
+            func.coalesce(func.sum(MediaBlob.size_bytes), 0)
+        ).filter(MediaBlob.event_id == event.id).scalar() or 0
+        if used + (request.content_length or 0) > MAX_EVENT_BYTES:
+            return jsonify(error="event_quota",
+                           message=f"This event's media limit is {MAX_EVENT_BYTES // (1024 * 1024)} MB."), 413
 
-    try:
-        meta = stage_upload(event.id, request.files.get("file"))
-    except UploadError as e:
-        return jsonify(error=e.reason, message=e.message), 400
+        try:
+            meta = stage_upload(event.id, request.files.get("file"))
+        except UploadError as e:
+            return jsonify(error=e.reason, message=e.message), 400
 
-    filename = meta["filename"]
-    blob_path = meta["path"]
-    if event.status == "published":
-        staging_root = current_app.config["UPLOAD_STAGING_DIR"]
-        media_dir = os.path.join(current_app.config["MEDIA_SERVE_DIR"], event.slug)
-        os.makedirs(media_dir, exist_ok=True)
-        src = os.path.join(staging_root, event.id, filename)
-        dst = os.path.join(media_dir, filename)
-        if os.path.exists(dst):
-            # Never overwrite a committed file — the old payload (or a
-            # guest's cached page) may still point at it.
-            stem, ext = os.path.splitext(filename)
-            filename = f"{stem}-{meta['content_hash'][:8]}{ext}"
+        filename = meta["filename"]
+        blob_path = meta["path"]
+        if event.status == "published":
+            staging_root = current_app.config["UPLOAD_STAGING_DIR"]
+            media_dir = os.path.join(current_app.config["MEDIA_SERVE_DIR"], event.slug)
+            os.makedirs(media_dir, exist_ok=True)
+            src = os.path.join(staging_root, event.id, filename)
             dst = os.path.join(media_dir, filename)
-        tmp = dst + ".tmp"
-        try:
-            shutil.copy2(src, tmp)
-            os.replace(tmp, dst)
-        except OSError:
-            current_app.logger.exception("edit upload commit failed for %s", event.slug)
-            return jsonify(error="storage_failed",
-                           message="Couldn't save the file. Please try again."), 500
-        try:
-            os.remove(src)
-        except OSError:
-            pass
-        blob_path = f"{event.slug}/{filename}"
+            if os.path.exists(dst):
+                # Never overwrite a committed file — the old payload (or a
+                # guest's cached page) may still point at it.
+                stem, ext = os.path.splitext(filename)
+                filename = f"{stem}-{meta['content_hash'][:8]}{ext}"
+                dst = os.path.join(media_dir, filename)
+            tmp = dst + ".tmp"
+            try:
+                shutil.copy2(src, tmp)
+                os.replace(tmp, dst)
+            except OSError:
+                current_app.logger.exception("edit upload commit failed for %s", event.slug)
+                return jsonify(error="storage_failed",
+                               message="Couldn't save the file. Please try again."), 500
+            try:
+                os.remove(src)
+            except OSError:
+                pass
+            blob_path = f"{event.slug}/{filename}"
 
-    db.session.add(MediaBlob(
-        event_id=event.id,
-        path=blob_path,
-        size_bytes=meta["size_bytes"],
-        content_hash=meta["content_hash"],
-    ))
-    db.session.commit()
-    return jsonify(url=f"/media/{event.slug}/{filename}",
-                   size_bytes=meta["size_bytes"]), 201
+        db.session.add(MediaBlob(
+            event_id=event.id,
+            path=blob_path,
+            size_bytes=meta["size_bytes"],
+            content_hash=meta["content_hash"],
+        ))
+        db.session.commit()
+        return jsonify(url=f"/media/{event.slug}/{filename}",
+                       size_bytes=meta["size_bytes"]), 201
 
 
 @bp.post("/api/events/<event_id>/publish")

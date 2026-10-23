@@ -23,7 +23,7 @@ from models import ActivationCode, Event, Lead, MediaBlob, Rsvp, User, View, Wis
 from rate_limit import limiter
 from slugs import SlugError, validate
 from slugs import normalize as normalize_slug
-from uploads import UploadError, stage_upload, total_bytes_for_event
+from uploads import UploadError, event_upload_lock, stage_upload, total_bytes_for_event
 
 
 bp = Blueprint("public_api", __name__, url_prefix="/api")
@@ -504,19 +504,20 @@ def upload_media(event_id):
                        message="Cannot upload to a published or expired event."), 409
 
     file_storage = request.files.get("file")
-    try:
-        meta = stage_upload(event_id, file_storage)
-    except UploadError as e:
-        return jsonify(error=e.reason, message=e.message), 400
+    with event_upload_lock(event_id):
+        try:
+            meta = stage_upload(event_id, file_storage)
+        except UploadError as e:
+            return jsonify(error=e.reason, message=e.message), 400
 
-    blob = MediaBlob(
-        event_id=event_id,
-        path=meta["path"],
-        size_bytes=meta["size_bytes"],
-        content_hash=meta["content_hash"],
-    )
-    db.session.add(blob)
-    db.session.commit()
+        blob = MediaBlob(
+            event_id=event_id,
+            path=meta["path"],
+            size_bytes=meta["size_bytes"],
+            content_hash=meta["content_hash"],
+        )
+        db.session.add(blob)
+        db.session.commit()
 
     return jsonify(
         path=meta["path"],
