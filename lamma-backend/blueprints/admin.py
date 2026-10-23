@@ -529,6 +529,11 @@ def api_update_event(event_id):
     if _contains_blob_url(new_payload):
         return jsonify(error="blob_url",
                        message="A photo or song wasn't uploaded. Reload the editor (Ctrl+Shift+R) and save again."), 400
+    from payload_schema import validate_payload
+    problems = validate_payload(event.event_type, new_payload)
+    if problems:
+        return jsonify(error="bad_payload", message="; ".join(problems[:3]),
+                       problems=problems), 400
     event.payload_json = (
         new_payload if isinstance(new_payload, str)
         else json.dumps(new_payload, ensure_ascii=False)

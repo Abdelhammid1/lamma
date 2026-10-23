@@ -438,6 +438,11 @@ def create_event():
                        message="payload_json must be an object, array, or JSON string."), 400
     payload_str = None
     if payload is not None:
+        from payload_schema import validate_payload
+        problems = validate_payload(event_type, payload)
+        if problems:
+            return jsonify(error="bad_payload", message="; ".join(problems[:3]),
+                           problems=problems), 400
         payload_str = payload if isinstance(payload, str) else json.dumps(payload, ensure_ascii=False)
 
     # Retry after a failed publish (wrong code, dropped upload, reload):
