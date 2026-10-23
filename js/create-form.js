@@ -146,8 +146,10 @@ function applyType(t) {
   const nameWrap = $("name-field-wrapper");
   if (nameWrap) nameWrap.style.display = usesCoupleForm ? "none" : "";
   if (usesCoupleForm) syncNameFromCouple();
+  // Edit mode keeps its own heading (set by applyAdminChrome); loading
+  // the event calls applyType and used to overwrite it with "Create…".
   const title = $("cx-title");
-  if (title) title.textContent = TYPE_TITLE[t];
+  if (title && ADMIN_MODE !== "edit") title.textContent = TYPE_TITLE[t];
   // Fresh frame for the new template; it pushes the form's data into
   // itself once loaded (the buffered swap in sendPreview takes over
   // from the next change on).
@@ -1456,8 +1458,12 @@ const DRAFT_KEY = "lamma:create-draft";
 // Text inputs only — a browser can't keep picked files across pages.
 const DRAFT_SKIP = new Set(["f-code", "f-host-email"]);
 
+// Set once publish succeeds: a save still queued by the debounce must
+// not write the draft back after clearDraft().
+var draftClosed = false;
+
 function saveDraft() {
-  if (ADMIN_MODE) return;
+  if (ADMIN_MODE || draftClosed) return;
   const fields = {};
   document.querySelectorAll("#editor-screen input[id], #editor-screen textarea[id]").forEach((el) => {
     if (el.type === "file" || el.type === "radio" || DRAFT_SKIP.has(el.id)) return;
@@ -1489,6 +1495,7 @@ function saveDraft() {
 }
 
 function clearDraft() {
+  draftClosed = true;
   try { localStorage.removeItem(DRAFT_KEY); } catch (_) {}
 }
 

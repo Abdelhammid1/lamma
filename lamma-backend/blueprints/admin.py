@@ -107,7 +107,10 @@ def admin_json_csrf(fn):
 
 @bp.route("/login", methods=["GET", "POST"])
 def login():
-    if current_user.is_authenticated:
+    # Only an admin session skips the form. A signed-in host used to be
+    # redirected to the dashboard and hit a bare 403 there.
+    from auth import AdminUser
+    if current_user.is_authenticated and isinstance(current_user, AdminUser):
         return redirect(url_for("admin.dashboard"))
 
     error = None
@@ -123,7 +126,12 @@ def login():
             row.last_login_at = datetime.utcnow()
             db.session.commit()
             _audit(row.id, "login")
-            next_url = request.args.get("next") or url_for("admin.dashboard")
+            # Same-site paths only — `?next=https://elsewhere` must not
+            # turn the admin login into an open redirect.
+            next_url = request.args.get("next") or ""
+            if (not next_url.startswith("/") or next_url.startswith("//")
+                    or "\\" in next_url or any(ord(c) < 32 or ord(c) == 127 for c in next_url)):
+                next_url = url_for("admin.dashboard")
             return redirect(next_url)
 
         error = "Invalid email or password."

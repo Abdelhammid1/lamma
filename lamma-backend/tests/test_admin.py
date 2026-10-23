@@ -297,3 +297,20 @@ def test_edit_upload_enforces_event_quota_across_committed_files(app, logged_in,
     )
     assert res.status_code == 413
     assert res.get_json()["error"] == "event_quota"
+
+
+def test_admin_login_next_is_same_site_only(client, admin):
+    res = client.post("/admin/login?next=https://evil.example/x",
+                      data={"email": "me@example.com", "password": "s3cret-pass"})
+    assert res.status_code == 302 and "evil.example" not in res.location
+    client.post("/admin/logout", headers={"Origin": "http://localhost"})
+    res = client.post("/admin/login?next=/admin/events",
+                      data={"email": "me@example.com", "password": "s3cret-pass"})
+    assert res.location.endswith("/admin/events")
+
+
+def test_signed_in_host_sees_admin_login_form(client, session):
+    client.post("/user/signup", data={"email": "h@example.com", "password": "s3cret-pass"},
+                headers={"Origin": "http://localhost"})
+    res = client.get("/admin/login")
+    assert res.status_code == 200
