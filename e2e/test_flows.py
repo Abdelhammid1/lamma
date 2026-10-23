@@ -214,12 +214,16 @@ def test_classic_birthday_loads_from_the_server_only(page, site):
     }""")
     assert created == 200
 
+    # Nothing may leave the site except Google Fonts — no GitHub,
+    # jsDelivr (scripts included), Firebase or any other CDN.
+    allowed = (base, "https://fonts.googleapis.com/", "https://fonts.gstatic.com/")
     outside = []
     page.on("request", lambda r: outside.append(r.url)
-            if re.search(r"github|jsdelivr\.net/gh|firestore|firebasejs", r.url) else None)
+            if not r.url.startswith(allowed) and not r.url.startswith(("data:", "blob:")) else None)
     page.goto(base + "/rana-e2e")
     page.wait_for_function("document.getElementById('hero-name').textContent.startsWith('Rana')")
     assert page.title() == "Happy Birthday, Rana"
+    assert page.evaluate("typeof confetti") == "function"       # self-hosted, loaded
     assert outside == []
     page.goto(base + "/no-such-birthday")
     page.wait_for_selector("text=/not found|isn.t available|مش متاحة/i")
