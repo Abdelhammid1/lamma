@@ -88,17 +88,34 @@ def init_scheduler(app: Flask) -> BackgroundScheduler | None:
 _lock_file = None   # kept open for the process lifetime; closing releases it
 
 
+def scheduler_lock_path(app: Flask) -> str:
+    """SCHEDULER_LOCK_FILE if set, else <UPLOAD_STAGING_DIR>/.locks/
+    scheduler.lock — never the code directory, which systemd mounts
+    read-only (writing instance/scheduler.lock crashed the service)."""
+    configured = app.config.get("SCHEDULER_LOCK_FILE") or ""
+    if configured:
+        return configured
+    return os.path.join(app.config["UPLOAD_STAGING_DIR"], ".locks", "scheduler.lock")
+
+
 def _claim_scheduler_lock(app: Flask) -> bool:
-    """Non-blocking exclusive lock on instance/scheduler.lock. The OS
+    """Non-blocking exclusive lock on the scheduler lock file. The OS
     drops it when the process exits, so a restarted worker can take over.
-    Where fcntl doesn't exist (Windows dev), every process runs the job."""
+    Where fcntl doesn't exist (Windows dev), every process runs the job.
+    If the file can't be written at all, log it and run anyway — a
+    duplicate cleanup sweep is harmless, a crashed service is not."""
     global _lock_file
     try:
         import fcntl
     except ImportError:
         return True
-    path = os.path.join(app.instance_path, "scheduler.lock")
-    f = open(path, "a")
+    path = scheduler_lock_path(app)
+    try:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        f = open(path, "a")
+    except OSError as e:
+        log.warning("scheduler: can't write lock file %s (%s) — running without it", path, e)
+        return True
     try:
         fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
     except OSError:

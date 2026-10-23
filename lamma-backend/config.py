@@ -81,6 +81,10 @@ class Config:
 
     # --- Feature flags ---
     SCHEDULER_ENABLED = _bool("SCHEDULER_ENABLED", default=True)
+    # Lock that lets only one gunicorn worker run the cleanup job. Empty =
+    # <UPLOAD_STAGING_DIR>/.locks/scheduler.lock, which is already in the
+    # service's one writable directory (/var/lib/lamma-backend).
+    SCHEDULER_LOCK_FILE = os.environ.get("SCHEDULER_LOCK_FILE", "")
 
 
 class TestConfig(Config):

@@ -94,3 +94,25 @@ def test_cleanup_frees_slug_for_reuse(app, session, client):
     # Slug is no longer held by an active event → check-slug says available
     res = client.post("/api/check-slug", json={"slug": "reuse-me"})
     assert res.get_json()["available"] is True
+
+
+def test_scheduler_lock_lives_in_the_writable_state_dir(app, monkeypatch, tmp_path):
+    """The code dir is read-only under systemd; the lock must not go there."""
+    from scheduler import scheduler_lock_path
+    app.config["UPLOAD_STAGING_DIR"] = str(tmp_path / "uploads")
+    app.config["SCHEDULER_LOCK_FILE"] = ""
+    assert scheduler_lock_path(app) == str(tmp_path / "uploads" / ".locks" / "scheduler.lock")
+    app.config["SCHEDULER_LOCK_FILE"] = str(tmp_path / "custom.lock")
+    assert scheduler_lock_path(app) == str(tmp_path / "custom.lock")
+
+
+def test_unwritable_lock_does_not_stop_the_scheduler(app, tmp_path, monkeypatch):
+    import scheduler as sch
+    try:
+        import fcntl  # noqa: F401
+    except ImportError:
+        return                               # Windows: lock is a no-op anyway
+    blocker = tmp_path / "not-a-dir"
+    blocker.write_text("x")
+    app.config["SCHEDULER_LOCK_FILE"] = str(blocker / "scheduler.lock")   # parent is a file
+    assert sch._claim_scheduler_lock(app) is True

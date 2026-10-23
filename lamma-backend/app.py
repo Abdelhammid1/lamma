@@ -61,7 +61,13 @@ def create_app(config_object: type = Config) -> Flask:
     # Every writable path Flask touches needs to exist before first use.
     # MEDIA_SERVE_DIR + DATA_SERVE_DIR are the new local-disk home for
     # published invitations (replacing the GitHub Contents commit path).
-    os.makedirs(app.instance_path, exist_ok=True)
+    # instance/ only holds dev defaults; under systemd the code directory
+    # is read-only (ProtectSystem=strict) and every path comes from env,
+    # so a failure here must not stop the service.
+    try:
+        os.makedirs(app.instance_path, exist_ok=True)
+    except OSError:
+        pass
     os.makedirs(app.config["UPLOAD_STAGING_DIR"], exist_ok=True)
     os.makedirs(app.config["MEDIA_SERVE_DIR"],    exist_ok=True)
     os.makedirs(app.config["DATA_SERVE_DIR"],     exist_ok=True)
@@ -71,8 +77,19 @@ def create_app(config_object: type = Config) -> Flask:
     init_limiter(app)
 
     # Create tables on first boot (SQLite; Alembic later if we grow).
+    # Every gunicorn worker runs this at the same moment: on a fresh DB, or
+    # after a deploy that adds a table, two workers race and the loser
+    # gets "table … already exists" — which used to kill the worker and
+    # the service with it. The winner has made the table, so try again.
     with app.app_context():
-        db.create_all()
+        from sqlalchemy.exc import OperationalError
+        for attempt in range(3):
+            try:
+                db.create_all()
+                break
+            except OperationalError as e:
+                if "already exists" not in str(e) or attempt == 2:
+                    raise
 
     from blueprints.public import bp as public_bp
     from blueprints.admin  import bp as admin_bp
