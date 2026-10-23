@@ -1,25 +1,5 @@
-// view-ping.js — one tiny beacon per public page load so the host can
-// see how many people opened their invitation. Backend dedupes to one
-// "unique" view per visitor_hash per day; this file just fires once.
-//
-// Skipped when:
-//   - URL carries ?preview=1 (admin / host self-preview)
-//   - The browser can't send beacons at all (no sendBeacon + no fetch)
-//
-// Host-session + bot filtering happens server-side; the client doesn't
-// need to know who the current user is.
-
+// Shared module — the real code is /js/shared/view-ping.js.
 import { CONFIG } from "../config.js";
+import { pingView } from "/js/shared/view-ping.js?v=495b3d79";
 
-const SLUG = CONFIG.slug || "";
-if (SLUG && !/[?&]preview=1\b/.test(location.search)) {
-  const url = `/api/invitations/${encodeURIComponent(SLUG)}/view`;
-  try {
-    if (navigator.sendBeacon) {
-      // Empty body — the server reads request headers + remote addr.
-      navigator.sendBeacon(url, new Blob([""], { type: "text/plain" }));
-    } else if (typeof fetch === "function") {
-      fetch(url, { method: "POST", keepalive: true, credentials: "same-origin" }).catch(() => {});
-    }
-  } catch (_) { /* best-effort — never surface to the guest */ }
-}
+pingView(CONFIG);

@@ -22,9 +22,9 @@ const RENDERER_MODULES = [
   "./cover.js",
   "./details.js?v=6ab162dc",
   "./countdown.js",
-  "./venue.js?v=4ddca897",
-  "./schedule.js?v=23e924b8",
-  "./contacts.js?v=1effccae",
+  "./venue.js?v=58682a4b",
+  "./schedule.js?v=70dc6805",
+  "./contacts.js?v=69008faa",
   "./guestbook.js?v=a5e77586", "./view-ping.js",
   "./reveal.js",
 ];
