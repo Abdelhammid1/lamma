@@ -38,8 +38,7 @@ class Config:
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-    # --- GitHub proxy (Stage 3) ---
-    GITHUB_TOKEN  = os.environ.get("GITHUB_TOKEN", "")
+    # --- Old GitHub media repo: only read by `flask migrate-github` ---
     MEDIA_OWNER   = os.environ.get("MEDIA_OWNER", "zyadwael")
     MEDIA_REPO    = os.environ.get("MEDIA_REPO", "birthday-media")
     MEDIA_BRANCH  = os.environ.get("MEDIA_BRANCH", "main")
@@ -53,7 +52,7 @@ class Config:
         os.path.abspath(os.path.join(os.path.dirname(__file__), "instance", "uploads")),
     )
 
-    # --- Published-media storage (replaces GitHub as the serving layer) ---
+    # --- Published-media storage ---
     # On activate, the backend moves each staged blob into
     # MEDIA_SERVE_DIR/<slug>/<filename> and writes the final JSON to
     # DATA_SERVE_DIR/<slug>.json. nginx serves both prefixes directly;
@@ -94,5 +93,7 @@ class TestConfig(Config):
     SECRET_KEY = "test"
     # Cross-platform temp dir (works on Windows too)
     UPLOAD_STAGING_DIR = os.path.join(tempfile.gettempdir(), "lamma-test-uploads")
+    MEDIA_SERVE_DIR    = os.path.join(tempfile.gettempdir(), "lamma-test-media")
+    DATA_SERVE_DIR     = os.path.join(tempfile.gettempdir(), "lamma-test-data")
     SCHEDULER_ENABLED = False
     RATELIMIT_ENABLED = False

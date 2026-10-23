@@ -6,17 +6,12 @@
 //    2. Path segments — /medo → medo,  /wedding/sara → sara
 //    3. First DNS label of the hostname (subdomain fallback)
 //
-//  Data-source waterfall for load:
-//    1. Firestore  invitations/{slug}      ← self-serve created via /create
-//    2. GitHub raw birthday-media/data/…    ← legacy admin-created invitations
-//         (raw is tried before jsdelivr; the CDN had 12–24h stale-cache issues)
+//  Data: the server's /data/<slug>.json (every published invitation,
+//  including the ones moved over from the old GitHub media repo).
 // ============================================================================
 
 import { CONFIG }      from "../config.js";
-import { db }          from "./firebase-init.js";
 import { RESERVED_SLUGS } from "./reserved-slugs.js";
-import { doc, getDoc } from
-  "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 const RESERVED_LABELS  = new Set(["admin", "www", "api", "lamma"]);
 
@@ -57,12 +52,6 @@ export function getSlug() {
 }
 
 
-/**
- * Fetch the invitation JSON for a slug.
- * Firestore is authoritative for anything created via /create; the
- * legacy GitHub path is a fallback for old admin-created invitations
- * (Ranon, etc.). Returns null if not found in either.
- */
 // Every published event — birthday, wedding, qiraya, sobou, … — writes
 // to the same /data/<slug>.json. If a visitor hits /<slug> for a wedding
 // (the birthday catchall), the birthday renderer would try to display a
@@ -92,57 +81,17 @@ export async function loadBirthday(slug) {
       if (_redirectIfWrongTemplate(data, slug)) return null;
       return sanitizeConfigUrls(data);
     }
-  } catch (_) { /* try next source */ }
-
-  // 2. Firestore — invitations created via the old /create (pre-backend).
-  try {
-    const snap = await getDoc(doc(db, "invitations", slug));
-    if (snap.exists()) {
-      const data = _mapFirestoreDoc(snap.data());
-      if (_redirectIfWrongTemplate(data, slug)) return null;
-      return sanitizeConfigUrls(data);
-    }
-  } catch (e) {
-    console.warn("[loader] Firestore lookup failed, trying GitHub:", e);
-  }
-
-  // 3. GitHub — legacy admin publishes (Ranon, Rana) and the brief
-  //    period when the backend committed to <type>/data/<slug>.json.
-  //    Raw first (fresh), CDN as safety net.
-  const bust = Date.now();
-  const paths = [
-    `${CONFIG.rawBase}/data/${slug}.json?nc=${bust}`,
-    `${CONFIG.rawBase}/birthday/data/${slug}.json?nc=${bust}`,
-    `${CONFIG.rawBase}/wedding/data/${slug}.json?nc=${bust}`,
-    `${CONFIG.cdnBase}/data/${slug}.json?nc=${bust}`,
-    `${CONFIG.cdnBase}/birthday/data/${slug}.json?nc=${bust}`,
-    `${CONFIG.cdnBase}/wedding/data/${slug}.json?nc=${bust}`,
-  ];
-  for (const url of paths) {
-    try {
-      const res = await fetch(url, { cache: "no-store" });
-      if (res.ok) {
-        const data = await res.json();
-        if (_redirectIfWrongTemplate(data, slug)) return null;
-        return sanitizeConfigUrls(data);
-      }
-    } catch (_) { /* try next */ }
-  }
+  } catch (_) { /* offline or not published */ }
 
   return null;
 }
 
 
-/** Firestore stores an invitation with full media URLs already resolved
- *  (Firebase Storage download URLs). Just pass through. */
-function _mapFirestoreDoc(data) {
-  return data;
-}
 
 
 /* Sanitize every URL field in a loaded invitation BEFORE handing it to
- * the template. The payload comes from local disk / Firestore / GitHub —
- * any of those can be hostile if the uploader got creative (an attacker
+ * the template. The payload comes from the server's /data JSON, which a
+ * customer wrote — it can be hostile if the uploader got creative (an attacker
  * could publish an invitation whose `videoUrl` is `javascript:…` or
  * `data:text/html,…` and have the template render it into an <iframe>).
  * Allowlist: http, https, protocol-relative, and site-relative paths.
@@ -166,24 +115,3 @@ export function sanitizeConfigUrls(cfg) {
 }
 
 
-/**
- * For GitHub-legacy invitations, memories/video have repo-relative
- * `path` fields that need turning into absolute CDN URLs. Firestore
- * docs already store full URLs so this is a no-op there.
- *
- * Returns a shallow copy — never mutates the caller's object.
- */
-export function mapPathsToUrls(cfg) {
-  const cdn = CONFIG.cdnBase;
-  const out = { ...cfg };
-  if (Array.isArray(cfg.memories)) {
-    out.memories = cfg.memories.map((m) => ({
-      ...m,
-      url: m.url || (m.path ? `${cdn}/${m.path}` : ""),
-    }));
-  }
-  if (!out.videoUrl && out.videoPath) {
-    out.videoUrl = `${cdn}/${out.videoPath}`;
-  }
-  return out;
-}

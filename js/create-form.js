@@ -6,8 +6,8 @@
 //    - Slug uniqueness check via backend /api/check-slug
 //    - Activation code gate (single-use, verified by backend at activate time)
 //    - Publish flow: POST /api/events → POST /api/events/<id>/media (per file)
-//      → POST /api/events/<id>/activate. The backend commits everything to
-//      GitHub with a server-side PAT; the browser never sees a token.
+//      → POST /api/events/<id>/activate. The backend saves everything to the
+//      server's own disk; the browser never sees a token.
 //
 //  Requires the Flask backend from lamma-backend/ deployed behind /api on
 //  the same host (see lamma-backend/deploy/nginx.conf.sample). Without it,
@@ -48,7 +48,7 @@ const ADMIN_MODE   =
   : null;
 const ADMIN_EDIT_ID = ADMIN_PARAMS.get("admin_edit") || null;
 
-const MAX_MB       = 300;    // per video / photo — real GitHub blob API ceiling
+const MAX_MB       = 300;    // per video / photo — matches uploads.py MAX_FILE_BYTES
 const WARN_MB      = 250;
 const MAX_TOTAL_MB = 1024;
 const MAX_AUDIO_MB = 50;
@@ -911,7 +911,7 @@ async function publish() {
 
     // 2. Create the event with the finalized payload. The backend
     //    reserves the slug in its DB here (unique constraint) — this is
-    //    what supersedes the old Firestore slug-lock.
+    //    what holds the name while the files upload.
     setProgress(5, "Reserving your name…");
     // Admin-create passes the host's email so the backend creates (or
     // finds) a User row and attaches it to this event. Non-admin flows
@@ -1078,7 +1078,7 @@ function uploadFileWithProgress(url, file, onProgress) {
 }
 
 // Mirrors lamma-backend/uploads.py:safe_filename so the URL we bake
-// into the payload matches the filename the backend commits to GitHub.
+// into the payload matches the filename the backend stores.
 function safeFilename(raw) {
   if (!raw) return "file";
   const base    = String(raw).split(/[\\/]/).pop();

@@ -93,27 +93,6 @@ body.opened #cover .floral { transition: opacity 0.9s ease; opacity: 0; }
   z-index: 2;
 }
 
-/* ---------------------------------------------------------------------------
-   Banner: shown when Firebase config still has PASTE_YOURS placeholders.
-   -------------------------------------------------------------------------- */
-.config-banner {
-  position: fixed; inset: 0 0 auto 0;
-  z-index: 200;
-  background: #7a1f28;
-  color: #fff;
-  padding: 10px 16px;
-  text-align: center;
-  font-family: var(--font-ar);
-  font-size: 13px;
-  line-height: 1.5;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-}
-.config-banner code {
-  background: rgba(255,255,255,0.15);
-  padding: 1px 6px;
-  border-radius: 4px;
-  font-size: 12px;
-}
 
 /* ---------------------------------------------------------------------------
    Cover / landing card
@@ -1001,7 +980,7 @@ body.lightbox-open { overflow: hidden; }
 }
 
 /* ---------------------------------------------------------------------------
-   Guestbook section (real-time via Firestore onSnapshot)
+   Guestbook section (polled from the backend)
    -------------------------------------------------------------------------- */
 .guestbook {
   padding: 40px 24px 60px;

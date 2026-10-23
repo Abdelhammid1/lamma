@@ -5,18 +5,6 @@
 
 import { CONFIG } from "../config.js";
 
-// Firestore only holds invitations made before the backend existed.
-// Load its SDK (two modules from gstatic) only when the server has no
-// data for this link, instead of on every guest's first paint.
-async function legacyFirestoreDoc(slug) {
-  const [{ db }, { doc, getDoc }] = await Promise.all([
-    import("./firebase-init.js"),
-    import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js"),
-  ]);
-  if (!db) return null;
-  const snap = await getDoc(doc(db, "invitations", slug));
-  return snap.exists() ? snap.data() : null;
-}
 
 const RENDERER_MODULES = [
   "./cover.js",
@@ -191,19 +179,7 @@ if (isPreview()) {
         found = true;
         loaded = true;
       }
-    } catch (_) { /* try Firestore */ }
-    if (!loaded) {
-      try {
-        const legacy = await legacyFirestoreDoc(slug);
-        if (legacy) {
-          mergeInvitation(legacy);
-          CONFIG.slug = slug;
-          found = true;
-        }
-      } catch (e) {
-        console.warn("[qiraya-bootstrap] Firestore fetch failed:", e);
-      }
-    }
+    } catch (_) { /* not published — handled below */ }
   }
   // The URL named an invitation but nothing is published under it —
   // say so instead of showing the demo couple as if it were real.

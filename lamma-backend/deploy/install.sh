@@ -5,7 +5,6 @@
 #   - Python 3.10+
 #   - nginx already serving lamma.manasety.ai
 #   - Root (sudo) access
-#   - A fine-grained GitHub PAT with Contents: R/W on zyadwael/birthday-media
 #
 # Usage:
 #   curl -fsSL https://raw.githubusercontent.com/Abdelhammid1/lamma/main/lamma-backend/deploy/install.sh | sudo bash
@@ -62,9 +61,6 @@ install -d -o lamma -g lamma -m 0755 \
 
 echo "==> 6/8  Environment file $ENV_FILE"
 if [[ ! -f "$ENV_FILE" ]]; then
-  # GITHUB_TOKEN is now optional — the publish path writes to local disk,
-  # not GitHub. We still accept one in case you re-enable the old path.
-  read -r -p "  GitHub PAT (optional — press ENTER to skip): " GH_TOKEN
   read -r -p "  Flask SECRET_KEY (leave blank to auto-generate): " SECRET
   if [[ -z "$SECRET" ]]; then
     SECRET="$(python3 -c 'import secrets; print(secrets.token_urlsafe(48))')"
@@ -72,7 +68,6 @@ if [[ ! -f "$ENV_FILE" ]]; then
   cat > "$ENV_FILE" <<ENV
 SECRET_KEY=$SECRET
 DATABASE_URL=sqlite:///$STATE_DIR/app.db
-GITHUB_TOKEN=$GH_TOKEN
 MEDIA_OWNER=zyadwael
 MEDIA_REPO=birthday-media
 MEDIA_BRANCH=main

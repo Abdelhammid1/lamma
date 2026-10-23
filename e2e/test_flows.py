@@ -190,3 +190,37 @@ def test_admin_creates_for_new_host_who_sets_a_password(page, site):
     page.wait_for_url(re.compile(r"/user/?$"))
     assert "Karim & Mona" in page.text_content("body")
     assert page.js_errors == []
+
+
+# --- classic birthday (the template the GitHub-migrated invitations use) ---
+
+def test_classic_birthday_loads_from_the_server_only(page, site):
+    """Shaped like an invitation moved over by `flask migrate-github`:
+    /media links, no GitHub or Firestore fallback left to hide a miss."""
+    base = site["base"]
+    sign_in(page, site)
+    created = page.evaluate("""async () => {
+        const r = await fetch('/api/events', {method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({slug: 'rana-e2e', event_type: 'birthday', payload_json: {
+                name: 'Rana', letterAr: 'لصديقة عمري', letterEn: 'To my best friend',
+                quiz: [{question: 'q?', options: ['a', 'b'], correctIndex: 1}],
+                memories: [{url: '/logo.jpg', dateLabel: '15/9/2026'}]}})});
+        const ev = await r.json();
+        const a = await fetch(`/api/events/${ev.event_id}/activate`, {method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({code: 'GOOD-CODE-0003'})});
+        return a.status;
+    }""")
+    assert created == 200
+
+    outside = []
+    page.on("request", lambda r: outside.append(r.url)
+            if re.search(r"github|jsdelivr\.net/gh|firestore|firebasejs", r.url) else None)
+    page.goto(base + "/rana-e2e")
+    page.wait_for_function("document.getElementById('hero-name').textContent.startsWith('Rana')")
+    assert page.title() == "Happy Birthday, Rana"
+    assert outside == []
+    page.goto(base + "/no-such-birthday")
+    page.wait_for_selector("text=/not found|isn.t available|مش متاحة/i")
+    assert page.js_errors == []

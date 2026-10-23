@@ -12,11 +12,5 @@ export const CONFIG = {
   // Public domain the birthday site lives on. Slugs render at /<slug>.
   domain:      "manasety.ai",
 
-  // Public read path — jsdelivr CDN is fast, cached, and has no rate limit.
-  // It lags fresh commits by ~5–15 min; the loader falls back to rawBase.
-  cdnBase:     "https://cdn.jsdelivr.net/gh/zyadwael/birthday-media@main",
 
-  // Fresher but rate-limited — used as the fallback when CDN 404s a
-  // just-committed file. Also what the admin panel reads while editing.
-  rawBase:     "https://raw.githubusercontent.com/zyadwael/birthday-media/main",
 };

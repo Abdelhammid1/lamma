@@ -18,7 +18,6 @@ from flask_login import current_user
 
 from auth import AdminUser, HostUser
 from codes import ActivationError, normalize_code, validate_code_for_event
-from github import GitHubClient, GitHubError
 from models import ActivationCode, Event, Lead, MediaBlob, Rsvp, User, View, Wish, db
 from rate_limit import limiter
 from slugs import SlugError, validate
@@ -546,7 +545,7 @@ def event_status(event_id):
 
 
 # --------------------------------------------------------------------------
-# Stage 3 — Activation (commit to GitHub)
+# Stage 3 — Activation (publish to local disk)
 # --------------------------------------------------------------------------
 
 @bp.post("/events/<event_id>/activate")
@@ -582,8 +581,7 @@ def activate_event(event_id):
     except ActivationError as e:
         return jsonify(error=e.reason, message=e.message), 400
 
-    # Commit to local disk (replaces the old GitHub Contents + Git Data
-    # API path). storage.commit_event is idempotent so a retry after a
+    # Commit to local disk. storage.commit_event is idempotent so a retry after a
     # partial move does the right thing.
     from storage import commit_event
     try:
@@ -612,27 +610,6 @@ def activate_event(event_id):
 # --------------------------------------------------------------------------
 # Internal helpers
 # --------------------------------------------------------------------------
-
-def _serialize_event(event: Event) -> str:
-    """Turn the row's `payload_json` + slug into the string we commit."""
-    payload = json.loads(event.payload_json) if event.payload_json else {}
-    if not isinstance(payload, dict):
-        payload = {"payload": payload}
-    payload.setdefault("slug", event.slug)
-    payload.setdefault("event_type", event.event_type)
-    payload["published_at"] = datetime.utcnow().isoformat() + "Z"
-    return json.dumps(payload, ensure_ascii=False, indent=2)
-
-
-def _local_staging_path(event_id: str, blob_path: str) -> str:
-    root = current_app.config["UPLOAD_STAGING_DIR"]
-    # blob.path is either "<event_id>/<file>" (pre-publish) or the final
-    # "<type>/media/<slug>/<file>" after publish; only the pre-publish form
-    # exists locally.
-    if blob_path.startswith(f"{event_id}/"):
-        return os.path.join(root, blob_path)
-    return os.path.join(root, event_id, os.path.basename(blob_path))
-
 
 def _resume_own_event(slug, user_id, event_type, contact, payload_str):
     """Return this owner's unfinished event holding `slug`, refreshed

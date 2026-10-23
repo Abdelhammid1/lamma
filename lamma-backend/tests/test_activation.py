@@ -1,9 +1,4 @@
-"""Integration tests for POST /api/events/:id/activate.
-
-The GitHubClient is replaced by a fake that records every call, so we
-verify the *right* paths / bodies are sent without actually hitting
-api.github.com.
-"""
+"""Integration tests for POST /api/events/:id/activate."""
 
 import io
 import json
@@ -14,37 +9,6 @@ import pytest
 
 from codes import generate_code
 from models import ActivationCode, Event, MediaBlob, db
-
-
-# ---------------------------------------------------------------------------
-# Fake GitHub client — records every write, always returns a fake commit sha
-# ---------------------------------------------------------------------------
-
-_INSTANCES: list = []
-
-
-class FakeGitHub:
-    def __init__(self, *args, **kwargs):
-        self.puts: list = []
-        _INSTANCES.append(self)
-
-    def put_file(self, path, content, message, sha=None):
-        # Copy bytes so we can assert on them
-        blob = bytes(content) if isinstance(content, (bytes, bytearray)) else content
-        self.puts.append({"path": path, "content": blob, "message": message, "sha": sha})
-        return {"content": {"sha": "fake-" + path[:8].replace("/", "-")}}
-
-
-class FailingGitHub(FakeGitHub):
-    def put_file(self, *args, **kwargs):
-        from github import GitHubError
-        raise GitHubError(500, "boom", "http://api/x")
-
-
-@pytest.fixture(autouse=True)
-def _reset_instances():
-    _INSTANCES.clear()
-    yield
 
 
 # ---------------------------------------------------------------------------
@@ -90,8 +54,7 @@ def _upload(client, event_id, data=b"\xff\xd8fake jpeg", filename="1.jpg"):
 # ---------------------------------------------------------------------------
 
 def test_activate_success_writes_json_and_media(app, client, session, tmp_path):
-    # Publishing writes to the server's own disk (storage.commit_event);
-    # the GitHub path is gone.
+    # Publishing writes to the server's own disk (storage.commit_event).
     app.config["MEDIA_SERVE_DIR"] = str(tmp_path / "media")
     app.config["DATA_SERVE_DIR"] = str(tmp_path / "data")
     ev = _make_event(session, slug="medo")
@@ -162,8 +125,7 @@ def test_activate_universal_code(client, session):
     ev = _make_event(session, slug="uni")
     code = _make_code(session, event_id=None)
 
-    with patch("blueprints.public.GitHubClient", FakeGitHub):
-        res = client.post(f"/api/events/{ev.id}/activate", json={"code": code.code})
+    res = client.post(f"/api/events/{ev.id}/activate", json={"code": code.code})
     assert res.status_code == 200
 
 
@@ -201,6 +163,5 @@ def test_activate_normalizes_hyphenless_code(client, session):
     code = _make_code(session, event_id=ev.id)
     raw = code.code.replace("-", "").lower()          # what a user might type
 
-    with patch("blueprints.public.GitHubClient", FakeGitHub):
-        res = client.post(f"/api/events/{ev.id}/activate", json={"code": raw})
+    res = client.post(f"/api/events/{ev.id}/activate", json={"code": raw})
     assert res.status_code == 200

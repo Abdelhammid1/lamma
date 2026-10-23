@@ -2,8 +2,7 @@
 
 Uploaded files sit on the backend's local disk under
 `instance/uploads/<event_id>/<path>` until the event is activated
-(Stage 3), then they're committed to GitHub and the local files
-deleted. Anti-abuse job in Stage 5 also purges files for unactivated
+(Stage 3), then they're moved into MEDIA_SERVE_DIR. Anti-abuse job in Stage 5 also purges files for unactivated
 events after 48 h.
 """
 
@@ -31,12 +30,8 @@ ALLOWED_AUDIO_MIME = frozenset({
 })
 ALLOWED_MIME       = ALLOWED_IMAGE_MIME | ALLOWED_VIDEO_MIME | ALLOWED_AUDIO_MIME
 
-# Max any single file may be. Frontend warns above 25 MB; server
-# refuses above 35 MB. The REAL ceiling is GitHub's blob API, which
-# despite documenting 100 MB per blob returns 422 for base64 bodies
-# above ~35 MB — tested empirically across 40/45/50/60/70/80 MB. The
-# only paths above that are Git LFS or `git push` from the backend,
-# neither of which is wired.
+# Max any single file may be (the create form warns above 250 MB).
+# nginx's client_max_body_size must stay a little above this.
 MAX_FILE_BYTES     = 300 * 1024 * 1024
 
 # Max sum of files per event. 6 photos × 35 MB + 1 video × 35 MB +

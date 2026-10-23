@@ -22,13 +22,4 @@ export const CONFIG = {
   videoUrl:     "",
   musicUrl:     "",
 
-  firebase: {
-    apiKey:            "AIzaSyC4r0MZyLlX5c7UdYZ1j1L90vzUmm2A3co",
-    authDomain:        "weding-dc92e.firebaseapp.com",
-    projectId:         "weding-dc92e",
-    storageBucket:     "weding-dc92e.firebasestorage.app",
-    messagingSenderId: "645238686194",
-    appId:             "1:645238686194:web:c2caf0ebcb31c7cee36b6b",
-    measurementId:     "G-99C93SS013",
-  },
 };

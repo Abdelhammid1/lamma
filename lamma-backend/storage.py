@@ -1,7 +1,6 @@
 """Local-disk storage for published invitations.
 
-Replaces the GitHub Contents + Git Data API round-trip in
-activate_event with a plain filesystem move. The staged file (which
+Activation is a plain filesystem move. The staged file (which
 multipart upload already wrote to `UPLOAD_STAGING_DIR/<event_id>/<name>`)
 is renamed into its permanent slot:
 
@@ -14,8 +13,7 @@ and the serialized invitation JSON is written atomically to:
 Both prefixes are served to the browser by nginx (/media and /data
 location blocks the install script now prints), falling back to
 Flask's send_from_directory routes if the sysadmin forgot to add
-them. The frontend loader fetches /data/<slug>.json first and
-treats GitHub as a legacy fallback.
+them. The frontend loaders fetch /data/<slug>.json.
 
 Design notes:
 - All writes are tmp-write + os.replace so a crash mid-write never
@@ -115,8 +113,7 @@ def rewrite_data_json(event) -> None:
 
 
 def _serialize_event(event) -> str:
-    """Same JSON shape the old GitHub path produced, so birthday.html's
-    loader renders either source transparently."""
+    """The invitation JSON the templates load from /data/<slug>.json."""
     payload = json.loads(event.payload_json) if event.payload_json else {}
     if not isinstance(payload, dict):
         payload = {"payload": payload}

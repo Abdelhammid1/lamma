@@ -60,7 +60,7 @@ def create_app(config_object: type = Config) -> Flask:
 
     # Every writable path Flask touches needs to exist before first use.
     # MEDIA_SERVE_DIR + DATA_SERVE_DIR are the new local-disk home for
-    # published invitations (replacing the GitHub Contents commit path).
+    # published invitations.
     # instance/ only holds dev defaults; under systemd the code directory
     # is read-only (ProtectSystem=strict) and every path comes from env,
     # so a failure here must not stop the service.

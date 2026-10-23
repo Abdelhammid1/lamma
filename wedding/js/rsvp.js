@@ -1,7 +1,7 @@
 // ============================================================================
 //  RSVP form — POSTs to the Lamma backend (/api/invitations/<slug>/rsvp)
 //  so the owning host can read responses back without us exposing PII in
-//  Firestore. Guestbook (wishes) still writes to Firestore.
+//  Firestore. Guestbook wishes go through the backend too.
 // ============================================================================
 
 import { CONFIG } from "../config.js";

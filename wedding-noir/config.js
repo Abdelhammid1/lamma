@@ -55,18 +55,4 @@ export const CONFIG = {
   ],
   music: "audio/ambient.mp3",
 
-  // ---------- 7. Firebase project config ----------
-  //   Get these values from  Firebase Console → Project Settings → General →
-  //   Your apps → Web app → SDK setup and configuration.
-  //   Until you paste real values, the site will show a "Firebase not
-  //   configured" banner and RSVP + guestbook will be disabled.
-  firebase: {
-    apiKey:            "AIzaSyC4r0MZyLlX5c7UdYZ1j1L90vzUmm2A3co",
-    authDomain:        "weding-dc92e.firebaseapp.com",
-    projectId:         "weding-dc92e",
-    storageBucket:     "weding-dc92e.firebasestorage.app",
-    messagingSenderId: "645238686194",
-    appId:             "1:645238686194:web:c2caf0ebcb31c7cee36b6b",
-    measurementId:     "G-99C93SS013",
-  },
 };

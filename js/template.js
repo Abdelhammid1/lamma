@@ -2,11 +2,11 @@
 //  Template renderer — takes a birthday config object and populates every
 //  slot in the page (name, quiz, memories, letter, video, wrong-answer
 //  modal). Stage A: pulls from a hard-coded DEMO_CONFIG. Stage B: fetches
-//  the doc from Firestore based on ?for=<slug>.
+//  the invitation JSON from the server based on ?for=<slug>.
 // ============================================================================
 
 import { initPageFlow } from "./page-flow.js";
-import { getSlug, loadBirthday, mapPathsToUrls } from "./loader.js";
+import { getSlug, loadBirthday } from "./loader.js";
 import { CONFIG } from "../config.js";
 
 /* ---------- Defaults: any missing field falls back to these ---------- */
@@ -323,7 +323,7 @@ export function renderTemplate(rawConfig) {
 }
 
 /* ------------------------------ Bootstrap ------------------------------ */
-//   Stage B: resolve slug → fetch JSON from birthday-media on GitHub →
+//   Stage B: resolve slug → fetch /data/<slug>.json from the server →
 //   render. Falls back to DEMO_CONFIG only when slug === "demo" AND the
 //   fetch fails (useful for local dev before any JSON is committed).
 
@@ -363,7 +363,7 @@ function showNotFound(slug) {
 
 // ------------------------------------------------------------------
 // Preview mode — used by /create for the live iframe on the right.
-// If ?preview=1, we DON'T load from Firestore/GitHub. Instead we:
+// If ?preview=1, we DON'T load from the server. Instead we:
 //   1. Optionally decode `?data=<base64 json>` for a shareable preview
 //   2. Listen for postMessage from the parent create.html
 // Each message replaces the config and re-renders.
@@ -424,7 +424,6 @@ async function bootstrap() {
     return;
   }
 
-  cfg = mapPathsToUrls(cfg);
   hideLoading();
   renderTemplate(cfg);
   initPageFlow();

@@ -823,20 +823,6 @@ img[src*="calendar-frame"], img[src*="corner"], img[src*="ornament"] { display: 
 }
 
 /* --- Config warning banner ------------------------------------- */
-.config-banner {
-  background: var(--ink);
-  color: var(--cream);
-  padding: 12px 16px;
-  font-family: var(--font-body);
-  font-size: 12px;
-  letter-spacing: 0.1em;
-  text-align: center;
-}
-.config-banner code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  background: rgba(255, 255, 255, 0.1);
-  padding: 2px 6px;
-}
 
 /* --- Opened state (cover → invitation transition) --------------- */
 #invitation {

@@ -2,7 +2,7 @@
 //  Wedding bootstrap.
 //
 //  Resolves the wedding slug (?for=<slug>, path /wedding/<slug>, or root
-//  demo), fetches invitations/{slug} from Firestore, and MERGES the result
+//  demo), fetches /data/<slug>.json from the server, and MERGES the result
 //  into the mutable CONFIG object BEFORE dynamically importing any renderer
 //  module. Because CONFIG's individual properties are mutated in place,
 //  every renderer sees the correct couple / gallery / venue when it runs.
@@ -18,18 +18,6 @@
 
 import { CONFIG } from "../config.js";
 
-// Firestore only holds invitations made before the backend existed.
-// Load its SDK (two modules from gstatic) only when the server has no
-// data for this link, instead of on every guest's first paint.
-async function legacyFirestoreDoc(slug) {
-  const [{ db }, { doc, getDoc }] = await Promise.all([
-    import("./firebase-init.js"),
-    import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js"),
-  ]);
-  if (!db) return null;
-  const snap = await getDoc(doc(db, "invitations", slug));
-  return snap.exists() ? snap.data() : null;
-}
 
 const RENDERER_MODULES = [
   "./cover.js",       "./announcement.js?v=793a061c", "./gallery.js",
@@ -207,9 +195,6 @@ if (isPreview()) {
     let loaded = false;
     // 1. Backend's local-disk /data/<slug>.json — this is where every
     //    wedding published through /create lands since commit 93df6bc.
-    //    Without this lookup, weddings loaded from local disk fell
-    //    through to Firestore (never set) and rendered the demo
-    //    (Ahmed & Sara).
     try {
       const res = await fetch(`/data/${slug}.json`, { cache: "no-store" });
       if (res.ok) {
@@ -218,22 +203,7 @@ if (isPreview()) {
         found = true;
         loaded = true;
       }
-    } catch (_) { /* try Firestore */ }
-
-    // 2. Firestore — invitations created via the pre-backend /create
-    //    (while the publish flow still wrote Firebase docs).
-    if (!loaded) {
-      try {
-        const legacy = await legacyFirestoreDoc(slug);
-        if (legacy) {
-          mergeInvitation(legacy);
-          CONFIG.slug = slug;
-          found = true;
-        }
-      } catch (e) {
-        console.warn("[wedding-bootstrap] Firestore fetch failed:", e);
-      }
-    }
+    } catch (_) { /* not published — handled below */ }
   }
   // If no slug was found, the demo (Ahmed & Sara) still renders — that's
   // /wedding/ landing behavior. We tag it as "demo" so the demo's guestbook

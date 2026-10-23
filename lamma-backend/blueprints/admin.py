@@ -35,7 +35,6 @@ from flask_login import current_user, login_required, login_user, logout_user
 
 from auth import verify_password, admin_required
 from codes import generate_code, make_expiry
-from github import GitHubClient, GitHubError
 from models import Admin, ActivationCode, AuditLog, Event, MediaBlob, Rsvp, View, Wish, db
 
 
@@ -316,25 +315,15 @@ def delete_event(event_id):
     if event is None:
         abort(404)
 
-    # If it was published, clean up the content wherever it was
-    # written. New events live on local disk (MEDIA_SERVE_DIR /
-    # DATA_SERVE_DIR); events published before commit 93df6bc still
-    # have their JSON + media on GitHub. Try both — each path is
-    # idempotent + best-effort, so a missing file in either backend
-    # doesn't block the DB status flip.
+    # If it was published, remove its JSON + media from local disk
+    # (MEDIA_SERVE_DIR / DATA_SERVE_DIR). Best-effort and idempotent, so
+    # a missing file doesn't block the DB status flip.
     if event.status == "published":
         from storage import delete_event as _delete_event_files
         try:
             _delete_event_files(event.slug)
         except Exception:   # noqa: BLE001 — best-effort cleanup
             current_app.logger.exception("local-disk cleanup failed for %s", event.slug)
-        # Only touch GitHub if we still have a token to do it with;
-        # the install script now treats GITHUB_TOKEN as optional.
-        if current_app.config.get("GITHUB_TOKEN"):
-            try:
-                _cascade_delete_on_github(event)
-            except Exception:   # noqa: BLE001
-                current_app.logger.exception("GitHub cleanup failed for %s", event.slug)
 
     event.status = "deleted"
     db.session.commit()
@@ -718,31 +707,3 @@ def _audit(admin_id, action, event_id=None, details=None):
         details_json=json.dumps(details) if details is not None else None,
     ))
     db.session.commit()
-
-
-def _cascade_delete_on_github(event: Event) -> None:
-    """Best-effort removal of JSON + every media file. Logs but doesn't
-    fail the whole delete if GitHub is unhappy — the DB row still moves
-    to `deleted`."""
-    client = GitHubClient()
-    prefix = event.event_type
-    try:
-        current = client.get_file(f"{prefix}/data/{event.slug}.json")
-        if current:
-            client.delete_file(f"{prefix}/data/{event.slug}.json", current["sha"],
-                               f"{prefix}: delete {event.slug}")
-    except GitHubError:
-        pass
-
-    # Media directory: list + delete each file
-    try:
-        items = client.list_dir(f"{prefix}/media/{event.slug}")
-        for it in items or []:
-            if it.get("type") == "file":
-                try:
-                    client.delete_file(it["path"], it["sha"],
-                                       f"{prefix}: delete media {event.slug}/{it['name']}")
-                except GitHubError:
-                    pass
-    except GitHubError:
-        pass

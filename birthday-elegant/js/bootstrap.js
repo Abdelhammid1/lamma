@@ -1,7 +1,7 @@
 // ============================================================================
 //  birthday-elegant bootstrap.
 //
-//  Resolves the slug, fetches the invitation JSON from local disk → Firestore,
+//  Resolves the slug, fetches /data/<slug>.json from the server,
 //  merges fields into CONFIG, then renders everything into the static DOM.
 //  No separate renderer modules — the template is simple enough (letter +
 //  memories + optional video) that one pass of DOM writes is cheaper to
@@ -10,18 +10,6 @@
 
 import { CONFIG } from "../config.js";
 
-// Firestore only holds invitations made before the backend existed.
-// Load its SDK (two modules from gstatic) only when the server has no
-// data for this link, instead of on every guest's first paint.
-async function legacyFirestoreDoc(slug) {
-  const [{ db }, { doc, getDoc }] = await Promise.all([
-    import("./firebase-init.js"),
-    import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js"),
-  ]);
-  if (!db) return null;
-  const snap = await getDoc(doc(db, "invitations", slug));
-  return snap.exists() ? snap.data() : null;
-}
 
 const RESERVED_SEG = new Set([
   "", "birthday", "birthday-elegant", "wedding", "wedding-noir",
@@ -341,21 +329,7 @@ if (isPreview()) {
         found = true;
         loaded = true;
       }
-    } catch (_) { /* try Firestore */ }
-
-    // 2. Firestore fallback — invitations created in the pre-backend flow.
-    if (!loaded) {
-      try {
-        const legacy = await legacyFirestoreDoc(slug);
-        if (legacy) {
-          mergeInvitation(legacy);
-          CONFIG.slug = slug;
-          found = true;
-        }
-      } catch (e) {
-        console.warn("[birthday-elegant] Firestore fetch failed:", e);
-      }
-    }
+    } catch (_) { /* not published — handled below */ }
   }
   // The URL named an invitation but nothing is published under it —
   // say so instead of showing the demo couple as if it were real.

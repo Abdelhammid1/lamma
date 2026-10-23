@@ -37,21 +37,6 @@ def _make_event(session, slug="medo", status="awaiting_code"):
     return ev
 
 
-class FakeGitHub:
-    """Same fake as test_activation — records calls, never hits the net."""
-    def __init__(self, *a, **kw):
-        self.puts, self.deletes = [], []
-    def put_file(self, path, content, message, sha=None):
-        self.puts.append({"path": path, "message": message, "sha": sha})
-        return {"content": {"sha": "sha-" + path[:6].replace("/", "-")}}
-    def get_file(self, path):
-        return {"sha": "existing-sha", "size": 0, "content_bytes": b""}
-    def delete_file(self, path, sha, message):
-        self.deletes.append({"path": path, "sha": sha, "message": message})
-        return {"commit": {"sha": "d"}}
-    def list_dir(self, path):
-        return []
-
 
 # --- login flow ------------------------------------------------------------
 
@@ -184,13 +169,20 @@ def test_delete_soft_deletes(logged_in, session):
     assert session.get(Event, ev.id).status == "deleted"
 
 
-def test_delete_published_attempts_github_cleanup(logged_in, session):
+def test_delete_published_removes_its_files(app, logged_in, session, tmp_path):
+    app.config["MEDIA_SERVE_DIR"] = str(tmp_path / "media")
+    app.config["DATA_SERVE_DIR"] = str(tmp_path / "data")
+    (tmp_path / "media" / "del2").mkdir(parents=True)
+    (tmp_path / "media" / "del2" / "photo.jpg").write_bytes(b"x")
+    (tmp_path / "data").mkdir()
+    (tmp_path / "data" / "del2.json").write_text("{}")
     ev = _make_event(session, slug="del2", status="published")
-    with patch("blueprints.admin.GitHubClient", FakeGitHub) as _:
-        res = logged_in.post(f"/admin/events/{ev.id}/delete", follow_redirects=False)
+    res = logged_in.post(f"/admin/events/{ev.id}/delete", follow_redirects=False)
     assert res.status_code == 302
     session.expire_all()
     assert session.get(Event, ev.id).status == "deleted"
+    assert not (tmp_path / "media" / "del2").exists()
+    assert not (tmp_path / "data" / "del2.json").exists()
 
 
 # --- audit log records login / logout -------------------------------------
