@@ -8,7 +8,7 @@ site via `isinstance(current_user, HostUser)`.
 """
 
 from flask_login import LoginManager, UserMixin
-from passlib.hash import bcrypt
+import bcrypt
 
 from models import Admin, User, db
 
@@ -96,15 +96,24 @@ def admin_required(fn):
 from flask_login import current_user  # noqa: E402
 
 
+# bcrypt directly (passlib is unmaintained and crashes on bcrypt >= 5).
+# Hashes are the same standard $2b$ strings passlib wrote, so every
+# stored password keeps working. bcrypt only reads the first 72 bytes —
+# passlib silently truncated there; bcrypt 5 raises instead, so we
+# truncate explicitly to keep the same behaviour.
+def _pw_bytes(plain: str) -> bytes:
+    return plain.encode("utf-8")[:72]
+
+
 def hash_password(plain: str) -> str:
     """One-way hash — never store plaintext."""
-    return bcrypt.hash(plain)
+    return bcrypt.hashpw(_pw_bytes(plain), bcrypt.gensalt(rounds=12)).decode("ascii")
 
 
 def verify_password(plain: str, hashed: str) -> bool:
     if not (plain and hashed):
         return False
     try:
-        return bcrypt.verify(plain, hashed)
+        return bcrypt.checkpw(_pw_bytes(plain), hashed.encode("ascii"))
     except (TypeError, ValueError):
         return False

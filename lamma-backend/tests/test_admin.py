@@ -314,3 +314,13 @@ def test_signed_in_host_sees_admin_login_form(client, session):
                 headers={"Origin": "http://localhost"})
     res = client.get("/admin/login")
     assert res.status_code == 200
+
+
+def test_passwords_hashed_by_the_old_passlib_code_still_verify():
+    """Stored hashes predate the switch from passlib to bcrypt directly."""
+    from auth import hash_password, verify_password
+    old = "$2b$12$fKVn5fJhZpLirVfDNCQI5eudfOitO2/wAFuwNWmoCTlg3McDvDmMG"   # passlib, "s3cret-pass"
+    assert verify_password("s3cret-pass", old)
+    assert not verify_password("wrong-pass", old)
+    long_pw = "x" * 100                      # bcrypt 5 raises past 72 bytes; we truncate
+    assert verify_password(long_pw, hash_password(long_pw))

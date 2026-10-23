@@ -29,7 +29,8 @@ from flask import current_app
 from flask.cli import with_appcontext
 
 from models import Event, MediaBlob, db
-from uploads import safe_filename
+from slugs import SlugError, check_format
+from uploads import MAX_FILE_BYTES, _ext_is_safe, safe_filename
 
 # Where the old frontend looked, in order (js/loader.js).
 DATA_LOCATIONS = ("data/{slug}.json", "birthday/data/{slug}.json", "wedding/data/{slug}.json")
@@ -45,11 +46,17 @@ def _bases() -> tuple[str, list[str]]:
 
 
 def _http_get(url: str) -> bytes | None:
-    r = requests.get(url, timeout=120)
-    if r.status_code == 404:
-        return None
-    r.raise_for_status()
-    return r.content
+    """Download, refusing anything over the upload size limit."""
+    with requests.get(url, timeout=120, stream=True) as r:
+        if r.status_code == 404:
+            return None
+        r.raise_for_status()
+        body = bytearray()
+        for chunk in r.iter_content(1024 * 1024):
+            body += chunk
+            if len(body) > MAX_FILE_BYTES:
+                raise click.ClickException(f"{url} is larger than {MAX_FILE_BYTES // (1024 * 1024)} MB")
+        return bytes(body)
 
 
 def _repo_path(ref: str, prefixes: list[str]) -> str | None:
@@ -69,6 +76,10 @@ def _repo_path(ref: str, prefixes: list[str]) -> str | None:
 def plan_invitation(slug: str, fetch: Callable[[str], bytes | None]) -> dict:
     """Fetch one invitation's JSON and work out the files to copy and
     the rewritten payload. Pure apart from `fetch` (tests pass a fake)."""
+    try:
+        check_format(slug)
+    except SlugError as e:
+        raise click.ClickException(f"{slug}: {e.message}")
     raw, prefixes = _bases()
     data, source = None, None
     for loc in DATA_LOCATIONS:
@@ -88,6 +99,10 @@ def plan_invitation(slug: str, fetch: Callable[[str], bytes | None]) -> dict:
         if repo_path is None:
             return ref
         name = safe_filename(repo_path.rsplit("/", 1)[-1])
+        # Same file-type allowlist as uploads: whatever the repo holds,
+        # nothing but images / video / audio lands in the served /media.
+        if not _ext_is_safe(name):
+            raise click.ClickException(f"{slug}: {repo_path} is not an allowed media type")
         while name in used_names:
             stem, ext = os.path.splitext(name)
             name = f"{stem}-x{ext}"
@@ -113,6 +128,9 @@ def plan_invitation(slug: str, fetch: Callable[[str], bytes | None]) -> dict:
             payload[url_key] = localise(ref)
     payload["slug"] = slug
     payload.setdefault("event_type", "birthday")
+    from blueprints.public import VALID_EVENT_TYPES
+    if payload["event_type"] not in VALID_EVENT_TYPES:
+        raise click.ClickException(f"{slug}: unknown event_type {payload['event_type']!r}")
     return {"slug": slug, "source": source, "payload": payload, "files": files}
 
 

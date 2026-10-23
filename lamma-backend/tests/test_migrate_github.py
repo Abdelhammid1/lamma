@@ -73,3 +73,19 @@ def test_cli_dry_run_changes_nothing_and_skips_existing(app, session, monkeypatc
     session.commit()
     out = runner.invoke(args=["migrate-github", "ranon", "--apply"]).output
     assert "already on the server" in out
+
+
+def test_refuses_non_media_files_unknown_types_and_bad_slugs(app):
+    import click
+    import pytest
+    bad = dict(REPO)
+    bad[f"{RAW}/data/evil.json"] = json.dumps({
+        "name": "x", "memories": [{"path": "media/evil/page.html"}]}).encode()
+    bad[f"{RAW}/data/oddtype.json"] = json.dumps({"name": "x", "event_type": "<script>"}).encode()
+    with app.app_context():
+        with pytest.raises(click.ClickException, match="not an allowed media type"):
+            plan_invitation("evil", bad.get)
+        with pytest.raises(click.ClickException, match="unknown event_type"):
+            plan_invitation("oddtype", bad.get)
+        with pytest.raises(click.ClickException):
+            plan_invitation("../etc", bad.get)
