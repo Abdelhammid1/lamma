@@ -168,8 +168,16 @@ def list_wishes(slug):
         limit = max(1, min(200, int(request.args.get("limit", "50"))))
     except (TypeError, ValueError):
         limit = 50
+    # By the live event's id, not the slug: a slug freed by an expired
+    # or deleted event can be taken by a new couple, who must not see
+    # the previous couple's guestbook.
+    event = (db.session.query(Event)
+             .filter_by(slug=slug, status="published")
+             .first())
+    if event is None:
+        return jsonify(wishes=[]), 200
     rows = (db.session.query(Wish)
-            .filter(Wish.event_slug == slug)
+            .filter(Wish.event_id == event.id)
             .order_by(Wish.created_at.desc())
             .limit(limit)
             .all())

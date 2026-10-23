@@ -10,7 +10,7 @@ const RENDERER_MODULES = [
   "./cover.js",
   "./details.js?v=2",
   "./countdown.js",
-  "./venue.js?v=2",
+  "./venue.js?v=3",
   "./schedule.js?v=7",
   "./contacts.js?v=1",
   "./guestbook.js?v=2", "./view-ping.js",
@@ -153,6 +153,7 @@ if (isPreview()) {
   }
 
   const slug = resolveSlug();
+  let found = false;
   if (slug) {
     let loaded = false;
     try {
@@ -160,6 +161,7 @@ if (isPreview()) {
       if (res.ok) {
         mergeInvitation(await res.json());
         CONFIG.slug = slug;
+        found = true;
         loaded = true;
       }
     } catch (_) { /* try Firestore */ }
@@ -169,11 +171,19 @@ if (isPreview()) {
         if (snap.exists()) {
           mergeInvitation(snap.data());
           CONFIG.slug = slug;
+          found = true;
         }
       } catch (e) {
         console.warn("[sobou-bootstrap] Firestore fetch failed:", e);
       }
     }
+  }
+  // The URL named an invitation but nothing is published under it —
+  // say so instead of showing the demo couple as if it were real.
+  if (slug && !found) {
+    const { showNotFound } = await import("/js/not-found.js");
+    showNotFound();
+    return;
   }
   if (!CONFIG.slug) CONFIG.slug = "demo";
   await loadRenderers();

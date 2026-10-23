@@ -153,7 +153,7 @@ static `location /` catch-all:
     client_max_body_size 110m;
 
     location /api/ {
-        proxy_pass         http://127.0.0.1:8010;
+        proxy_pass         http://172.18.0.1:8010;
         proxy_set_header   Host              $host;
         proxy_set_header   X-Real-IP         $remote_addr;
         proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
@@ -163,8 +163,26 @@ static `location /` catch-all:
         proxy_request_buffering off;
     }
 
-    location /admin  { proxy_pass http://127.0.0.1:8010; proxy_set_header Host $host; }
-    location /admin/ { proxy_pass http://127.0.0.1:8010; proxy_set_header Host $host; }
+    location /admin  { proxy_pass http://172.18.0.1:8010; proxy_set_header Host $host; }
+    location /admin/ { proxy_pass http://172.18.0.1:8010; proxy_set_header Host $host; }
+
+    # Invitation pages go through Flask so WhatsApp / Facebook link
+    # previews show the couple's names, date and photo. Flask answers 404
+    # for anything it can't enhance, and every error falls back to the
+    # plain static page — the invitation never goes down with the backend.
+    location ~ ^/(wedding|wedding-noir|engagement|qiraya|sobou|birthday-elegant)/[a-z0-9][a-z0-9-]*/?$ {
+        proxy_pass             http://172.18.0.1:8010;
+        proxy_set_header       Host              $host;
+        proxy_set_header       X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header       X-Forwarded-Proto $scheme;
+        proxy_connect_timeout  2s;
+        proxy_read_timeout     5s;
+        proxy_intercept_errors on;
+        error_page 404 500 502 503 504 = @static_invitation;
+    }
+    location @static_invitation {
+        rewrite ^/([a-z-]+)/ /$1/index.html last;
+    }
 
     # Published invitation payloads (JSON) + their media files, written
     # by activate_event to MEDIA_SERVE_DIR / DATA_SERVE_DIR. Serving them

@@ -316,6 +316,7 @@ if (isPreview()) {
   }
 
   const slug = resolveSlug();
+  let found = false;
   if (slug) {
     let loaded = false;
     // 1. Backend's local-disk /data/<slug>.json — the current publish path.
@@ -324,6 +325,7 @@ if (isPreview()) {
       if (res.ok) {
         mergeInvitation(await res.json());
         CONFIG.slug = slug;
+        found = true;
         loaded = true;
       }
     } catch (_) { /* try Firestore */ }
@@ -335,11 +337,19 @@ if (isPreview()) {
         if (snap.exists()) {
           mergeInvitation(snap.data());
           CONFIG.slug = slug;
+          found = true;
         }
       } catch (e) {
         console.warn("[birthday-elegant] Firestore fetch failed:", e);
       }
     }
+  }
+  // The URL named an invitation but nothing is published under it —
+  // say so instead of showing the demo couple as if it were real.
+  if (slug && !found) {
+    const { showNotFound } = await import("/js/not-found.js");
+    showNotFound();
+    return;
   }
   if (!CONFIG.slug) CONFIG.slug = "demo";
 

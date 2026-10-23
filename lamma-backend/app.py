@@ -77,9 +77,11 @@ def create_app(config_object: type = Config) -> Flask:
     from blueprints.public import bp as public_bp
     from blueprints.admin  import bp as admin_bp
     from blueprints.user   import bp as user_bp
+    from blueprints.pages  import bp as pages_bp
     app.register_blueprint(public_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(user_bp)
+    app.register_blueprint(pages_bp)
 
     register_cli(app)
 

@@ -68,6 +68,14 @@ class Config:
         os.path.abspath(os.path.join(os.path.dirname(__file__), "instance", "data")),
     )
 
+    # --- Static site checkout (template index.html files) ---
+    # blueprints/pages.py reads <SITE_ROOT>/<template>/index.html to add
+    # link-preview tags. Defaults to the repo this backend lives in.
+    SITE_ROOT = os.environ.get(
+        "SITE_ROOT",
+        os.path.abspath(os.path.join(os.path.dirname(__file__), "..")),
+    )
+
     # --- Rate limits (Stage 5 — placeholders for now) ---
     RATELIMIT_STORAGE_URI = os.environ.get("RATELIMIT_STORAGE_URI", "memory://")
 
