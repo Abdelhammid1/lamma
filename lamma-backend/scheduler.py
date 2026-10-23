@@ -65,6 +65,12 @@ def init_scheduler(app: Flask) -> BackgroundScheduler | None:
     if os.environ.get("WERKZEUG_RUN_MAIN") == "true":
         # Reloader parent shouldn't start jobs — child (WERKZEUG_RUN_MAIN=true) does
         pass
+    # gunicorn runs several workers, each calling create_app(). Only the
+    # one that wins this lock runs the job; the others would just repeat
+    # the same sweep.
+    if not _claim_scheduler_lock(app):
+        log.info("scheduler: another worker runs the cleanup job")
+        return None
 
     scheduler = BackgroundScheduler(timezone="UTC", daemon=True)
     scheduler.add_job(
@@ -77,3 +83,26 @@ def init_scheduler(app: Flask) -> BackgroundScheduler | None:
     scheduler.start()
     log.info("scheduler: started, cleanup every %d min", JOB_INTERVAL_MINUTES)
     return scheduler
+
+
+_lock_file = None   # kept open for the process lifetime; closing releases it
+
+
+def _claim_scheduler_lock(app: Flask) -> bool:
+    """Non-blocking exclusive lock on instance/scheduler.lock. The OS
+    drops it when the process exits, so a restarted worker can take over.
+    Where fcntl doesn't exist (Windows dev), every process runs the job."""
+    global _lock_file
+    try:
+        import fcntl
+    except ImportError:
+        return True
+    path = os.path.join(app.instance_path, "scheduler.lock")
+    f = open(path, "a")
+    try:
+        fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
+        f.close()
+        return False
+    _lock_file = f
+    return True

@@ -9,9 +9,19 @@
 // ============================================================================
 
 import { CONFIG } from "../config.js";
-import { db }     from "./firebase-init.js";
-import { doc, getDoc } from
-  "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+// Firestore only holds invitations made before the backend existed.
+// Load its SDK (two modules from gstatic) only when the server has no
+// data for this link, instead of on every guest's first paint.
+async function legacyFirestoreDoc(slug) {
+  const [{ db }, { doc, getDoc }] = await Promise.all([
+    import("./firebase-init.js"),
+    import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js"),
+  ]);
+  if (!db) return null;
+  const snap = await getDoc(doc(db, "invitations", slug));
+  return snap.exists() ? snap.data() : null;
+}
 
 const RESERVED_SEG = new Set([
   "", "birthday", "birthday-elegant", "wedding", "wedding-noir",
@@ -265,6 +275,9 @@ if (isPreview()) {
   let lastEncoded = new URLSearchParams(location.search).get("data") || "";
   let reloadTimer = null;
   window.addEventListener("message", (e) => {
+    // Only our own /create page may drive the preview — any other site
+    // could frame this page and render its own content under our name.
+    if (e.origin !== location.origin) return;
     if (!e.data || e.data.type !== "lamma:preview") return;
     let enc;
     try { enc = encodePreviewData(e.data.cfg); } catch (_) { return; }
@@ -331,11 +344,11 @@ if (isPreview()) {
     } catch (_) { /* try Firestore */ }
 
     // 2. Firestore fallback — invitations created in the pre-backend flow.
-    if (!loaded && db) {
+    if (!loaded) {
       try {
-        const snap = await getDoc(doc(db, "invitations", slug));
-        if (snap.exists()) {
-          mergeInvitation(snap.data());
+        const legacy = await legacyFirestoreDoc(slug);
+        if (legacy) {
+          mergeInvitation(legacy);
           CONFIG.slug = slug;
           found = true;
         }

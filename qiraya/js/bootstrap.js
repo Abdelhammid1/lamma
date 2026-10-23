@@ -4,18 +4,28 @@
 // kept separate so this template stays self-contained.
 
 import { CONFIG } from "../config.js";
-import { db }     from "./firebase-init.js";
-import { doc, getDoc } from
-  "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+// Firestore only holds invitations made before the backend existed.
+// Load its SDK (two modules from gstatic) only when the server has no
+// data for this link, instead of on every guest's first paint.
+async function legacyFirestoreDoc(slug) {
+  const [{ db }, { doc, getDoc }] = await Promise.all([
+    import("./firebase-init.js"),
+    import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js"),
+  ]);
+  if (!db) return null;
+  const snap = await getDoc(doc(db, "invitations", slug));
+  return snap.exists() ? snap.data() : null;
+}
 
 const RENDERER_MODULES = [
   "./cover.js",
-  "./details.js?v=2",
+  "./details.js?v=6ab162dc",
   "./countdown.js",
-  "./venue.js?v=3",
-  "./schedule.js?v=7",
-  "./contacts.js?v=1",
-  "./guestbook.js?v=2", "./view-ping.js",
+  "./venue.js?v=4ddca897",
+  "./schedule.js?v=23e924b8",
+  "./contacts.js?v=1effccae",
+  "./guestbook.js?v=a5e77586", "./view-ping.js",
   "./reveal.js",
 ];
 
@@ -118,6 +128,9 @@ if (isPreview()) {
   let lastEncoded = new URLSearchParams(location.search).get("data") || "";
   let reloadTimer = null;
   window.addEventListener("message", (e) => {
+    // Only our own /create page may drive the preview — any other site
+    // could frame this page and render its own content under our name.
+    if (e.origin !== location.origin) return;
     if (!e.data || e.data.type !== "lamma:preview") return;
     let enc;
     try { enc = encodePreviewData(e.data.cfg); } catch (_) { return; }
@@ -179,11 +192,11 @@ if (isPreview()) {
         loaded = true;
       }
     } catch (_) { /* try Firestore */ }
-    if (!loaded && db) {
+    if (!loaded) {
       try {
-        const snap = await getDoc(doc(db, "invitations", slug));
-        if (snap.exists()) {
-          mergeInvitation(snap.data());
+        const legacy = await legacyFirestoreDoc(slug);
+        if (legacy) {
+          mergeInvitation(legacy);
           CONFIG.slug = slug;
           found = true;
         }

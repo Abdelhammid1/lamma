@@ -61,6 +61,17 @@ _SAFE_EXTS = frozenset({
 })
 
 
+_CHUNK = 1024 * 1024
+
+
+def _file_sha256(path: str) -> str:
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(_CHUNK), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
 class UploadError(ValueError):
     """Raised on any staging failure. `reason` is a short code and
     `message` is a user-facing sentence."""
@@ -134,51 +145,60 @@ def stage_upload(event_id: str, file_storage) -> dict:
             "File extension is not allowed. Use jpg, png, webp, gif, mp4, mov, webm, mp3, m4a or ogg.",
         )
 
-    # Read once to a temp buffer so we can measure + hash + reject
-    # oversize files without leaving a half-written file behind.
-    data = file_storage.read()
-    size = len(data)
-
-    if size == 0:
-        raise UploadError("empty", "The uploaded file is empty.")
-    if size > MAX_FILE_BYTES:
-        raise UploadError(
-            "too_large",
-            f"File is too large (max {MAX_FILE_BYTES // (1024 * 1024)} MB).",
-        )
-
-    # Per-event cap check (existing files + this one)
+    # Stream to a temp file in 1 MB chunks, hashing and counting as we
+    # go. Reading the whole upload into memory (as before) held up to
+    # 300 MB per request in RAM — two big uploads at once could starve
+    # the server.
     existing = total_bytes_for_event(event_id)
-    if existing + size > MAX_EVENT_BYTES:
-        raise UploadError(
-            "event_quota",
-            f"This event's media limit is {MAX_EVENT_BYTES // (1024 * 1024)} MB.",
-        )
-
-    content_hash = hashlib.sha256(data).hexdigest()
-
-    # If the exact bytes were already uploaded under a different name,
-    # reuse — cheap dedupe.
     dest_dir = _staging_dir_for(event_id)
-    dest = os.path.join(dest_dir, filename)
+    tmp_path = os.path.join(dest_dir, f".upload-{os.getpid()}-{id(file_storage)}.part")
+    hasher = hashlib.sha256()
+    size = 0
+    try:
+        with open(tmp_path, "wb") as out:
+            while True:
+                chunk = file_storage.stream.read(_CHUNK)
+                if not chunk:
+                    break
+                size += len(chunk)
+                if size > MAX_FILE_BYTES:
+                    raise UploadError(
+                        "too_large",
+                        f"File is too large (max {MAX_FILE_BYTES // (1024 * 1024)} MB).",
+                    )
+                if existing + size > MAX_EVENT_BYTES:
+                    raise UploadError(
+                        "event_quota",
+                        f"This event's media limit is {MAX_EVENT_BYTES // (1024 * 1024)} MB.",
+                    )
+                hasher.update(chunk)
+                out.write(chunk)
+        if size == 0:
+            raise UploadError("empty", "The uploaded file is empty.")
+        content_hash = hasher.hexdigest()
 
-    # Avoid collisions: if the same filename exists with DIFFERENT bytes,
-    # prefix with a short hash. If it exists with the same bytes, no-op.
-    if os.path.exists(dest):
-        with open(dest, "rb") as f:
-            if hashlib.sha256(f.read()).hexdigest() == content_hash:
+        dest = os.path.join(dest_dir, filename)
+        # Same name already staged: same bytes → reuse it; different
+        # bytes → suffix the name with a short hash.
+        if os.path.exists(dest):
+            if _file_sha256(dest) == content_hash:
+                os.remove(tmp_path)
                 return {
                     "path": f"{event_id}/{filename}",
                     "size_bytes": size,
                     "content_hash": content_hash,
                     "filename": filename,
                 }
-        stem, ext = os.path.splitext(filename)
-        filename = f"{stem}-{content_hash[:8]}{ext}"
-        dest = os.path.join(dest_dir, filename)
-
-    with open(dest, "wb") as f:
-        f.write(data)
+            stem, ext = os.path.splitext(filename)
+            filename = f"{stem}-{content_hash[:8]}{ext}"
+            dest = os.path.join(dest_dir, filename)
+        os.replace(tmp_path, dest)
+    finally:
+        if os.path.exists(tmp_path):
+            try:
+                os.remove(tmp_path)
+            except OSError:
+                pass
 
     return {
         "path": f"{event_id}/{filename}",

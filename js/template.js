@@ -387,7 +387,10 @@ async function bootstrap() {
     renderTemplate(initial);
     initPageFlow();
     window.addEventListener("message", (e) => {
-      if (!e.data || e.data.type !== "lamma:preview") return;
+      // Only our own /create page may drive the preview — any other site
+    // could frame this page and render its own content under our name.
+    if (e.origin !== location.origin) return;
+    if (!e.data || e.data.type !== "lamma:preview") return;
       const cfg = e.data.cfg || {};
       renderTemplate(cfg);
       initPageFlow();

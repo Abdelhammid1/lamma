@@ -17,16 +17,26 @@
 // ============================================================================
 
 import { CONFIG } from "../config.js";
-import { db }     from "./firebase-init.js";
-import { doc, getDoc } from
-  "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+// Firestore only holds invitations made before the backend existed.
+// Load its SDK (two modules from gstatic) only when the server has no
+// data for this link, instead of on every guest's first paint.
+async function legacyFirestoreDoc(slug) {
+  const [{ db }, { doc, getDoc }] = await Promise.all([
+    import("./firebase-init.js"),
+    import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js"),
+  ]);
+  if (!db) return null;
+  const snap = await getDoc(doc(db, "invitations", slug));
+  return snap.exists() ? snap.data() : null;
+}
 
 const RENDERER_MODULES = [
-  "./cover.js",       "./announcement.js?v=2", "./gallery.js",
+  "./cover.js",       "./announcement.js?v=793a061c", "./gallery.js",
   "./event-info.js",  "./countdown.js",    "./calendar.js",
-  "./ics.js?v=2",         "./rsvp.js?v=2",         "./venue.js?v=3",
-  "./schedule.js?v=11",    "./dress-code.js",   "./contacts.js?v=1",
-  "./guestbook.js?v=2",   "./reveal.js",
+  "./ics.js?v=9c7e12b0",         "./rsvp.js?v=bc3a29b9",         "./venue.js?v=7f9ae513",
+  "./schedule.js?v=23e924b8",    "./dress-code.js",   "./contacts.js?v=1effccae",
+  "./guestbook.js?v=4c4c4264",   "./reveal.js",
   "./view-ping.js",
 ];
 
@@ -139,6 +149,9 @@ if (isPreview()) {
   let lastEncoded = new URLSearchParams(location.search).get("data") || "";
   let reloadTimer = null;
   window.addEventListener("message", (e) => {
+    // Only our own /create page may drive the preview — any other site
+    // could frame this page and render its own content under our name.
+    if (e.origin !== location.origin) return;
     if (!e.data || e.data.type !== "lamma:preview") return;
     let enc;
     try { enc = encodePreviewData(e.data.cfg); }
@@ -207,9 +220,9 @@ if (isPreview()) {
     //    (while the publish flow still wrote Firebase docs).
     if (!loaded) {
       try {
-        const snap = await getDoc(doc(db, "invitations", slug));
-        if (snap.exists()) {
-          mergeInvitation(snap.data());
+        const legacy = await legacyFirestoreDoc(slug);
+        if (legacy) {
+          mergeInvitation(legacy);
           CONFIG.slug = slug;
           found = true;
         }

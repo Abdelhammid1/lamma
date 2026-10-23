@@ -17,11 +17,13 @@ Group=lamma
 WorkingDirectory=/opt/lamma-backend
 EnvironmentFile=/etc/lamma-backend.env
 
-# Gunicorn — 2 sync workers is fine for a low-traffic admin/self-serve
-# backend. Bump to `-w 4 -k gthread --threads 4` if traffic warrants.
+# Gunicorn — 2 workers x 4 threads (gthread). With plain sync workers a
+# single slow upload or long request held a whole worker, and two of
+# them blocked guests' RSVPs.
 ExecStart=/opt/lamma-backend/.venv/bin/gunicorn \
     --bind 172.18.0.1:8010 \
     --workers 2 \
+    --threads 4 \
     --timeout 900 \
     --access-logfile - \
     --error-logfile - \

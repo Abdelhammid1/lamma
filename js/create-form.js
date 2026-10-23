@@ -700,7 +700,20 @@ $("preview-open").addEventListener("click", () => {
 // `fileUrl` turns a picked File into the URL baked into the payload:
 // a throwaway blob: URL for the live preview, or the uploaded
 // /media/<slug>/… URL when edit mode saves (see publishAdminEdit).
-function collectFormForPreview(fileUrl = (f) => URL.createObjectURL(f)) {
+// One preview URL per picked File. The preview is rebuilt on every
+// keystroke; minting a fresh blob: URL each time kept every old one
+// (and its file) alive until the tab closed.
+const previewUrls = new WeakMap();
+function previewUrl(file) {
+  let url = previewUrls.get(file);
+  if (!url) {
+    url = URL.createObjectURL(file);
+    previewUrls.set(file, url);
+  }
+  return url;
+}
+
+function collectFormForPreview(fileUrl = previewUrl) {
   const name = $("f-name").value.trim();
   if (BIRTHDAY_TYPES.has(state.type)) {
     const videoFile = $("f-video-file").files?.[0];

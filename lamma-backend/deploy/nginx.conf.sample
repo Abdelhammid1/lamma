@@ -6,9 +6,9 @@
 # Reload after changes:
 #   sudo nginx -t && sudo systemctl reload nginx
 
-# 1. Upload cap. Files > 25MB warn client-side, 50MB refused server-side.
-#    Add ~5MB margin for base64 overhead / form envelope.
-client_max_body_size 55m;
+# 1. Upload cap: uploads.py refuses files over 300 MB; add room for the
+#    multipart envelope.
+client_max_body_size 310m;
 
 # 2. Public JSON API + admin panel proxied to gunicorn on 127.0.0.1:8010.
 location /api/ {
@@ -19,8 +19,10 @@ location /api/ {
     proxy_set_header   X-Forwarded-Proto $scheme;
     proxy_read_timeout 60s;
 
-    # Uploads can be slow on mobile networks
-    proxy_request_buffering off;
+    # Uploads can be slow on mobile networks: nginx buffers the whole
+    # body, then passes it to gunicorn in one burst so a worker isn't
+    # tied up for the duration of a slow upload.
+    proxy_request_buffering on;
 }
 
 location /admin {

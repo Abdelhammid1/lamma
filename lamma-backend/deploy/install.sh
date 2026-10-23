@@ -108,6 +108,7 @@ EnvironmentFile=$ENV_FILE
 ExecStart=$BACKEND_DIR/.venv/bin/gunicorn \\
     --bind 172.18.0.1:8010 \\
     --workers 2 \\
+    --threads 4 \\
     --timeout 900 \\
     --access-logfile - \\
     --error-logfile - \\
@@ -150,7 +151,8 @@ Add these blocks INSIDE the `server { ... }` for lamma.manasety.ai
 (usually /etc/nginx/sites-available/lamma.manasety.ai), BEFORE the
 static `location /` catch-all:
 
-    client_max_body_size 110m;
+    # Matches uploads.py MAX_FILE_BYTES (300 MB) + multipart overhead.
+    client_max_body_size 310m;
 
     location /api/ {
         proxy_pass         http://172.18.0.1:8010;
@@ -160,7 +162,10 @@ static `location /` catch-all:
         proxy_set_header   X-Forwarded-Proto $scheme;
         proxy_read_timeout 300s;
         proxy_send_timeout 300s;
-        proxy_request_buffering off;
+        # Buffered: nginx takes the whole upload from a slow phone first,
+        # then hands it to gunicorn in one burst, so a worker isn't tied
+        # up for the minutes the upload takes.
+        proxy_request_buffering on;
     }
 
     location /admin  { proxy_pass http://172.18.0.1:8010; proxy_set_header Host $host; }
