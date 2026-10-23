@@ -32,3 +32,5 @@ def create_admin(email: str, password: str) -> None:
 def register_cli(app) -> None:
     """Attach every CLI command in this module to the app."""
     app.cli.add_command(create_admin)
+    from migrate_github import migrate_github
+    app.cli.add_command(migrate_github)
