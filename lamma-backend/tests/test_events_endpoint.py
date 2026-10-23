@@ -9,6 +9,13 @@ import os
 import pytest
 
 from models import Event, MediaBlob, db
+from tests.conftest import sign_in_host
+
+
+@pytest.fixture(autouse=True)
+def _signed_in(client):
+    # POST /api/events requires a signed-in host (or an admin naming one).
+    sign_in_host(client)
 
 
 # ---------------------------------------------------------------------------
@@ -67,12 +74,14 @@ def test_create_event_bad_type(client):
     assert res.get_json()["error"] == "bad_event_type"
 
 
-def test_create_event_double_take_returns_409(client, session):
-    """Two clients race for the same slug — the second gets 409."""
+def test_create_event_double_take_by_another_host_is_taken(app, client):
+    """A second host asking for a held slug gets 'taken'. (The same host
+    retrying gets their own event back — see test_publish_flow.)"""
     r1 = _create_event(client, slug="mona")
     assert r1.status_code == 201
 
-    r2 = _create_event(client, slug="mona")
+    other = sign_in_host(app.test_client(), email="other@example.com")
+    r2 = _create_event(other, slug="mona")
     # slug validation catches this pre-DB and returns 400 'taken'
     assert r2.status_code == 400
     assert r2.get_json()["error"] == "taken"

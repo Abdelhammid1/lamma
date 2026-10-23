@@ -59,7 +59,8 @@ def test_cleanup_does_not_touch_published(app, session):
 
 def test_cleanup_removes_staging_files_and_blob_rows(app, session, client):
     # Fresh event through the normal API so upload staging actually creates
-    from json import dumps
+    from tests.conftest import sign_in_host
+    sign_in_host(client)
     res = client.post("/api/events", json={"slug": "with-media", "event_type": "birthday",
                                             "payload_json": {"name": "x"}})
     event_id = res.get_json()["event_id"]

@@ -26,6 +26,14 @@ def client(app):
     return app.test_client()
 
 
+def sign_in_host(client, email="host@example.com", password="s3cret-pass"):
+    """Sign `client` up (and so in) as a host — publishing requires one."""
+    res = client.post("/user/signup", data={"email": email, "password": password},
+                      headers={"Origin": "http://localhost"})
+    assert res.status_code in (302, 303), res.status_code
+    return client
+
+
 @pytest.fixture
 def session(app):
     """Give tests direct DB access when they need to seed rows."""

@@ -89,33 +89,30 @@ def _upload(client, event_id, data=b"\xff\xd8fake jpeg", filename="1.jpg"):
 # Tests
 # ---------------------------------------------------------------------------
 
-def test_activate_success_writes_json_and_media(client, session):
+def test_activate_success_writes_json_and_media(app, client, session, tmp_path):
+    # Publishing writes to the server's own disk (storage.commit_event);
+    # the GitHub path is gone.
+    app.config["MEDIA_SERVE_DIR"] = str(tmp_path / "media")
+    app.config["DATA_SERVE_DIR"] = str(tmp_path / "data")
     ev = _make_event(session, slug="medo")
     code = _make_code(session, event_id=ev.id)
     _upload(client, ev.id, filename="cover.jpg")
 
-    with patch("blueprints.public.GitHubClient", FakeGitHub):
-        res = client.post(f"/api/events/{ev.id}/activate", json={"code": code.code})
+    res = client.post(f"/api/events/{ev.id}/activate", json={"code": code.code})
 
     assert res.status_code == 200
     assert res.get_json()["status"] == "published"
-    assert res.get_json()["public_url"].endswith("/")
+    assert res.get_json()["public_url"].endswith("/medo")
 
-    gh = _INSTANCES[0]
-    put_paths = [p["path"] for p in gh.puts]
+    data = json.loads((tmp_path / "data" / "medo.json").read_text(encoding="utf-8"))
+    assert data["slug"] == "medo" and data["name"] == "Medo"
+    assert (tmp_path / "media" / "medo" / "cover.jpg").is_file()
 
-    # JSON goes to <type>/data/<slug>.json
-    assert "birthday/data/medo.json" in put_paths
-    # Photo goes to <type>/media/<slug>/<filename>
-    assert any(p.startswith("birthday/media/medo/") and p.endswith(".jpg") for p in put_paths)
-
-    # DB reflects publication
     session.expire_all()
     ev = session.get(Event, ev.id)
     code = session.get(ActivationCode, code.code)
     assert ev.status == "published"
     assert ev.activated_at is not None
-    assert ev.published_commit_sha
     assert code.used is True
     assert code.used_at is not None
 
@@ -183,15 +180,15 @@ def test_activate_unknown_event(client):
     assert res.status_code == 404
 
 
-def test_activate_github_failure_returns_502_and_keeps_event(client, session):
+def test_activate_storage_failure_returns_502_and_keeps_event(client, session):
     ev = _make_event(session)
     code = _make_code(session, event_id=ev.id)
 
-    with patch("blueprints.public.GitHubClient", FailingGitHub):
+    with patch("storage.commit_event", side_effect=OSError("disk full")):
         res = client.post(f"/api/events/{ev.id}/activate", json={"code": code.code})
 
     assert res.status_code == 502
-    assert res.get_json()["error"] == "github_failed"
+    assert res.get_json()["error"] == "storage_failed"
 
     # DB state unchanged so the user can retry
     session.expire_all()
