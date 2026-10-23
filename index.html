@@ -43,14 +43,14 @@
 
 <main class="max-w-md mx-auto px-4 pb-16 flex flex-col">
 
-  <!-- Top bar: language toggle placeholder -->
+  <!-- Top bar: returning hosts get back to their invitations. (Was a
+       language toggle that did nothing.) -->
   <div class="w-full flex justify-end pt-3 pb-2">
-    <button type="button"
-            class="flex items-center gap-1.5 px-3 py-1 bg-surface-container-low rounded-full shadow-sm"
-            aria-label="Toggle language">
-      <span class="material-symbols-outlined text-secondary text-[16px]">language</span>
-      <span class="font-label text-[10px] font-semibold tracking-widest text-primary">العربية · English</span>
-    </button>
+    <a href="/user/"
+       class="flex items-center gap-1.5 px-3 py-1 bg-surface-container-low rounded-full shadow-sm">
+      <span class="material-symbols-outlined text-secondary text-[16px]" aria-hidden="true">person</span>
+      <span class="font-label text-[11px] font-semibold tracking-wide text-primary">My invitations · دعواتي</span>
+    </a>
   </div>
 
   <!-- Hero -->

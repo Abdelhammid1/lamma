@@ -370,14 +370,22 @@ fieldset.cx-field { border: none; }
   padding: 12px 16px; border-bottom: 1px solid var(--line);
   font-family: 'Manrope', sans-serif; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); font-weight: 700;
 }
-#preview-frame {
+.cx-preview-stage { position: relative; }
+.cx-preview-stage iframe {
+  display: block;
   border: 0;
   width: 100%;
   height: 640px;
   background: var(--bg-1);
 }
 @media (min-width: 980px) {
-  #preview-frame { height: calc(100vh - 180px); }
+  .cx-preview-stage iframe { height: calc(100vh - 180px); }
+}
+/* The next preview loads here, hidden on top of the current one, and is
+   swapped in once it has rendered — no blank flash, no jump to the top. */
+.cx-preview-stage iframe.is-loading {
+  position: absolute; top: 0; left: 0;
+  visibility: hidden;
 }
 
 /* --- success screen ------------------------------------------------------ */
@@ -394,3 +402,14 @@ fieldset.cx-field { border: none; }
 .cx-success-mark { font-size: 56px; margin-bottom: 12px; }
 .cx-success-url { display: inline-block; padding: 14px 20px; background: var(--bg-1); border-radius: 10px; color: var(--plum); font-family: 'SF Mono', Consolas, monospace; font-size: 15px; word-break: break-all; text-decoration: none; margin: 12px 0; }
 .cx-success-buttons { display: flex; gap: 12px; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
+
+/* --- sign-in gate (shown at Publish when not signed in) ------------------ */
+.cx-signin {
+  margin: 12px 0;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--bg-1);
+  display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+}
+.cx-signin p { margin: 0 0 4px; flex-basis: 100%; font-size: 14px; }

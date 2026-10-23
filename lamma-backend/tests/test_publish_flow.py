@@ -117,3 +117,19 @@ def test_admin_password_link_sets_and_resets(client, session):
     assert res.status_code in (302, 303)
     from auth import verify_password
     assert verify_password("new-pass-456", session.get(User, user.id).password_hash)
+
+
+# --- batch 3: dashboard shows names, share buttons, metrics per template ---
+
+def test_dashboard_names_share_and_metrics(client, session, host):
+    session.add_all([
+        Event(slug="farhetna", event_type="wedding", status="published", user_id=host.id,
+              payload_json=json.dumps({"couple": {"groom": "Mohamed", "bride": "Farida"}})),
+        Event(slug="baby-y", event_type="sobou", status="published", user_id=host.id,
+              payload_json=json.dumps({"couple": {"groom": "Yassin", "bride": "Family"}})),
+    ])
+    session.commit()
+    html = client.get("/user/").get_data(as_text=True)
+    assert "Mohamed &amp; Farida" in html and "Yassin" in html
+    assert html.count('class="btn btn-outline btn-sm copy-link"') == 2
+    assert html.count('data-metric="attending"') == 1      # only the wedding has RSVP

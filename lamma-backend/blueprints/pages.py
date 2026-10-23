@@ -112,6 +112,24 @@ def preview_fields(tpl: str, p: dict) -> tuple[str, str, str]:
     return title, description, image or "/logo.jpg"
 
 
+def display_name(event_type: str, payload_json: str | None) -> str:
+    """The names a host recognises their invitation by ("Mohamed &
+    Farida"), or "" when the payload has none."""
+    try:
+        p = json.loads(payload_json) if payload_json else {}
+    except ValueError:
+        return ""
+    if not isinstance(p, dict):
+        return ""
+    if event_type in ("birthday", "birthday-elegant"):
+        return _s(p.get("name"))
+    couple = p.get("couple") if isinstance(p.get("couple"), dict) else {}
+    groom, bride = _s(couple.get("groom")), _s(couple.get("bride"))
+    if event_type == "sobou":
+        return groom
+    return " & ".join(n for n in (groom, bride) if n)
+
+
 def _s(v) -> str:
     return v.strip() if isinstance(v, str) else ""
 

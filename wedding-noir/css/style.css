@@ -1138,3 +1138,15 @@ input.invalid, textarea.invalid, select.invalid { border-color: #b3261e !importa
 .btn-whatsapp:hover { background: #1fa14f; }
 .btn-call     { background: transparent; color: var(--ink); border: 1px solid var(--ink); }
 .btn-call:hover { background: var(--ink); color: var(--cream); }
+
+/* Host's blessing under the couple's names. */
+.ann-blessing {
+  max-width: 32ch;
+  margin: 22px auto 0;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--muted);
+  text-align: center;
+}

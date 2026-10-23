@@ -22,7 +22,7 @@ import { doc, getDoc } from
   "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 const RENDERER_MODULES = [
-  "./cover.js",       "./announcement.js", "./gallery.js",
+  "./cover.js",       "./announcement.js?v=2", "./gallery.js",
   "./event-info.js",  "./countdown.js",    "./calendar.js",
   "./ics.js?v=2",         "./rsvp.js",         "./venue.js?v=3",
   "./schedule.js?v=7",    "./dress-code.js",   "./contacts.js?v=1",

@@ -114,6 +114,14 @@ function applyType(t) {
   // host isn't asked to fill questions that will never be shown.
   const quizGroup = $("quiz-group");
   if (quizGroup) quizGroup.hidden = (t === "birthday-elegant");
+  // Only ask for what the chosen template actually shows: qiraya and
+  // sobou have no gallery or dress-code section, and only the elegant
+  // birthday has the two cover lines.
+  const noGallery = (t === "qiraya" || t === "sobou");
+  $("dress-group").hidden   = noGallery;
+  $("gallery-group").hidden = noGallery;
+  $("elegant-group").style.display = (t === "birthday-elegant") ? "" : "none";
+  updateSlugLink();
   // سبوع isn't a couple — it's a baby's naming ceremony. The groom
   // field holds the baby's name, the bride field holds the family /
   // parents. Rewrite the labels so the host isn't confused into
@@ -140,7 +148,13 @@ function applyType(t) {
   if (usesCoupleForm) syncNameFromCouple();
   const title = $("cx-title");
   if (title) title.textContent = TYPE_TITLE[t];
-  $("preview-frame").src = TYPE_PREVIEW[t];
+  // Fresh frame for the new template; it pushes the form's data into
+  // itself once loaded (the buffered swap in sendPreview takes over
+  // from the next change on).
+  lastPreviewUrl = "";
+  const frame = $("preview-frame");
+  frame.addEventListener("load", () => setTimeout(sendPreview, 100), { once: true });
+  frame.src = TYPE_PREVIEW[t];
   schedulePreview();
   updatePublishGate();
 }
@@ -174,7 +188,7 @@ const SLUG_RE = /^[a-z0-9][a-z0-9-]{0,38}[a-z0-9]$/;
 $("f-slug").addEventListener("input", debounce(async (e) => {
   const raw = (e.target.value || "").toLowerCase().trim();
   e.target.value = raw;
-  $("slug-preview").textContent = raw ? `lamma.manasety.ai/${raw}` : "lamma.manasety.ai/<slug>";
+  updateSlugLink();
   await checkSlug(raw);
   schedulePreview();
   updatePublishGate();
@@ -209,13 +223,42 @@ function syncNameFromCouple() {
 $("f-groom").addEventListener("input", () => { if (COUPLE_TYPES.has(state.type)) syncNameFromCouple(); });
 $("f-bride").addEventListener("input", () => { if (COUPLE_TYPES.has(state.type)) syncNameFromCouple(); });
 
+// The address guests actually open: every template except the classic
+// birthday lives under /<template>/ (mirrors _build_public_url).
+function updateSlugLink() {
+  const slug = ($("f-slug").value || "").trim();
+  const prefix = state.type === "birthday" ? "" : `${state.type}/`;
+  $("slug-preview").textContent = `lamma.manasety.ai/${prefix}${slug || "<slug>"}`;
+}
+
 function slugify(s) {
-  return (s || "").toLowerCase().trim()
+  const latin = (s || "").toLowerCase().trim()
     .replace(/[^a-z0-9\s-]/g, "")
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "")
     .slice(0, 40);
+  if (latin.length >= 2) return latin;
+  // Arabic names used to leave the address empty ("Fill in: valid
+  // available slug"). Suggest a Latin spelling the host can edit.
+  return transliterate(s).slice(0, 40).replace(/-+$/, "");
+}
+
+const AR_LATIN = {
+  "ا": "a", "أ": "a", "إ": "e", "آ": "a", "ب": "b", "ت": "t", "ث": "th",
+  "ج": "g", "ح": "h", "خ": "kh", "د": "d", "ذ": "z", "ر": "r", "ز": "z",
+  "س": "s", "ش": "sh", "ص": "s", "ض": "d", "ط": "t", "ظ": "z", "ع": "a",
+  "غ": "gh", "ف": "f", "ق": "k", "ك": "k", "ل": "l", "م": "m", "ن": "n",
+  "ه": "h", "ة": "a", "و": "o", "ؤ": "o", "ي": "y", "ى": "a", "ئ": "e",
+  "ء": "", "&": "-and-",
+};
+function transliterate(s) {
+  return [...(s || "")].map((ch) => (ch in AR_LATIN ? AR_LATIN[ch] : ch))
+    .join("").toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
 }
 
 async function checkSlug(slug) {
@@ -566,15 +609,73 @@ function schedulePreview() {
   previewTimer = setTimeout(sendPreview, 300);
 }
 
+// The classic birthday re-renders in place on a postMessage. The other
+// templates can only render once per page load, so each change used to
+// reload the visible iframe: a blank flash, and the scroll jumped back
+// to the top every keystroke. Now the next version loads in a hidden
+// iframe on top, and is swapped in at the same scroll position once it
+// has rendered.
+let previewSeq = 0;
+let lastPreviewUrl = "";
+
 function sendPreview() {
   const cfg = collectFormForPreview();
   const iframe = $("preview-frame");
-  try {
-    iframe.contentWindow.postMessage({ type: "lamma:preview", cfg }, "*");
-  } catch (_) { /* ignore during navigation */ }
+  if (state.type === "birthday") {
+    try {
+      iframe.contentWindow.postMessage({ type: "lamma:preview", cfg }, location.origin);
+    } catch (_) { /* ignore during navigation */ }
+    return;
+  }
+  const url = `${TYPE_PREVIEW[state.type]}&data=${encodePreview(cfg)}`;
+  if (url === lastPreviewUrl) return;
+  lastPreviewUrl = url;
+  const mine = ++previewSeq;
+  document.querySelectorAll(".cx-preview-stage iframe.is-loading").forEach((f) => f.remove());
+  const next = document.createElement("iframe");
+  next.title = "Preview";
+  next.className = "is-loading";
+  next.addEventListener("load", async () => {
+    await renderedOrTimeout(next, 1500);
+    if (mine !== previewSeq) { next.remove(); return; }
+    const cur = $("preview-frame");
+    copyScroll(cur, next);
+    cur.remove();
+    next.classList.remove("is-loading");
+    next.id = "preview-frame";
+  }, { once: true });
+  next.src = url;
+  $("preview-frame").parentElement.appendChild(next);
 }
 
-$("preview-frame").addEventListener("load", () => setTimeout(sendPreview, 100));
+function encodePreview(cfg) {
+  return encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(cfg)))));
+}
+
+// Template bootstraps add body.opened once every renderer has run in
+// preview mode; fall back to a timeout so a slow template still swaps.
+function renderedOrTimeout(frame, ms) {
+  return new Promise((resolve) => {
+    const t0 = Date.now();
+    (function poll() {
+      let done = false;
+      try { done = frame.contentDocument?.body?.classList.contains("opened"); } catch (_) {}
+      if (done || Date.now() - t0 > ms) return resolve();
+      setTimeout(poll, 50);
+    })();
+  });
+}
+
+// Some templates scroll the window, some scroll <body>; copy both.
+function copyScroll(from, to) {
+  try {
+    const y  = from.contentWindow.scrollY;
+    const by = from.contentDocument.body.scrollTop;
+    to.contentWindow.scrollTo(0, y);
+    to.contentDocument.body.scrollTop = by;
+  } catch (_) { /* cross-document access failed — keep the top */ }
+}
+
 
 // Push preview on any form change
 document.getElementById("editor-screen").addEventListener("input", schedulePreview);
@@ -623,6 +724,8 @@ function collectFormForPreview(fileUrl = (f) => URL.createObjectURL(f)) {
       letterEn:    $("f-letterEn").value,
       signatureEn: $("f-signatureEn").value,
       signatureAr: $("f-signatureAr").value,
+      honorific:   $("f-honorific").value.trim(),
+      dateLabel:   $("f-date-label").value.trim(),
       videoUrl:    videoFile ? fileUrl(videoFile) : $("f-video-url").value.trim(),
       musicUrl:    musicFile ? fileUrl(musicFile) : ($("f-music-file").dataset.existingUrl || ""),
     };
@@ -763,6 +866,7 @@ async function publish() {
 
   clearCodeErr();
   const btn = $("publish-btn");
+  if (!ADMIN_MODE && !(await requireSignIn())) return;
   btn.disabled = true;
 
   const slug = $("f-slug").value.trim();
@@ -883,6 +987,7 @@ async function publish() {
         } catch (_) { /* ignore */ }
       };
     }
+    clearDraft();
     $("editor-screen").hidden = true;
     $("success-screen").hidden = false;
     hideProgress();
@@ -1078,13 +1183,13 @@ function applyAdminChrome() {
   const title = $("cx-title");
   if (title) {
     title.textContent = ADMIN_MODE === "edit"
-      ? "Edit invitation (admin)"
+      ? "Edit your invitation"
       : "Create invitation (admin)";
   }
   const lede = document.querySelector(".cx-lede");
   if (lede) {
     lede.textContent = ADMIN_MODE === "edit"
-      ? "You're editing this invitation as an admin. Changes are saved immediately — no activation code needed."
+      ? "Change anything below and press Save — guests see it right away. No activation code needed."
       : "Admin create: publishes immediately without an activation code.";
   }
   if ($("publish-btn")) {
@@ -1124,6 +1229,8 @@ async function loadAdminEditFixtures() {
     setIf("f-letterEn",    p.letterEn);
     setIf("f-signatureEn", p.signatureEn);
     setIf("f-signatureAr", p.signatureAr);
+    setIf("f-honorific",   p.honorific);
+    setIf("f-date-label",  p.dateLabel);
     setIf("f-video-url",   isLiveUrl(p.videoUrl) ? p.videoUrl : "");
     showExistingAudio("f-music-file", p.musicUrl);
     // Rebuild quiz rows from stored data.
@@ -1324,6 +1431,122 @@ function reseedAfterSave(uploaded) {
   }
 }
 
+/* ================= Sign-in at publish + local draft ================= */
+
+// True when a host is signed in. Otherwise saves the draft, shows the
+// sign-in panel (its links come back to this page) and returns false.
+async function requireSignIn() {
+  try {
+    const r = await fetch("/user/me", { credentials: "include" });
+    const j = r.ok ? await r.json() : { authenticated: true };
+    if (j.authenticated) return true;
+  } catch (_) {
+    return true;   // backend unreachable: let publish surface the real error
+  }
+  saveDraft();
+  const next = encodeURIComponent(`/create.html?type=${state.type}`);
+  $("signin-login").href  = `/user/login?next=${next}`;
+  $("signin-signup").href = `/user/signup?next=${next}`;
+  $("signin-gate").hidden = false;
+  $("signin-gate").scrollIntoView({ behavior: "smooth", block: "center" });
+  return false;
+}
+
+const DRAFT_KEY = "lamma:create-draft";
+// Text inputs only — a browser can't keep picked files across pages.
+const DRAFT_SKIP = new Set(["f-code", "f-host-email"]);
+
+function saveDraft() {
+  if (ADMIN_MODE) return;
+  const fields = {};
+  document.querySelectorAll("#editor-screen input[id], #editor-screen textarea[id]").forEach((el) => {
+    if (el.type === "file" || el.type === "radio" || DRAFT_SKIP.has(el.id)) return;
+    fields[el.id] = el.value;
+  });
+  const draft = {
+    v: 1,
+    savedAt: Date.now(),
+    type: state.type,
+    slugEdited: !!$("f-slug").dataset.userEdited,
+    fields,
+    quiz: [...quizBuilder.querySelectorAll(".q-row")].map((row) => ({
+      question: row.querySelector(".q-text").value,
+      options: [...row.querySelectorAll(".q-option-text")].map((i) => i.value),
+      correctIndex: Math.max(0, [...row.querySelectorAll('input[type="radio"]')].findIndex((r) => r.checked)),
+    })),
+    schedule: [...scheduleBuilder.querySelectorAll(".sched-row")].map((row) => ({
+      time: row.querySelector(".sched-time").value,
+      label: row.querySelector(".sched-label").value,
+    })),
+    contacts: [...contactsBuilder.querySelectorAll(".contact-row")].map((row) => ({
+      name: row.querySelector(".c-name").value,
+      role: row.querySelector(".c-role").value,
+      phone: row.querySelector(".c-phone").value,
+    })),
+    colors: [...document.querySelectorAll("#dress-colors .cx-color")].map((el) => el.value),
+  };
+  try { localStorage.setItem(DRAFT_KEY, JSON.stringify(draft)); } catch (_) { /* storage off */ }
+}
+
+function clearDraft() {
+  try { localStorage.removeItem(DRAFT_KEY); } catch (_) {}
+}
+
+function restoreDraft() {
+  let d = null;
+  try { d = JSON.parse(localStorage.getItem(DRAFT_KEY) || "null"); } catch (_) {}
+  if (!d || d.v !== 1 || !d.fields || typeof d.fields !== "object") return;
+  // A template card on the landing page (?type=) for a different
+  // template means a new invitation — leave the draft for later.
+  const urlType = new URLSearchParams(location.search).get("type");
+  if (urlType && urlType !== d.type) return;
+  if (ALL_TYPES.has(d.type)) applyType(d.type);
+  for (const [id, value] of Object.entries(d.fields)) {
+    const el = document.getElementById(id);
+    if (el && typeof value === "string" && el.type !== "file") el.value = value;
+  }
+  if (Array.isArray(d.quiz) && d.quiz.length) {
+    quizBuilder.innerHTML = "";
+    d.quiz.forEach((q) => addQuizRow({
+      question: q.question || "",
+      options: Array.isArray(q.options) ? q.options : ["", "", ""],
+      correctIndex: q.correctIndex || 0,
+    }));
+  }
+  if (Array.isArray(d.schedule) && d.schedule.length) {
+    scheduleBuilder.innerHTML = "";
+    d.schedule.forEach((it) => addScheduleRow(it));
+  }
+  if (Array.isArray(d.contacts) && d.contacts.length) {
+    contactsBuilder.innerHTML = "";
+    d.contacts.forEach((c) => addContactRow(c));
+  }
+  if (Array.isArray(d.colors)) {
+    document.querySelectorAll("#dress-colors .cx-color").forEach((el, i) => {
+      if (/^#[0-9a-f]{6}$/i.test(d.colors[i] || "")) el.value = d.colors[i];
+    });
+  }
+  if (d.slugEdited) $("f-slug").dataset.userEdited = "1";
+  const slug = $("f-slug").value.trim();
+  if (slug) checkSlug(slug).then(updatePublishGate);
+  updateSlugLink();
+  schedulePreview();
+  updatePublishGate();
+
+  const note = $("draft-note");
+  note.textContent = `Restored what you typed on ${new Date(d.savedAt).toLocaleString()}. Photos and music need to be picked again. `;
+  const reset = document.createElement("button");
+  reset.type = "button";
+  reset.className = "cx-btn cx-btn-ghost";
+  reset.textContent = "Start over";
+  reset.addEventListener("click", () => {
+    clearDraft();
+    location.href = `/create.html?type=${state.type}`;
+  });
+  note.appendChild(reset);
+  note.hidden = false;
+}
+
 /* ================= boot (last: all `let` bindings are alive) ================= */
 
 const initialType = new URLSearchParams(location.search).get("type");
@@ -1341,22 +1564,14 @@ if (ADMIN_MODE === "create") {
   $("f-host-email")?.addEventListener("input", updatePublishGate);
 }
 
-// Non-admin flow: the host must be signed in BEFORE they can start a
-// publish. Bounce to /user/login if they aren't. We check once on load
-// so the host doesn't fill a long form only to lose it on submit; the
-// backend re-checks on POST /api/events as the real guard.
+// Visitors fill and preview first; sign-in is asked at Publish (see
+// requireSignIn). The form is kept as a draft on this device so a
+// sign-in round trip — or a closed tab — doesn't lose it.
 if (!ADMIN_MODE) {
-  (async () => {
-    try {
-      const r = await fetch("/user/me", { credentials: "include" });
-      if (!r.ok) return; // backend not up / unexpected — don't bounce
-      const j = await r.json();
-      if (!j.authenticated) {
-        const next = location.pathname + location.search;
-        location.replace("/user/login?next=" + encodeURIComponent(next));
-      }
-    } catch (_) { /* backend offline — let them keep filling, publish will prompt */ }
-  })();
+  restoreDraft();
+  const editor = document.getElementById("editor-screen");
+  editor.addEventListener("input",  debounce(saveDraft, 600));
+  editor.addEventListener("change", debounce(saveDraft, 600));
 }
 
 // Telemetry: tell the backend that someone opened the create form so

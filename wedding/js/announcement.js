@@ -15,3 +15,11 @@ set("ann-groom",       CONFIG.couple.groom);
 set("ann-bride",       CONFIG.couple.bride);
 set("ann-groom-label", CONFIG.couple.groomLabel);
 set("ann-bride-label", CONFIG.couple.brideLabel);
+
+// The host's blessing / short message — collected by the create form
+// but never shown on these two templates before (only in the .ics).
+const blessingEl = document.getElementById("ann-blessing");
+if (blessingEl && CONFIG.blessing) {
+  blessingEl.textContent = CONFIG.blessing;
+  blessingEl.hidden = false;
+}

@@ -1495,3 +1495,15 @@ body.lightbox-open { overflow: hidden; }
 .btn-call     { background: transparent; color: #a13b58; border: 1px solid #a13b58; }
 .btn-call:hover { background: #a13b58; color: #fff; }
 .btn-contact:active { transform: translateY(1px); }
+
+/* Host's blessing under the couple's names. */
+.ann-blessing {
+  max-width: 32ch;
+  margin: 22px auto 0;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--muted);
+  text-align: center;
+}

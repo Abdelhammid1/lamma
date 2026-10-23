@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,600&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Cairo:wght@400;600;700&family=Manrope:wght@400;500;600;700&display=swap"
       rel="stylesheet" />
-<link rel="stylesheet" href="create.css?v=6" />
+<link rel="stylesheet" href="create.css?v=8" />
 </head>
 <body>
 
@@ -18,7 +18,7 @@
     <img src="logo.jpg" alt="LAMMA" />
     <span class="cx-brand-name">لمّة · LAMMA</span>
   </a>
-  <a href="/admin" class="cx-admin-link">Admin →</a>
+  <a href="/user/" class="cx-admin-link">My invitations →</a>
 </header>
 
 <main class="cx-shell">
@@ -40,6 +40,7 @@
 
       <h1 class="cx-title" id="cx-title">Create your invitation</h1>
       <p class="cx-lede">Fill in your details. The preview updates as you type. When you're happy, enter your activation code and publish.</p>
+      <p class="cx-hint" id="draft-note" hidden></p>
 
       <!-- Template-switcher pills — one tap flips state.type, swaps
            the field groups + the preview iframe, keeps whatever name /
@@ -70,12 +71,23 @@
       <div class="cx-field">
         <label for="f-slug">URL slug</label>
         <input id="f-slug" type="text" autocomplete="off" spellcheck="false" />
-        <span class="cx-hint">Your page will live at <code id="slug-preview">lamma.manasety.ai/&lt;slug&gt;</code></span>
+        <span class="cx-hint">English letters, numbers and hyphens. Your link: <code id="slug-preview">lamma.manasety.ai/&lt;slug&gt;</code></span>
         <span class="cx-error" id="slug-error"></span>
       </div>
 
       <!-- ─────────── BIRTHDAY FIELDS ─────────── -->
       <div id="birthday-fields">
+        <!-- Only the elegant birthday shows these two lines on its cover. -->
+        <div id="elegant-group" class="cx-field-row">
+          <div class="cx-field">
+            <label for="f-honorific">Line under the name</label>
+            <input id="f-honorific" type="text" dir="auto" placeholder="A Birthday" />
+          </div>
+          <div class="cx-field">
+            <label for="f-date-label">Date line (optional)</label>
+            <input id="f-date-label" type="text" dir="auto" placeholder="Saturday, 14 November 2026" />
+          </div>
+        </div>
         <!-- Quiz is only used by the classic birthday template; the
              elegant variant is a formal single-scroll with no quiz. -->
         <div id="quiz-group">
@@ -195,6 +207,9 @@
         <p class="cx-hint">Up to 4 people guests can message or call — the brothers, best man, event coordinator.</p>
         <div id="contacts-builder"></div>
         <button type="button" id="add-contact-btn" class="cx-btn cx-btn-ghost">+ Add contact</button>
+        <!-- Dress code + gallery: only the templates that have those
+             sections show them (applyType hides them for qiraya / sobou). -->
+        <div id="dress-group">
         <div class="cx-field">
           <label for="f-dress-code">Dress code label</label>
           <input id="f-dress-code" type="text" placeholder="Pink dresses" />
@@ -214,11 +229,14 @@
           </div>
           <span class="cx-hint">Up to 5. The hex code shows under each swatch on the invitation.</span>
         </div>
+        </div>
 
+        <div id="gallery-group">
         <h2 class="cx-section">Gallery photos</h2>
         <p class="cx-hint">Up to 8 photos. First photo becomes the hero. Max 35 MB each.</p>
         <div id="gallery-builder"></div>
         <button type="button" id="add-gallery-btn" class="cx-btn cx-btn-ghost">+ Add photo</button>
+        </div>
 
         <h2 class="cx-section">Background music (optional)</h2>
         <div class="cx-field">
@@ -246,6 +264,11 @@
           <div class="cx-progress-bar"><div id="progress-fill"></div></div>
           <p class="cx-progress-text" id="progress-text">Working…</p>
         </div>
+        <div id="signin-gate" class="cx-signin" hidden>
+          <p>Sign in to publish. Everything you typed is saved on this device; after signing in you'll come back here. Photos and music need to be picked again.</p>
+          <a id="signin-login"  class="cx-btn cx-btn-primary" href="/user/login">Sign in</a>
+          <a id="signin-signup" class="cx-btn cx-btn-ghost"   href="/user/signup">Create an account</a>
+        </div>
         <button type="button" id="publish-btn" class="cx-btn cx-btn-primary" disabled>
           Publish
         </button>
@@ -259,7 +282,9 @@
         <span>Live preview</span>
         <button type="button" id="preview-open" class="cx-btn cx-btn-ghost">Open in new tab</button>
       </div>
-      <iframe id="preview-frame" title="Preview" src="birthday.html?preview=1"></iframe>
+      <div class="cx-preview-stage">
+        <iframe id="preview-frame" title="Preview" src="birthday.html?preview=1"></iframe>
+      </div>
     </aside>
   </div>
 
@@ -284,6 +309,6 @@
 
 </main>
 
-<script type="module" src="js/create-form.js?v=28"></script>
+<script type="module" src="js/create-form.js?v=29"></script>
 </body>
 </html>

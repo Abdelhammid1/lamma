@@ -19,9 +19,11 @@
     <div class="card event-card" data-slug="{{ ev.slug }}" data-event-id="{{ ev.id }}" data-status="{{ ev.status }}" style="padding: 18px 20px;">
       <div style="display:flex; align-items:flex-start; justify-content:space-between; gap: 12px; flex-wrap: wrap;">
         <div style="min-width: 0; flex: 1;">
-          <div style="font-family:'Playfair Display',serif; font-size:18px; color: var(--plum);">
-            <code style="font-family:'Manrope',sans-serif; font-size: 14px;">{{ ev.slug }}</code>
-            <span class="muted" style="font-size: 12px; margin-left: 8px;">· {{ ev.event_type }}</span>
+          <div style="font-family:'Playfair Display',serif; font-size:18px; color: var(--plum);" dir="auto">
+            {{ names.get(ev.id) or ev.slug }}
+          </div>
+          <div class="muted" style="font-size: 12px; margin-top: 2px;">
+            {{ ev.event_type }} · <code style="font-family:'Manrope',sans-serif;">{{ ev.slug }}</code>
           </div>
           <div class="muted" style="font-size: 12px; margin-top: 4px;">
             {% if ev.status == 'published' %}
@@ -40,12 +42,14 @@
             {% endif %}
           </div>
           <div class="responses-preview muted" style="font-size: 12px; margin-top: 8px; display: flex; gap: 14px; flex-wrap: wrap;">
+            {% if ev.event_type in ('wedding', 'wedding-noir') %}
             <span data-metric="attending">
               <span class="num" style="color: var(--plum); font-weight: 600;">·</span> attending
             </span>
             <span data-metric="guests">
               <span class="num" style="color: var(--plum); font-weight: 600;">·</span> guests
             </span>
+            {% endif %}
             <span data-metric="wishes">
               <span class="num" style="color: var(--plum); font-weight: 600;">·</span> wishes
             </span>
@@ -58,6 +62,8 @@
         <div style="display:flex; gap: 6px; flex-wrap: wrap;">
           {% if ev.status == 'published' %}
             <a href="{{ public_href }}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">View live</a>
+            <button type="button" class="btn btn-outline btn-sm copy-link" data-href="{{ public_href }}">Copy link</button>
+            <a class="btn btn-outline btn-sm share-wa" data-href="{{ public_href }}" target="_blank" rel="noopener" href="#">WhatsApp</a>
           {% endif %}
           <a href="{{ url_for('user.event_responses', event_id=ev.id) }}" class="btn btn-outline btn-sm">Responses</a>
           <a href="/create.html?admin_edit={{ ev.id }}" class="btn btn-outline btn-sm">Edit</a>
@@ -127,6 +133,20 @@ async function loadCard(card) {
 }
 
 document.querySelectorAll(".event-card").forEach(loadCard);
+
+// Share: absolute link built from this page's origin.
+document.querySelectorAll(".copy-link").forEach((btn) => {
+  btn.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(location.origin + btn.dataset.href);
+      btn.textContent = "Copied ✓";
+      setTimeout(() => { btn.textContent = "Copy link"; }, 1500);
+    } catch (_) { /* clipboard blocked — the View live link still works */ }
+  });
+});
+document.querySelectorAll(".share-wa").forEach((a) => {
+  a.href = "https://wa.me/?text=" + encodeURIComponent(location.origin + a.dataset.href);
+});
 
 // Activate an invitation that was created but never got its code —
 // same /activate endpoint the create page calls.

@@ -311,7 +311,10 @@ def dashboard():
         for ev in rows
         if ev.status in ("draft", "awaiting_code") and ev.created_at
     }
-    return render_template("user/dashboard.html", events=rows, hours_left=hours_left)
+    from blueprints.pages import display_name
+    names = {ev.id: display_name(ev.event_type, ev.payload_json) for ev in rows}
+    return render_template("user/dashboard.html", events=rows,
+                           hours_left=hours_left, names=names)
 
 
 @bp.get("/events/<event_id>/responses")
