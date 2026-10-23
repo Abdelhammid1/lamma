@@ -18,7 +18,7 @@ import os
 import re
 from datetime import datetime, timedelta
 
-from flask import Blueprint, abort, current_app, request
+from flask import Blueprint, abort, current_app
 from markupsafe import escape
 
 from models import Event, db
@@ -60,7 +60,10 @@ def invitation_page(tpl, slug):
         payload = {}
 
     title, description, image = preview_fields(tpl, payload)
-    base = request.host_url.rstrip("/")
+    # A fixed origin, never the request's Host / X-Forwarded-Host: those
+    # are client-controlled, and this response is cacheable, so a forged
+    # header could poison the preview everyone else gets.
+    base = f"https://lamma.{current_app.config['PUBLIC_DOMAIN']}"
     tags = "\n".join([
         f'<meta property="og:type" content="website" />',
         f'<meta property="og:site_name" content="لمّة · LAMMA" />',

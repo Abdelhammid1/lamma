@@ -195,7 +195,7 @@ def new_claim_link(user_id):
     return render_template(
         "claim_link.html",
         user=row,
-        claim_url=request.host_url.rstrip("/") + "/user/claim/" + raw,
+        claim_url=f"https://lamma.{current_app.config['PUBLIC_DOMAIN']}/user/claim/" + raw,
         expires_at=expires,
     )
 

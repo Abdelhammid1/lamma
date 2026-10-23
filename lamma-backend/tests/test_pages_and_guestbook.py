@@ -24,7 +24,7 @@ def test_invitation_page_has_preview_tags(client, session):
     html = res.get_data(as_text=True)
     assert "<title>Mohamed &amp; Farida · Wedding</title>" in html
     assert 'og:description" content="Sunday, 1 November 2026 · Solitaire Hall"' in html
-    assert 'og:image" content="http://localhost/media/farhetna/gallery-1.jpeg"' in html
+    assert 'og:image" content="https://lamma.manasety.ai/media/farhetna/gallery-1.jpeg"' in html
     assert html.count("<title>") == 1
     assert 'id="cover"' in html or "bootstrap.js" in html     # still the real template
 
@@ -47,16 +47,25 @@ def test_sobou_uses_baby_name_and_logo_fallback(client, session):
                payload={"couple": {"groom": "Yassin", "bride": "Family"}})
     html = client.get("/sobou/baby/").get_data(as_text=True)
     assert "<title>Yassin · سبوع</title>" in html
-    assert 'og:image" content="http://localhost/logo.jpg"' in html
+    assert 'og:image" content="https://lamma.manasety.ai/logo.jpg"' in html
 
 
 def test_guestbook_shows_only_the_live_invitations_wishes(client, session):
     old = _published(session, slug="farah", status="deleted")
     session.add(Wish(event_id=old.id, event_slug="farah", name="Old", message="old couple"))
-    new = _published(session, slug="farah-2")
-    new.slug = "farah"          # simulate the freed slug taken again
-    old.slug = "farah-old"      # (slug is unique in the DB)
+    session.commit()
+    old.slug = "farah-old"      # slug is unique in the DB: free it first,
+    session.commit()            # then give it to the new couple
+    new = _published(session, slug="farah")
     session.add(Wish(event_id=new.id, event_slug="farah", name="New", message="hi"))
     session.commit()
     names = [w["name"] for w in client.get("/api/invitations/farah/wishes").get_json()["wishes"]]
     assert names == ["New"]
+
+
+def test_forged_forwarded_host_does_not_reach_the_tags(client, session):
+    _published(session)
+    html = client.get("/wedding/farhetna",
+                      headers={"X-Forwarded-Host": "evil.example", "Host": "evil.example"}).get_data(as_text=True)
+    assert "evil.example" not in html
+    assert 'og:url" content="https://lamma.manasety.ai/wedding/farhetna"' in html
