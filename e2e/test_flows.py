@@ -228,3 +228,83 @@ def test_classic_birthday_loads_from_the_server_only(page, site):
     page.goto(base + "/no-such-birthday")
     page.wait_for_selector("text=/not found|isn.t available|مش متاحة/i")
     assert page.js_errors == []
+
+
+# --- Wedding · Burgundy: form → publish → every section → edit ------------
+
+def test_burgundy_end_to_end(page, site):
+    base = site["base"]
+    allowed = (base, "https://fonts.googleapis.com/", "https://fonts.gstatic.com/")
+    outside = []
+    page.on("request", lambda r: outside.append(r.url)
+            if not r.url.startswith(allowed) and not r.url.startswith(("data:", "blob:")) else None)
+
+    sign_in(page, site)
+    page.goto(base + "/create.html?type=wedding-burgundy")
+    page.wait_for_selector("#burgundy-group:not([hidden])")
+    assert page.is_hidden("#elegant-group")
+    fill_wedding(page, groom="Karim", bride="Nour")
+    page.fill("#f-groom-full", "Karim Adel")
+    page.fill("#f-bride-full", "Nour Samir")
+    page.fill("#f-family-groom", "Mr. & Mrs.\nAdel Fathy")
+    page.fill("#f-family-bride", "Mr. & Mrs.\nSamir Lotfy")
+    page.fill("#f-ceremony-place", "Al-Sayeda Nafisa Mosque")
+    page.fill("#f-gift-message", "Your presence is our gift")
+    page.fill("#f-gift-details", "InstaPay: karim@instapay")
+    page.wait_for_function(
+        "document.getElementById('slug-preview').textContent === 'lamma.manasety.ai/wedding-burgundy/karim-nour'")
+    publish_with(page, "GOOD-CODE-0004")
+    page.wait_for_selector("#success-screen:not([hidden])", timeout=20_000)
+
+    html = urllib.request.urlopen(base + "/wedding-burgundy/karim-nour").read().decode()
+    assert "<title>Karim &amp; Nour · Wedding</title>" in html
+
+    page.goto(base + "/wedding-burgundy/karim-nour")
+    assert page.text_content("#cover-groom") == "Karim"
+    assert page.is_hidden("#invitation")
+    page.click("#open-btn")
+    page.wait_for_selector("#invitation", state="visible")
+    assert page.get_attribute("#hero-photo", "src").startswith("/media/karim-nour/")
+    assert page.text_content("#family-groom") == "Mr. & Mrs.\nAdel Fathy"
+    assert page.text_content("#full-bride") == "Nour Samir"
+    assert page.text_content("#ceremony-place") == "Al-Sayeda Nafisa Mosque"
+    assert page.text_content("#reception-place") == "Solitaire Hall"
+    assert page.text_content("#car-count") == "1 / 1"
+    assert re.match(r"\d+ days \d+ hours \d+ min \d+ sec", page.text_content("#countdown"))
+    assert page.text_content(".cal-event") == "12"                     # 12 December
+    assert "Dinner" in page.text_content("#schedule-list")
+    assert "19:00" in page.text_content("#schedule-list")               # 24-hour clock
+    assert page.get_attribute("audio", "src").startswith("/media/karim-nour/")
+    assert "Ali" in page.text_content("#contacts")
+
+    # Gift box: closed until tapped, then the details with a Copy button.
+    assert page.is_hidden("#gift-card")
+    page.click("#gift-open")
+    assert page.text_content("#gift-details") == "InstaPay: karim@instapay"
+    assert page.is_visible("#gift-copy")
+    assert page.text_content("#gift-message") == "Your presence is our gift"
+
+    page.click("#rsvp-open")
+    page.fill("#rsvp-name", "Guest Two")
+    page.click("#rsvp-form button[type=submit]")
+    page.wait_for_function("/thank/i.test(document.getElementById('rsvp-status').textContent)")
+    page.fill("#gb-name", "Guest Two")
+    page.fill("#gb-message", "Alf mabrook")
+    page.click("#gb-form button[type=submit]")
+    page.wait_for_selector("#gb-list li:has-text('Alf mabrook')")
+    assert outside == [], outside
+    assert page.js_errors == []
+
+    # Edit: change only the gift message; song, photo and the rest stay.
+    page.goto(base + "/user/")
+    page.locator(".event-card[data-slug='karim-nour'] >> text=Edit").click()
+    page.wait_for_selector("text=Current song")
+    assert page.input_value("#f-family-bride") == "Mr. & Mrs.\nSamir Lotfy"
+    page.fill("#f-gift-message", "Thank you for coming")
+    page.click("#publish-btn")
+    page.wait_for_function("document.getElementById('progress-text').textContent === 'Saved.'")
+    data = urllib.request.urlopen(base + "/data/karim-nour.json").read().decode()
+    for kept in ("Thank you for coming", "InstaPay: karim@instapay", "Al-Sayeda Nafisa Mosque",
+                 "/media/karim-nour/music-", "/media/karim-nour/gallery-", "Karim Adel"):
+        assert kept in data, kept
+    assert page.js_errors == []

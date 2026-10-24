@@ -23,7 +23,7 @@ from datetime import datetime
 MAX_PAYLOAD_BYTES = 200_000
 MAX_STRING = 5_000
 
-COUPLE_TYPES = {"wedding", "wedding-noir", "engagement", "qiraya", "sobou", "invitation"}
+COUPLE_TYPES = {"wedding", "wedding-noir", "wedding-burgundy", "engagement", "qiraya", "sobou", "invitation"}
 BIRTHDAY_TYPES = {"birthday", "birthday-elegant"}
 
 # Generous ceilings: well above what the form allows (8 photos, 4
@@ -169,6 +169,12 @@ def _check_couple(p, errors):
 
     if p.get("blessing") is not None and not isinstance(p.get("blessing"), str):
         errors.append("blessing must be text")
+
+    # wedding-burgundy extras (optional everywhere, ignored by the others)
+    _str_fields(couple, ("groomFull", "brideFull"), "couple", errors)
+    _str_fields(_obj(p, "families", "families", errors), ("groom", "bride"), "families", errors)
+    _str_fields(_obj(p, "ceremony", "ceremony", errors), ("name",), "ceremony", errors)
+    _str_fields(_obj(p, "gift", "gift", errors), ("message", "details"), "gift", errors)
 
     dress = _obj(p, "dressCode", "dressCode", errors)
     _str_fields(dress, ("label",), "dressCode", errors)

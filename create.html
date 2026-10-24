@@ -49,6 +49,7 @@
       <div class="cx-pills" id="type-pills" role="tablist" aria-label="Template">
         <button type="button" class="cx-pill" role="tab" data-type="wedding">Wedding</button>
         <button type="button" class="cx-pill" role="tab" data-type="wedding-noir">Wedding · Noir</button>
+        <button type="button" class="cx-pill" role="tab" data-type="wedding-burgundy">Wedding · Burgundy</button>
         <button type="button" class="cx-pill" role="tab" data-type="engagement">Engagement</button>
         <button type="button" class="cx-pill" role="tab" data-type="qiraya">قراية فاتحة</button>
         <button type="button" class="cx-pill" role="tab" data-type="sobou">سبوع</button>
@@ -158,6 +159,33 @@
             <input id="f-bride" type="text" dir="auto" />
           </div>
         </div>
+        <!-- Only Wedding · Burgundy shows these (applyType toggles the group). -->
+        <div id="burgundy-group">
+          <div class="cx-field-row">
+            <div class="cx-field">
+              <label for="f-groom-full">Groom's full name <span class="cx-hint" style="font-weight:400;">(optional)</span></label>
+              <input id="f-groom-full" type="text" dir="auto" placeholder="Omar Hassan" />
+            </div>
+            <div class="cx-field">
+              <label for="f-bride-full">Bride's full name <span class="cx-hint" style="font-weight:400;">(optional)</span></label>
+              <input id="f-bride-full" type="text" dir="auto" placeholder="Laila Mahmoud" />
+            </div>
+          </div>
+          <div class="cx-field-row">
+            <div class="cx-field">
+              <label for="f-family-groom">Groom's family</label>
+              <textarea id="f-family-groom" rows="2" dir="auto" placeholder="Mr. &amp; Mrs.&#10;Hassan Abdelrahman"></textarea>
+            </div>
+            <div class="cx-field">
+              <label for="f-family-bride">Bride's family</label>
+              <textarea id="f-family-bride" rows="2" dir="auto" placeholder="Mr. &amp; Mrs.&#10;Mahmoud Farouk"></textarea>
+            </div>
+          </div>
+          <div class="cx-field">
+            <label for="f-ceremony-place">Ceremony place <span class="cx-hint" style="font-weight:400;">(optional — if it's not the venue below)</span></label>
+            <input id="f-ceremony-place" type="text" dir="auto" placeholder="e.g. Al-Sayeda Nafisa Mosque" />
+          </div>
+        </div>
         <div class="cx-field">
           <label for="f-event-datetime">Event date &amp; time</label>
           <input id="f-event-datetime" type="datetime-local" />
@@ -245,6 +273,19 @@
           <button type="button" class="cx-btn cx-btn-ghost cx-clear" data-clear="f-wedding-music" hidden>Remove</button>
           <span class="cx-hint">MP3 / M4A / OGG. Max 50 MB. Plays after the guest presses Open Invitation.</span>
         </div>
+
+        <div id="burgundy-gift-group">
+          <h2 class="cx-section">Gift box (optional)</h2>
+          <p class="cx-hint">Guests tap a gift box to open it. Leave both empty to hide the section.</p>
+          <div class="cx-field">
+            <label for="f-gift-message">Message</label>
+            <input id="f-gift-message" type="text" dir="auto" placeholder="Your presence would be the greatest gift we could receive!" />
+          </div>
+          <div class="cx-field">
+            <label for="f-gift-details">Gift details <span class="cx-hint" style="font-weight:400;">(optional — InstaPay, wallet number…; guests get a Copy button)</span></label>
+            <textarea id="f-gift-details" rows="2" dir="auto"></textarea>
+          </div>
+        </div>
       </div>
 
       <!-- Publish gate -->
@@ -309,6 +350,6 @@
 
 </main>
 
-<script type="module" src="js/create-form.js?v=ddf35330"></script>
+<script type="module" src="js/create-form.js?v=72299e07"></script>
 </body>
 </html>

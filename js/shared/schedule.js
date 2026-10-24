@@ -22,7 +22,7 @@
 //  Shared by every template: each template's js/schedule.js passes its own
 //  CONFIG in. Edit here, not in the template folders.
 
-export function renderSchedule(CONFIG) {
+export function renderSchedule(CONFIG, { clock24 = false } = {}) {
 
   const section = document.getElementById("schedule");
   const list    = document.getElementById("schedule-list");
@@ -68,7 +68,7 @@ export function renderSchedule(CONFIG) {
         const state = i < nextIdx ? "past" : i === nextIdx ? "next" : "future";
         return `
           <li class="tl-row tl-${state}" style="--i:${i}">
-            <span class="tl-time">${esc(fmtAmPm(it.time))}</span>
+            <span class="tl-time">${esc(clock24 ? it.time : fmtAmPm(it.time))}</span>
             <span class="tl-marker" aria-hidden="true"></span>
             <span class="tl-label" dir="auto">${esc(it.label)}</span>
           </li>

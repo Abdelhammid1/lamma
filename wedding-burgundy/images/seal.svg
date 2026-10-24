@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Wax seal">
+  <defs>
+    <radialGradient id="g" cx="38%" cy="32%" r="75%">
+      <stop offset="0" stop-color="#f3d58b"/>
+      <stop offset=".45" stop-color="#c9a24a"/>
+      <stop offset="1" stop-color="#7d5a1c"/>
+    </radialGradient>
+    <radialGradient id="in" cx="40%" cy="35%" r="70%">
+      <stop offset="0" stop-color="#e9c877"/>
+      <stop offset="1" stop-color="#9c7326"/>
+    </radialGradient>
+  </defs>
+  <!-- Irregular poured-wax edge -->
+  <path fill="url(#g)" d="M60 6c9 0 13 5 21 7s14 3 18 10 2 13 6 20 7 12 5 21-9 11-12 18-4 14-12 18-14 1-22 4-13 8-22 6-11-8-18-12-13-5-16-13 0-14-3-22-8-12-5-20 10-11 14-18 6-12 14-15 12-4 20-4z"/>
+  <!-- Pressed inner disc -->
+  <circle cx="60" cy="60" r="34" fill="url(#in)"/>
+  <circle cx="60" cy="60" r="34" fill="none" stroke="#7d5a1c" stroke-opacity=".55" stroke-width="2"/>
+  <circle cx="60" cy="60" r="29" fill="none" stroke="#f6e2a6" stroke-opacity=".5" stroke-width="1"/>
+  <!-- Heart, embossed -->
+  <path d="M60 78s-17-9.5-17-22a9.2 9.2 0 0 1 17-4.8A9.2 9.2 0 0 1 77 56c0 12.5-17 22-17 22z"
+        fill="none" stroke="#6b4a14" stroke-width="3.2" stroke-linejoin="round"/>
+  <path d="M60 76s-15.5-8.7-15.5-20a8 8 0 0 1 15.5-4" fill="none" stroke="#f8e6b0" stroke-opacity=".7" stroke-width="1.2"/>
+</svg>

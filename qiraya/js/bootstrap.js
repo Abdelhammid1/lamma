@@ -11,7 +11,7 @@ const RENDERER_MODULES = [
   "./details.js?v=6ab162dc",
   "./countdown.js",
   "./venue.js?v=58682a4b",
-  "./schedule.js?v=70dc6805",
+  "./schedule.js?v=dd9baf15",
   "./contacts.js?v=69008faa",
   "./guestbook.js?v=a5e77586", "./view-ping.js",
   "./reveal.js",

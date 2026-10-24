@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 260" role="img" aria-label="Flowers">
+  <!-- PLACEHOLDER flowers. Replace with the licensed watercolour set:
+       drop floral-left.png and floral-right.png in this folder and point
+       the two floral variables in css/style.css at them. -->
+  <defs>
+    <radialGradient id="peony" cx="45%" cy="40%" r="65%">
+      <stop offset="0" stop-color="#b53a4a"/><stop offset=".6" stop-color="#7a1f2b"/><stop offset="1" stop-color="#4a0f17"/>
+    </radialGradient>
+    <radialGradient id="rose" cx="45%" cy="40%" r="65%">
+      <stop offset="0" stop-color="#fff8ee"/><stop offset=".7" stop-color="#efdcc4"/><stop offset="1" stop-color="#cfb08f"/>
+    </radialGradient>
+    <linearGradient id="leaf" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#a7ad86"/><stop offset="1" stop-color="#5e6a45"/>
+    </linearGradient>
+  </defs>
+  <!-- Berry sprigs -->
+  <g stroke="#6b3b3b" stroke-width="1.6" fill="none" stroke-linecap="round">
+    <path d="M70 150C64 104 72 60 92 18"/><path d="M84 70c10-8 18-10 26-9M78 100c-10-6-18-6-24-3"/>
+  </g>
+  <g fill="#7a2733">
+    <circle cx="92" cy="18" r="4"/><circle cx="98" cy="28" r="3.5"/><circle cx="86" cy="32" r="3.5"/>
+    <circle cx="110" cy="61" r="3.5"/><circle cx="104" cy="54" r="3"/><circle cx="54" cy="97" r="3.5"/><circle cx="60" cy="90" r="3"/>
+  </g>
+  <!-- Leaves -->
+  <g fill="url(#leaf)">
+    <path d="M40 170c-24-8-34-30-30-48 20 6 34 24 30 48z"/>
+    <path d="M150 196c22-14 46-12 60 0-18 14-42 16-60 0z"/>
+    <path d="M118 122c4-22 22-36 40-36-2 20-18 34-40 36z"/>
+    <path d="M60 224c-10 18-30 26-48 22 8-18 28-28 48-22z"/>
+  </g>
+  <!-- Peony -->
+  <g transform="translate(92 176)">
+    <circle r="46" fill="url(#peony)"/>
+    <g fill="none" stroke="#3d0a12" stroke-opacity=".45" stroke-width="2">
+      <path d="M-30 -8c10-22 50-22 60 0"/><path d="M-22 6c8-16 36-16 44 0"/><path d="M-12 16c4-8 20-8 24 0"/>
+      <path d="M-40 14c6 20 26 30 40 30s34-10 40-30"/>
+    </g>
+    <circle r="9" fill="#5a1019"/>
+  </g>
+  <!-- Cream rose -->
+  <g transform="translate(150 132)">
+    <circle r="26" fill="url(#rose)"/>
+    <g fill="none" stroke="#b89670" stroke-width="1.6">
+      <path d="M-14 -4c6-12 22-12 28 0"/><path d="M-8 4c4-7 12-7 16 0"/><path d="M-18 8c4 10 12 14 18 14s14-4 18-14"/>
+    </g>
+  </g>
+  <!-- Small peony -->
+  <g transform="translate(40 228)">
+    <circle r="22" fill="url(#peony)"/>
+    <path d="M-12 -2c5-10 19-10 24 0M-7 6c3-5 11-5 14 0" fill="none" stroke="#3d0a12" stroke-opacity=".45" stroke-width="1.6"/>
+  </g>
+</svg>

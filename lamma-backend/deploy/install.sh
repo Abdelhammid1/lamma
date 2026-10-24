@@ -170,7 +170,7 @@ static `location /` catch-all:
     # previews show the couple's names, date and photo. Flask answers 404
     # for anything it can't enhance, and every error falls back to the
     # plain static page — the invitation never goes down with the backend.
-    location ~ ^/(wedding|wedding-noir|engagement|qiraya|sobou|birthday-elegant)/[a-z0-9][a-z0-9-]*/?$ {
+    location ~ ^/(wedding|wedding-noir|wedding-burgundy|engagement|qiraya|sobou|birthday-elegant)/[a-z0-9][a-z0-9-]*/?$ {
         proxy_pass             http://172.18.0.1:8010;
         proxy_set_header       Host              $host;
         proxy_set_header       X-Forwarded-For   $proxy_add_x_forwarded_for;

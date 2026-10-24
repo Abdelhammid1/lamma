@@ -15,7 +15,7 @@
 <div style="display:grid; gap: 12px; margin-top: 24px;" id="events-grid">
   {% for ev in events %}
     {% set prefix = ev.event_type %}
-    {% set public_href = '/' ~ prefix ~ '/' ~ ev.slug if prefix in ('wedding','wedding-noir','birthday-elegant','engagement','qiraya','sobou') else '/' ~ ev.slug %}
+    {% set public_href = '/' ~ prefix ~ '/' ~ ev.slug if prefix in ('wedding','wedding-noir','wedding-burgundy','birthday-elegant','engagement','qiraya','sobou') else '/' ~ ev.slug %}
     <div class="card event-card" data-slug="{{ ev.slug }}" data-event-id="{{ ev.id }}" data-status="{{ ev.status }}" style="padding: 18px 20px;">
       <div style="display:flex; align-items:flex-start; justify-content:space-between; gap: 12px; flex-wrap: wrap;">
         <div style="min-width: 0; flex: 1;">
@@ -42,7 +42,7 @@
             {% endif %}
           </div>
           <div class="responses-preview muted" style="font-size: 12px; margin-top: 8px; display: flex; gap: 14px; flex-wrap: wrap;">
-            {% if ev.event_type in ('wedding', 'wedding-noir') %}
+            {% if ev.event_type in ('wedding', 'wedding-noir', 'wedding-burgundy') %}
             <span data-metric="attending">
               <span class="num" style="color: var(--plum); font-weight: 600;">·</span> attending
             </span>

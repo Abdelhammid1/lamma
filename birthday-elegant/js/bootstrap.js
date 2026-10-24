@@ -12,7 +12,7 @@ import { CONFIG } from "../config.js";
 
 
 const RESERVED_SEG = new Set([
-  "", "birthday", "birthday-elegant", "wedding", "wedding-noir",
+  "", "birthday", "birthday-elegant", "wedding", "wedding-noir", "wedding-burgundy",
   "engagement", "qiraya", "sobou", "admin", "create",
   "index.html", "admin.html", "create.html",
 ]);

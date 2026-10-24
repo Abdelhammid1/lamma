@@ -30,7 +30,7 @@ except ImportError:
     sys.exit(2)
 
 
-TEMPLATES = ["wedding", "wedding-noir", "engagement", "qiraya", "sobou", "birthday-elegant"]
+TEMPLATES = ["wedding", "wedding-noir", "wedding-burgundy", "engagement", "qiraya", "sobou", "birthday-elegant"]
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
 

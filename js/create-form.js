@@ -71,7 +71,7 @@ function guardFileSize(input, maxMb, label) {
 
 // All templates that share the "couple + event + venue" schema reuse
 // the wedding-shaped form. Birthday is the only outlier (quiz + memories).
-const COUPLE_TYPES = new Set(["wedding", "wedding-noir", "engagement", "qiraya", "sobou"]);
+const COUPLE_TYPES = new Set(["wedding", "wedding-noir", "wedding-burgundy", "engagement", "qiraya", "sobou"]);
 const BIRTHDAY_TYPES = new Set(["birthday", "birthday-elegant"]);
 const ALL_TYPES    = new Set([...BIRTHDAY_TYPES, ...COUPLE_TYPES]);
 
@@ -80,6 +80,7 @@ const TYPE_TITLE = {
   "birthday-elegant":"Create your birthday invitation — Elegant",
   wedding:           "Create your wedding invitation",
   "wedding-noir":    "Create your wedding invitation — Noir",
+  "wedding-burgundy": "Create your wedding invitation — Burgundy",
   engagement:        "Create your engagement invitation",
   qiraya:            "اعمل دعوة قراية فاتحة",
   sobou:             "اعمل دعوة سبوع",
@@ -90,6 +91,7 @@ const TYPE_PREVIEW = {
   "birthday-elegant": "birthday-elegant/index.html?preview=1",
   wedding:            "wedding/index.html?preview=1",
   "wedding-noir":     "wedding-noir/index.html?preview=1",
+  "wedding-burgundy": "wedding-burgundy/index.html?preview=1",
   engagement:         "engagement/index.html?preview=1",
   qiraya:             "qiraya/index.html?preview=1",
   sobou:              "sobou/index.html?preview=1",
@@ -121,6 +123,8 @@ function applyType(t) {
   $("dress-group").hidden   = noGallery;
   $("gallery-group").hidden = noGallery;
   $("elegant-group").style.display = (t === "birthday-elegant") ? "" : "none";
+  $("burgundy-group").hidden      = (t !== "wedding-burgundy");
+  $("burgundy-gift-group").hidden = (t !== "wedding-burgundy");
   updateSlugLink();
   // سبوع isn't a couple — it's a baby's naming ceremony. The groom
   // field holds the baby's name, the bride field holds the family /
@@ -756,6 +760,7 @@ function collectFormForPreview(fileUrl = previewUrl) {
   const EVENT_TYPE_LABEL = {
     wedding:        "Wedding",
     "wedding-noir": "Wedding",
+    "wedding-burgundy": "Wedding",
     engagement:     "Engagement",
     qiraya:         "قراية فاتحة",
     sobou:          "سبوع",
@@ -768,6 +773,9 @@ function collectFormForPreview(fileUrl = previewUrl) {
       eventType: EVENT_TYPE_LABEL[state.type] || "Wedding",
       groomLabel: "The Groom",
       brideLabel: "The Bride",
+      ...(state.type === "wedding-burgundy"
+        ? { groomFull: $("f-groom-full").value.trim(), brideFull: $("f-bride-full").value.trim() }
+        : {}),
     },
     event: {
       datetimeIso:   $("f-event-datetime").value ? new Date($("f-event-datetime").value).toISOString() : "",
@@ -820,6 +828,18 @@ function collectFormForPreview(fileUrl = previewUrl) {
       const f = input.files?.[0];
       return f ? fileUrl(f) : (input.dataset.existingUrl || "");
     })(),
+    ...(state.type === "wedding-burgundy" ? burgundyExtras() : {}),
+  };
+}
+
+// Fields only Wedding · Burgundy shows. The full names live on `couple`
+// so every renderer reads the couple from one place.
+function burgundyExtras() {
+  const v = (id) => ($(id)?.value || "").trim();
+  return {
+    families: { groom: v("f-family-groom"), bride: v("f-family-bride") },
+    ceremony: { name: v("f-ceremony-place") },
+    gift:     { message: v("f-gift-message"), details: v("f-gift-details") },
   };
 }
 
@@ -1287,6 +1307,13 @@ async function loadAdminEditFixtures() {
     setIf("f-venue-maps",    v.mapsEmbedSrc);
     setIf("f-blessing",      p.blessing);
     setIf("f-dress-code",    p.dressCode?.label);
+    setIf("f-groom-full",     c.groomFull);
+    setIf("f-bride-full",     c.brideFull);
+    setIf("f-family-groom",   p.families?.groom);
+    setIf("f-family-bride",   p.families?.bride);
+    setIf("f-ceremony-place", p.ceremony?.name);
+    setIf("f-gift-message",   p.gift?.message);
+    setIf("f-gift-details",   p.gift?.details);
     // Pre-fill the colour swatches from the stored palette. Missing
     // slots stay at their seed default so the host can extend an
     // existing palette by just editing the extra swatches.

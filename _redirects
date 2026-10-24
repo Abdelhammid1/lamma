@@ -28,6 +28,9 @@
 /wedding-noir           /wedding-noir/index.html    200
 /wedding-noir/          /wedding-noir/index.html    200
 /wedding-noir/*         /wedding-noir/index.html    200
+/wedding-burgundy       /wedding-burgundy/index.html 200
+/wedding-burgundy/      /wedding-burgundy/index.html 200
+/wedding-burgundy/*     /wedding-burgundy/index.html 200
 /birthday-elegant       /birthday-elegant/index.html 200
 /birthday-elegant/      /birthday-elegant/index.html 200
 /birthday-elegant/*     /birthday-elegant/index.html 200

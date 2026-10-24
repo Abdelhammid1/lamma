@@ -59,3 +59,11 @@ jobs:
       # A stale ?v= token serves guests yesterday's JS/CSS from cache.
       - name: cache tokens match file contents
         run: python3 tools/cache_tokens.py --check
+      # One illegal character (e.g. "--" inside a comment) makes a browser
+      # drop the whole SVG silently — that blanked every flower once.
+      - name: every SVG is well-formed XML
+        run: |
+          git ls-files '*.svg' | while read -r f; do
+            python3 -c "import sys, xml.dom.minidom as m; m.parse(sys.argv[1])" "$f" \
+              || { echo "::error file=$f::not well-formed XML"; exit 1; }
+          done

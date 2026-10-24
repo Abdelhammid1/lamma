@@ -23,8 +23,8 @@ const RENDERER_MODULES = [
   "./cover.js",       "./announcement.js?v=793a061c", "./gallery.js",
   "./event-info.js",  "./countdown.js",    "./calendar.js",
   "./ics.js?v=6d5e3a89",         "./rsvp.js",         "./venue.js?v=a47d1db9",
-  "./schedule.js?v=70dc6805",    "./dress-code.js",   "./contacts.js?v=69008faa",
-  "./guestbook.js?v=4c4c4264", "./view-ping.js",   "./reveal.js",
+  "./schedule.js?v=dd9baf15",    "./dress-code.js",   "./contacts.js?v=69008faa",
+  "./guestbook.js?v=87e3a3a4", "./view-ping.js",   "./reveal.js",
 ];
 
 const RESERVED_SEG = new Set([
