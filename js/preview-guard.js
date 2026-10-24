@@ -7,14 +7,21 @@
 //  Used by every template's bootstrap (and the classic birthday).
 // ============================================================================
 
-function sameOrigin(win) {
-  try { return !!win && win.location.origin === location.origin; }
-  catch (_) { return false; }              // cross-origin: access throws
+const CREATE_PATHS = new Set(["/create", "/create.html"]);
+
+// The window must be our create page itself — same origin is not enough,
+// or any other page on the site that frames or opens this one (say, an
+// invitation embedding a crafted preview URL) would count as trusted.
+function isCreatePage(win) {
+  try {
+    return !!win && win.location.origin === location.origin
+      && CREATE_PATHS.has(win.location.pathname);
+  } catch (_) { return false; }            // cross-origin: access throws
 }
 
 export function trustedPreview() {
-  if (window.parent !== window) return sameOrigin(window.parent);
-  return sameOrigin(window.opener);
+  if (window.parent !== window) return isCreatePage(window.parent);
+  return isCreatePage(window.opener);
 }
 
 // In a tab of its own (not the iframe), say plainly that this is a preview.

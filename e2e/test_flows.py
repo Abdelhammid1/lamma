@@ -344,3 +344,18 @@ def test_hand_made_preview_link_is_ignored_but_create_preview_works(page, site):
     tab.wait_for_selector("#lamma-preview-banner")
     assert tab.text_content("#cover-groom") == "Real"
     assert page.js_errors == []
+
+
+def test_preview_framed_by_another_site_page_is_ignored(page, site):
+    """Same origin is not enough: only /create itself may feed a preview."""
+    import base64, json
+    base = site["base"]
+    fake = {"couple": {"groom": "Scam", "bride": "Couple"}}
+    data = base64.b64encode(json.dumps(fake).encode()).decode()
+    page.goto(base + "/wedding/")                                   # some other page on our site
+    page.evaluate(f"""() => {{ const f = document.createElement('iframe');
+        f.id = 'probe'; f.src = '/wedding-burgundy/index.html?preview=1&data={data}';
+        document.body.appendChild(f); }}""")
+    page.wait_for_function("() => document.getElementById('probe')?.contentDocument?.getElementById('cover-groom')?.textContent")
+    page.wait_for_timeout(600)
+    assert page.evaluate("document.getElementById('probe').contentDocument.getElementById('cover-groom').textContent") == "Omar"

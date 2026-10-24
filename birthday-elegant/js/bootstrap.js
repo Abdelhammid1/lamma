@@ -9,7 +9,7 @@
 // ============================================================================
 
 import { CONFIG } from "../config.js";
-import { previewBanner, trustedPreview } from "/js/preview-guard.js?v=63bb8708";
+import { previewBanner, trustedPreview } from "/js/preview-guard.js?v=8c897610";
 
 
 const RESERVED_SEG = new Set([
