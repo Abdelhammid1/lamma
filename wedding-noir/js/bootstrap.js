@@ -17,6 +17,7 @@
 // ============================================================================
 
 import { CONFIG } from "../config.js";
+import { previewBanner, trustedPreview } from "/js/preview-guard.js?v=63bb8708";
 
 
 const RENDERER_MODULES = [
@@ -64,6 +65,9 @@ function isPreview() {
 }
 
 function decodePreviewData() {
+  // Only our own /create may hand this page content (js/preview-guard.js).
+  if (!trustedPreview()) return null;
+  previewBanner();
   const raw = new URLSearchParams(location.search).get("data");
   if (!raw) return null;
   try {

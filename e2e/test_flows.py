@@ -308,3 +308,39 @@ def test_burgundy_end_to_end(page, site):
                  "/media/karim-nour/music-", "/media/karim-nour/gallery-", "Karim Adel"):
         assert kept in data, kept
     assert page.js_errors == []
+
+
+# --- preview links can't be forged -------------------------------------------
+
+def test_hand_made_preview_link_is_ignored_but_create_preview_works(page, site):
+    """?preview=1&data=… used to render whatever the link carried, on our
+    domain — e.g. a fake payment number in the gift box. Only our own
+    /create may hand a preview its content now."""
+    import base64, json
+    base = site["base"]
+    fake = {"couple": {"groom": "Scam", "bride": "Couple"},
+            "gift": {"message": "Send money", "details": "Wallet 0100 000 0000"}}
+    data = base64.b64encode(json.dumps(fake).encode()).decode()
+
+    page.goto(f"{base}/wedding-burgundy/index.html?preview=1&data={data}")
+    page.wait_for_timeout(800)
+    assert page.text_content("#cover-groom") == "Omar"          # the demo, not the link's data
+    assert "Wallet" not in page.content()
+    assert page.locator("#lamma-preview-banner").count() == 0
+
+    # The real thing: the create page's preview iframe shows what was typed…
+    sign_in(page, site)
+    page.goto(base + "/create.html?type=wedding-burgundy")
+    page.fill("#f-groom", "Real")
+    page.fill("#f-bride", "Host")
+    frame = page.frame_locator("#preview-frame")
+    page.wait_for_function(
+        "() => document.querySelector('#preview-frame')?.contentDocument?.getElementById('cover-groom')?.textContent === 'Real'",
+        timeout=15_000)
+    # …and "Open in new tab" too, with the preview banner on top.
+    with page.context.expect_page() as new_tab:
+        page.click("#preview-open")
+    tab = new_tab.value
+    tab.wait_for_selector("#lamma-preview-banner")
+    assert tab.text_content("#cover-groom") == "Real"
+    assert page.js_errors == []

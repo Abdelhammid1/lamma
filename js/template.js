@@ -8,6 +8,7 @@
 import { initPageFlow } from "./page-flow.js";
 import { getSlug, loadBirthday } from "./loader.js";
 import { CONFIG } from "../config.js";
+import { previewBanner, trustedPreview } from "./preview-guard.js?v=63bb8708";
 
 /* ---------- Defaults: any missing field falls back to these ---------- */
 export const DEFAULTS = {
@@ -373,6 +374,9 @@ function isPreviewMode() {
 }
 
 function decodeInitialPreview() {
+  // Only our own /create may hand this page content (js/preview-guard.js).
+  if (!trustedPreview()) return null;
+  previewBanner();
   const data = new URLSearchParams(location.search).get("data");
   if (!data) return null;
   try {
