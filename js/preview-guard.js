@@ -12,9 +12,12 @@ const CREATE_PATHS = new Set(["/create", "/create.html"]);
 // The window must be our create page itself — same origin is not enough,
 // or any other page on the site that frames or opens this one (say, an
 // invitation embedding a crafted preview URL) would count as trusted.
+// And that create page must be top-level: otherwise another site could
+// frame /create and point its preview iframe at a crafted URL.
 function isCreatePage(win) {
   try {
-    return !!win && win.location.origin === location.origin
+    return !!win && win.top === win
+      && win.location.origin === location.origin
       && CREATE_PATHS.has(win.location.pathname);
   } catch (_) { return false; }            // cross-origin: access throws
 }

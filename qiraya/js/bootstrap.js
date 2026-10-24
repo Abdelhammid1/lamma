@@ -4,7 +4,7 @@
 // kept separate so this template stays self-contained.
 
 import { CONFIG } from "../config.js";
-import { previewBanner, trustedPreview } from "/js/preview-guard.js?v=8c897610";
+import { previewBanner, trustedPreview } from "/js/preview-guard.js?v=fcba6238";
 
 
 const RENDERER_MODULES = [

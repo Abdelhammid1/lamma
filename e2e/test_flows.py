@@ -260,7 +260,8 @@ def test_burgundy_end_to_end(page, site):
     assert "<title>Karim &amp; Nour · Wedding</title>" in html
 
     page.goto(base + "/wedding-burgundy/karim-nour")
-    assert page.text_content("#cover-groom") == "Karim"
+    # The template fills the cover a moment after load (modules load async).
+    page.wait_for_function("document.getElementById('cover-groom').textContent === 'Karim'")
     assert page.is_hidden("#invitation")
     page.click("#open-btn")
     page.wait_for_selector("#invitation", state="visible")
@@ -359,3 +360,22 @@ def test_preview_framed_by_another_site_page_is_ignored(page, site):
     page.wait_for_function("() => document.getElementById('probe')?.contentDocument?.getElementById('cover-groom')?.textContent")
     page.wait_for_timeout(600)
     assert page.evaluate("document.getElementById('probe').contentDocument.getElementById('cover-groom').textContent") == "Omar"
+
+
+def test_preview_inside_a_framed_create_page_is_ignored(page, site):
+    """/create framed by someone else (its preview iframe re-pointed at a
+    crafted URL) must not count: the create page has to be top-level."""
+    import base64, json
+    base = site["base"]
+    data = base64.b64encode(json.dumps({"couple": {"groom": "Scam", "bride": "X"}}).encode()).decode()
+    page.goto(base + "/wedding/")
+    page.evaluate("""() => { const f = document.createElement('iframe'); f.id = 'outer';
+        f.src = '/create.html?type=wedding-burgundy'; f.style.width = '1200px'; f.style.height = '800px';
+        document.body.appendChild(f); }""")
+    page.wait_for_function("() => document.getElementById('outer')?.contentDocument?.getElementById('preview-frame')")
+    page.evaluate(f"""() => {{ const pf = document.getElementById('outer').contentDocument.getElementById('preview-frame');
+        pf.src = '/wedding-burgundy/index.html?preview=1&data={data}'; }}""")
+    page.wait_for_timeout(2500)
+    groom = page.evaluate("""() => document.getElementById('outer').contentDocument
+        .getElementById('preview-frame').contentDocument.getElementById('cover-groom')?.textContent""")
+    assert groom == "Omar"
