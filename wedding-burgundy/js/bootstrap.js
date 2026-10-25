@@ -21,9 +21,9 @@ import { previewBanner, trustedPreview } from "/js/preview-guard.js?v=fcba6238";
 
 
 const RENDERER_MODULES = [
-  "./cover.js?v=c9eb9543",     "./content.js?v=3dc2652b",   "./gallery.js?v=728a5ea9",
+  "./cover.js?v=c9eb9543",     "./content.js?v=057fd7f5",   "./gallery.js?v=e60af7e8",
   "./countdown.js?v=3096335e", "./calendar.js?v=5244133f",  "./ics.js?v=fdb9bdd9",
-  "./rsvp.js?v=3d4953b2",      "./schedule.js?v=26994683",  "./contacts.js?v=69008faa",
+  "./rsvp.js?v=3d4953b2",      "./schedule.js?v=aeab4dc4",  "./contacts.js?v=69008faa",
   "./guestbook.js?v=87e3a3a4", "./reveal.js?v=3986f32d",    "./view-ping.js?v=ec6e9ac1",
 ];
 

@@ -44,15 +44,15 @@ set("full-bride", s(couple.brideFull) || couple.bride);
 const when = new Date(CONFIG.event?.datetimeIso);
 const valid = !isNaN(when);
 const fmt = (opts) => (valid ? new Intl.DateTimeFormat("en-US", opts).format(when) : "—");
-const time24 = valid
-  ? new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(when)
+const time12 = valid
+  ? new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit", hour12: true }).format(when)
   : "—";
 each("[data-day]",   (el) => (el.textContent = fmt({ day: "numeric" })));
 each("[data-month]", (el) => (el.textContent = fmt({ month: "long" }).toUpperCase()));
 each("[data-year]",  (el) => (el.textContent = fmt({ year: "numeric" })));
 each("[data-dow]",   (el) => (el.textContent = fmt({ weekday: "long" }).toUpperCase()));
-each('[data-time="ceremony"]',  (el) => (el.textContent = time24));
-const receptionTime = s(CONFIG.event?.receptionTime) || time24;
+each('[data-time="ceremony"]',  (el) => (el.textContent = time12));
+const receptionTime = s(CONFIG.event?.receptionTime) || time12;
 each('[data-time="reception"]', (el) => (el.textContent = receptionTime));
 
 set("ceremony-label", `${kind} Ceremony`);

@@ -8,7 +8,7 @@ import { CONFIG } from "../config.js";
 
 const $ = (id) => document.getElementById(id);
 const images = (Array.isArray(CONFIG.gallery) ? CONFIG.gallery : []).filter(Boolean);
-const section = $("gallery"), track = $("car-track"), counter = $("car-count");
+const section = $("gallery"), track = $("car-track");
 
 let current = 0;
 const slides = [];
@@ -27,7 +27,10 @@ if (!images.length) {
     img.loading = i < 3 ? "eager" : "lazy";
     img.decoding = "async";
     b.appendChild(img);
-    b.addEventListener("click", () => (i === current ? openLightbox(i) : go(i)));
+    b.addEventListener("click", () => {
+      if (swiped) return;
+      if (i === current) openLightbox(i); else go(i);
+    });
     track.appendChild(b);
     slides.push(b);
   });
@@ -53,7 +56,6 @@ function layout() {
     el.style.visibility = a > 2 ? "hidden" : "visible";
     el.tabIndex = k === 0 ? 0 : -1;
   });
-  if (counter) counter.textContent = `${current + 1} / ${images.length}`;
 }
 
 function go(i) {
@@ -68,14 +70,29 @@ $("carousel")?.addEventListener("keydown", (e) => {
   if (e.key === "ArrowRight") go(current + 1);
 });
 
-// Swipe: a horizontal drag of 40px or more moves one photo.
-let startX = null;
-track?.addEventListener("pointerdown", (e) => { startX = e.clientX; });
+// Swipe: only a clearly sideways drag moves a photo. Scrolling the page
+// up or down across the carousel (even a little diagonally) used to count
+// as a swipe and flip photos while the guest was just reading on.
+let start = null;
+let swiped = false;              // the click that follows a swipe is not a tap
+track?.addEventListener("pointerdown", (e) => {
+  if (!e.isPrimary) return;
+  start = { x: e.clientX, y: e.clientY, scroll: window.scrollY };
+});
+track?.addEventListener("pointercancel", () => { start = null; });   // the browser took over: a scroll
 track?.addEventListener("pointerup", (e) => {
-  if (startX === null) return;
-  const dx = e.clientX - startX;
-  startX = null;
-  if (Math.abs(dx) >= 40) go(current + (dx < 0 ? 1 : -1));
+  if (!start || !e.isPrimary) return;
+  const dx = e.clientX - start.x, dy = e.clientY - start.y;
+  const pageMoved = Math.abs(window.scrollY - start.scroll) > 4;
+  start = null;
+  // Any drag (swipe or not) is not a tap: ignore the click that follows,
+  // or a drag ending on the middle photo would open the full-screen viewer.
+  if (Math.hypot(dx, dy) > 10) {
+    swiped = true;
+    setTimeout(() => { swiped = false; }, 0);
+  }
+  if (pageMoved || Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 2) return;
+  go(current + (dx < 0 ? 1 : -1));
 });
 
 /* ---------- Full-screen viewer ---------- */

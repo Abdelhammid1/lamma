@@ -562,8 +562,7 @@ body.preview #cover { position: relative; inset: auto; min-height: 0 !important;
 }
 .car-prev { left: 8px; } .car-next { right: 8px; }
 @media (hover: hover) { .car-btn { display: block; } }
-.gallery.single .car-btn, .gallery.single .car-count { display: none; }
-.car-count { margin: 10px 0 0; font-size: 13px; letter-spacing: 0.1em; color: var(--muted); }
+.gallery.single .car-btn { display: none; }
 
 /* ---------------------------------------------------------------- Venue */
 .venue { padding: 46px 16px 56px; min-height: 420px; }

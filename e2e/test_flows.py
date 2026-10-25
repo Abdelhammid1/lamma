@@ -270,11 +270,11 @@ def test_burgundy_end_to_end(page, site):
     assert page.text_content("#full-bride") == "Nour Samir"
     assert page.text_content("#ceremony-place") == "Al-Sayeda Nafisa Mosque"
     assert page.text_content("#reception-place") == "Solitaire Hall"
-    assert page.text_content("#car-count") == "1 / 1"
+    assert page.locator("#car-count").count() == 0                     # no "1 / 5" under the photos
     assert re.match(r"\d+ days \d+ hours \d+ min \d+ sec", page.text_content("#countdown"))
     assert page.text_content(".cal-event") == "12"                     # 12 December
     assert "Dinner" in page.text_content("#schedule-list")
-    assert "19:00" in page.text_content("#schedule-list")               # 24-hour clock
+    assert "7:00 PM" in page.text_content("#schedule-list")             # 12-hour clock
     assert page.get_attribute("audio", "src").startswith("/media/karim-nour/")
     assert "Ali" in page.text_content("#contacts")
 
@@ -379,3 +379,45 @@ def test_preview_inside_a_framed_create_page_is_ignored(page, site):
     groom = page.evaluate("""() => document.getElementById('outer').contentDocument
         .getElementById('preview-frame').contentDocument.getElementById('cover-groom')?.textContent""")
     assert groom == "Omar"
+
+
+def test_burgundy_carousel_moves_only_on_a_sideways_swipe(page, site):
+    page.goto(site["base"] + "/wedding-burgundy/")
+    page.click("#open-btn")
+    # Opening scrolls back to the top after its fade; wait for that first.
+    page.wait_for_function("document.body.classList.contains('opened')")
+    page.wait_for_timeout(300)
+    page.wait_for_selector("#car-track .slide.is-current")
+    page.locator("#gallery").scroll_into_view_if_needed()
+    page.wait_for_timeout(300)
+    current = lambda: page.evaluate(
+        "[...document.querySelectorAll('#car-track .slide')].findIndex(s => s.classList.contains('is-current'))")
+    box = page.locator("#car-track .slide.is-current").bounding_box()
+    cx, cy = box["x"] + box["width"] / 2, box["y"] + box["height"] / 2
+
+    def drag(dx, dy):
+        page.mouse.move(cx, cy)
+        page.mouse.down()
+        page.mouse.move(cx + dx / 2, cy + dy / 2)
+        page.mouse.move(cx + dx, cy + dy)
+        page.mouse.up()
+        page.wait_for_timeout(250)
+
+    assert current() == 0
+    drag(60, 140)                 # mostly vertical, like scrolling past it
+    assert current() == 0
+    assert not page.is_visible("#lightbox")   # a drag is not a tap on the photo
+    drag(-120, 10)                # a real swipe to the left
+    assert current() == 1         # exactly one step (the click after it is ignored)
+    page.wait_for_timeout(700)    # let the 3D turn settle
+    # Tap the strip of the right-hand photo that shows beside the middle one.
+    mid = page.locator("#car-track .slide.is-current").bounding_box()
+    side = page.locator("#car-track .slide").nth(2).bounding_box()
+    x = (mid["x"] + mid["width"] + side["x"] + side["width"]) / 2
+    hit = page.evaluate(f"document.elementFromPoint({x}, {side['y'] + side['height'] / 2})?.getAttribute('aria-label')")
+    assert hit == "Photo 3 of 3", hit
+    page.mouse.click(x, side["y"] + side["height"] / 2)
+    page.wait_for_timeout(250)
+    assert current() == 2         # tapping a side photo still brings it in
+    assert page.locator("#car-count").count() == 0
+    assert page.js_errors == []

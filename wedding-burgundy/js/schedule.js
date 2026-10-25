@@ -2,4 +2,4 @@
 import { CONFIG } from "../config.js";
 import { renderSchedule } from "/js/shared/schedule.js?v=736d9964";
 
-renderSchedule(CONFIG, { clock24: true });   // "17:30", like the rest of this template
+renderSchedule(CONFIG);   // 12-hour, "5:30 PM"
