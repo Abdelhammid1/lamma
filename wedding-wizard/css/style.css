@@ -431,7 +431,7 @@ body.preview .intro, body.preview .envelope-scene { display: none !important; }
   gap: 4px;
   margin-top: 18px;
 }
-.couple .role { display: block; font: 600 12px var(--font-label); letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-3); }
+.couple .role { display: block; font: 600 13px var(--font-label); letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-3); }
 .couple .name {
   display: block;
   margin-top: 6px;
@@ -685,7 +685,7 @@ body.preview .intro, body.preview .envelope-scene { display: none !important; }
   text-align: center;
 }
 .thanks { margin: 0; font-size: 19px; font-style: italic; color: var(--gold-2); }
-.foot a { color: var(--cream-2); font: 13px var(--font-label); letter-spacing: 0.08em; text-decoration: none; }
+.foot a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 12px; color: var(--cream-2); font: 13px var(--font-label); letter-spacing: 0.08em; text-decoration: none; }
 
 /* ---------------------------------------------------------------- Music */
 .music-toggle {

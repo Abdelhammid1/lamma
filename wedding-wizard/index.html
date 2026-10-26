@@ -14,7 +14,7 @@
     href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cinzel+Decorative:wght@700&family=Cinzel:wght@500;600;700&family=IM+Fell+English:ital@0;1&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="css/style.css?v=2f2f88e7" />
+  <link rel="stylesheet" href="css/style.css?v=b05119b0" />
 </head>
 <body>
 
@@ -35,8 +35,8 @@
   </div>
 
   <!-- ============ The envelope: the wand touches the seal ============ -->
-  <div id="envelope-scene" class="envelope-scene" aria-hidden="true">
-    <div class="env-stage">
+  <div id="envelope-scene" class="envelope-scene">
+    <div class="env-stage" aria-hidden="true">
       <div class="envelope">
         <svg class="env-lines" viewBox="0 0 330 224" preserveAspectRatio="none"><path d="M14 16 L165 124 L316 16"/><path d="M14 210 L136 112 M316 210 L194 112"/></svg>
         <span class="env-seal"><img src="/wedding-wizard/images/wax-seal.webp" alt="" /><b data-monogram>O&amp;E</b></span>
@@ -53,9 +53,9 @@
       </svg>
       <span class="sparks" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
     </div>
-    <p class="env-caption">Sealed with magic</p>
+    <p class="env-caption" aria-hidden="true">Sealed with magic</p>
 
-    <div class="seal-close">
+    <div class="seal-close" aria-hidden="true">
       <img src="/wedding-wizard/images/wax-seal.webp" alt="" />
       <div class="seal-names">
         <span data-groom>Groom</span>
@@ -63,11 +63,12 @@
         <span data-bride>Bride</span>
       </div>
     </div>
-    <button type="button" class="skip" id="skip-intro">Skip</button>
+    <button type="button" class="skip" id="skip-intro" aria-label="Skip to the invitation">Skip</button>
   </div>
 
   <!-- ============ INVITATION ============ -->
   <main id="invitation">
+    <h1 class="sr-only" id="page-title">Wedding invitation</h1>
 
     <!-- Grab your wand: the enchanted map -->
     <section class="scene-sec bg-library" id="map">
@@ -295,6 +296,6 @@
     </symbol>
   </svg>
 
-  <script type="module" src="js/bootstrap.js?v=4735454b"></script>
+  <script type="module" src="js/bootstrap.js?v=368cddd6"></script>
 </body>
 </html>

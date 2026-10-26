@@ -21,7 +21,7 @@ import { previewBanner, trustedPreview } from "/js/preview-guard.js?v=fcba6238";
 
 
 const RENDERER_MODULES = [
-  "./intro.js?v=5d30e6b4",     "./content.js?v=6d8f0d26",   "./countdown.js?v=42d298ee",
+  "./intro.js?v=4c30b8bb",     "./content.js?v=c0dcb24d",   "./countdown.js?v=42d298ee",
   "./ics.js?v=fdb9bdd9",       "./rsvp.js?v=3d4953b2",      "./contacts.js?v=69008faa",
   "./guestbook.js?v=87e3a3a4", "./reveal.js?v=3986f32d",    "./view-ping.js?v=ec6e9ac1",
 ];
@@ -172,12 +172,14 @@ if (isPreview()) {
   if (isPreview()) {
     const data = decodePreviewData();
     if (data) { clearDemo(); mergeInvitation(data); }
-    await loadRenderers();
     // Skip the intro in preview — the tap inside an iframe would be lost
     // on every form change (location.replace resets it), so the host would
-    // never see the letter, venue or RSVP. Also mark sections visible so
-    // reveal.js doesn't leave them at opacity:0.
+    // never see the letter, venue or RSVP. Set before the renderers run, so
+    // intro.js doesn't start the owl video in the hidden intro on every
+    // keystroke's reload.
     document.body.classList.add("opened", "settled", "preview");
+    await loadRenderers();
+    // Mark sections visible so reveal.js doesn't leave them at opacity:0.
     for (const s of document.querySelectorAll(".section, .reveal")) {
       s.classList.add("in-view");
       s.classList.add("is-visible");

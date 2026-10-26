@@ -804,7 +804,9 @@ function collectFormForPreview(fileUrl = previewUrl) {
                  .map((el) => (el.value || "").toLowerCase().trim())
                  .filter((c) => c && c !== "#ffffff"),
     },
-    gallery:   [...galleryBuilder.querySelectorAll(".mem-row")].map((row) => {
+    // Wedding · Wizard has no gallery: photos picked under another template
+    // aren't uploaded with it.
+    gallery:   state.type === "wedding-wizard" ? [] : [...galleryBuilder.querySelectorAll(".mem-row")].map((row) => {
       const file = row.querySelector(".mem-file").files?.[0];
       // Same edit-mode fallback as memories — keep the committed URL
       // when there is no new file for this row.

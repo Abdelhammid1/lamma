@@ -20,6 +20,8 @@ const initial = (name) => Array.from(name.trim())[0] || "";
 document.querySelectorAll("[data-groom]").forEach((el) => (el.textContent = groom));
 document.querySelectorAll("[data-bride]").forEach((el) => (el.textContent = bride));
 const short = initial(groom) + initial(bride);
+const title = document.getElementById("page-title");
+if (title && (groom || bride)) title.textContent = `${[groom, bride].filter(Boolean).join(" & ")} · Wedding invitation`;
 document.querySelectorAll("[data-monogram]").forEach((el) => {
   el.textContent = short ? `${initial(groom)}&${initial(bride)}` : "";
 });
@@ -63,6 +65,9 @@ if (video && src && /^\/[^/]/.test(src) && !body.classList.contains("preview")) 
   intro.classList.add("playing");
   video.addEventListener("playing", () => { videoPlayed = true; });
   video.addEventListener("ended", () => readyToTap("Tap anywhere to continue"));
+  // A slow connection can stall the clip: never leave the guest without
+  // the prompt for long (the whole screen is the button either way).
+  setTimeout(() => { if (!video.ended) readyToTap("Tap anywhere to continue"); }, 20000);
   // No file, or the browser won't play it muted (some battery savers):
   // the castle stays and the guest taps on as if it had ended.
   video.addEventListener("error", () => { video.hidden = true; readyToTap("Tap anywhere to begin the magic"); });

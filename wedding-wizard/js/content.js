@@ -146,6 +146,10 @@ if (!s(dress.label) && !colors.length && !s(dress.note) && $("dress-code")) $("d
 
 /* ---------- RSVP: the two choices open the reply ---------- */
 const form = $("rsvp-form");
+// After a reply is sent the shared module resets the form (back to "yes"):
+// drop the highlight so it doesn't point at the other answer.
+form?.addEventListener("reset", () =>
+  document.querySelectorAll("#rsvp-choice .is-picked").forEach((b) => b.classList.remove("is-picked")));
 document.querySelectorAll("#rsvp-choice [data-attend]").forEach((btn) => {
   btn.addEventListener("click", () => {
     if (!form) return;
