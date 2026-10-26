@@ -311,6 +311,96 @@ def test_burgundy_end_to_end(page, site):
     assert page.js_errors == []
 
 
+def test_wizard_end_to_end(page, site):
+    base = site["base"]
+    allowed = (base, "https://fonts.googleapis.com/", "https://fonts.gstatic.com/")
+    outside = []
+    page.on("request", lambda r: outside.append(r.url)
+            if not r.url.startswith(allowed) and not r.url.startswith(("data:", "blob:")) else None)
+
+    sign_in(page, site)
+    page.goto(base + "/create.html?type=wedding-wizard")
+    page.wait_for_selector("#dress-note-field:not([hidden])")
+    assert page.is_hidden("#gallery-group")          # the wizard has no photo gallery
+    assert page.is_hidden("#burgundy-group")
+    page.fill("#f-groom", "Omar")
+    page.fill("#f-bride", "Esraa")
+    page.fill("#f-event-datetime", "2026-12-11T15:00")
+    page.fill("#f-welcome-time", "14:00")
+    page.fill("#f-venue-name", "The Great Hall")
+    page.fill("#f-venue-address", "Maadi, Cairo")
+    page.fill("#f-dress-code", "Light colours, please")
+    page.fill("#f-dress-note", "Keep children away from the dance floor")
+    page.click("#add-schedule-btn")
+    page.fill("#schedule-builder .sched-time", "17:00")
+    page.fill("#schedule-builder .sched-label", "Drinks & Snacks")
+    page.wait_for_function(
+        "document.getElementById('slug-preview').textContent === 'lamma.manasety.ai/wedding-wizard/omar-esraa'")
+    publish_with(page, "GOOD-CODE-0005")
+    page.wait_for_selector("#success-screen:not([hidden])", timeout=20_000)
+
+    html = urllib.request.urlopen(base + "/wedding-wizard/omar-esraa").read().decode()
+    assert "<title>Omar &amp; Esraa · Wedding</title>" in html
+    assert "/wedding-wizard/images/share.jpg" in html                 # link preview: the sealed letter
+
+    page.goto(base + "/wedding-wizard/omar-esraa")
+    page.wait_for_function("document.querySelector('.seal-names [data-groom]').textContent === 'Omar'")
+    assert page.is_hidden("#invitation")
+    page.click("#open-btn")                          # tap anywhere: envelope, wand, seal…
+    page.wait_for_selector("body.seal")
+    page.wait_for_selector("#invitation", state="visible", timeout=10_000)
+    page.wait_for_function("document.body.classList.contains('settled')")
+    assert page.is_hidden("#envelope-scene")
+    assert page.text_content("#letter [data-groom]") == "Omar"
+    assert page.text_content("#letter [data-monogram-short]") == "OE"
+    assert page.text_content("#venue-name") == "The Great Hall"
+    assert page.text_content("#doors-time") == "2:00 PM"
+    assert page.text_content("#date-line") == "FRIDAY, 11.12.2026"
+    assert page.text_content("#begin-time") == "3:00 PM"
+    assert page.text_content(".cal-event") == "11"
+    assert int(page.text_content("#cd-days")) >= 0
+    assert page.text_content(".plan-card .plan-time") == "5:00 PM"
+    assert page.text_content(".plan-card .plan-what") == "Drinks & Snacks"
+    assert page.text_content("#dress-note") == "Keep children away from the dance floor"
+    assert page.locator("#dress-code-swatches .swatch").count() >= 1
+
+    # The two RSVP choices open the reply with the answer already picked.
+    assert page.is_hidden("#rsvp-form")
+    page.click("[data-attend='no']")
+    assert page.is_visible("#rsvp-form")
+    assert page.is_checked("#rsvp-form input[value=no]")
+    assert page.is_hidden("#guest-count-field")
+    page.click("[data-attend='yes']")
+    assert page.is_visible("#guest-count-field")
+    page.fill("#rsvp-name", "Guest Three")
+    page.click("#rsvp-form button[type=submit]")
+    page.wait_for_function("/thank/i.test(document.getElementById('rsvp-status').textContent)")
+    page.fill("#gb-name", "Guest Three")
+    page.fill("#gb-message", "Mischief managed")
+    page.click("#gb-form button[type=submit]")
+    page.wait_for_selector("#gb-list li:has-text('Mischief managed')")
+    assert outside == [], outside
+    assert page.js_errors == []
+
+    # Edit keeps the note.
+    page.goto(base + "/user/")
+    page.locator(".event-card[data-slug='omar-esraa'] >> text=Edit").click()
+    page.wait_for_function("document.getElementById('f-dress-note').value === 'Keep children away from the dance floor'")
+    assert page.js_errors == []
+
+
+def test_wizard_skip_and_reduced_motion(page, site):
+    page.goto(site["base"] + "/wedding-wizard/")
+    page.click("#open-btn")
+    page.click("#skip-intro")                        # Skip goes straight to the map
+    page.wait_for_selector("#map", state="visible")
+    page.emulate_media(reduced_motion="reduce")
+    page.goto(site["base"] + "/wedding-wizard/")
+    page.click("#open-btn")                          # no envelope scene at all
+    page.wait_for_selector("#invitation", state="visible")
+    assert not page.evaluate("document.body.classList.contains('env')")
+    assert page.js_errors == []
+
 # --- preview links can't be forged -------------------------------------------
 
 def test_hand_made_preview_link_is_ignored_but_create_preview_works(page, site):

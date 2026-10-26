@@ -23,7 +23,7 @@ from datetime import datetime
 MAX_PAYLOAD_BYTES = 200_000
 MAX_STRING = 5_000
 
-COUPLE_TYPES = {"wedding", "wedding-noir", "wedding-burgundy", "engagement", "qiraya", "sobou", "invitation"}
+COUPLE_TYPES = {"wedding", "wedding-noir", "wedding-burgundy", "wedding-wizard", "engagement", "qiraya", "sobou", "invitation"}
 BIRTHDAY_TYPES = {"birthday", "birthday-elegant"}
 
 # Generous ceilings: well above what the form allows (8 photos, 4
@@ -177,7 +177,7 @@ def _check_couple(p, errors):
     _str_fields(_obj(p, "gift", "gift", errors), ("message", "details"), "gift", errors)
 
     dress = _obj(p, "dressCode", "dressCode", errors)
-    _str_fields(dress, ("label",), "dressCode", errors)
+    _str_fields(dress, ("label", "note"), "dressCode", errors)   # note: wedding-wizard
     colors = _list(dress, "colors", "dressCode.colors", errors)
     for i, c in enumerate(colors):
         if not (isinstance(c, str) and _HEX.match(c)):

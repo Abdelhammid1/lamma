@@ -28,7 +28,7 @@ const RENDERER_MODULES = [
 ];
 
 const RESERVED_SEG = new Set([
-  "", "wedding", "wedding-burgundy", "wedding-noir", "birthday", "birthday-elegant",
+  "", "wedding", "wedding-burgundy", "wedding-noir", "wedding-wizard", "birthday", "birthday-elegant",
   "engagement", "qiraya", "sobou", "admin", "create",
   "index.html", "admin.html", "create.html",
 ]);

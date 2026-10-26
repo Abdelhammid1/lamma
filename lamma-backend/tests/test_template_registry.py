@@ -28,7 +28,7 @@ def read(rel):
 
 def test_the_scan_finds_the_templates():
     found = template_folders()
-    assert {"wedding", "wedding-noir", "wedding-burgundy", "engagement",
+    assert {"wedding", "wedding-noir", "wedding-burgundy", "wedding-wizard", "engagement",
             "qiraya", "sobou", "birthday-elegant"} <= set(found), found
 
 

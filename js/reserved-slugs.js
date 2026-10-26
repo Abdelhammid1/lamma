@@ -11,7 +11,7 @@
 
 export const RESERVED_SLUGS = new Set([
   // Routes / product surfaces
-  "", "admin", "create", "wedding", "wedding-noir", "wedding-burgundy", "birthday",
+  "", "admin", "create", "wedding", "wedding-noir", "wedding-burgundy", "wedding-wizard", "birthday",
   "birthday-elegant", "engagement", "qiraya", "sobou", "invitation",
   "lamma", "landing",
 

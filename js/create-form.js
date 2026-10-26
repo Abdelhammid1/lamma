@@ -71,7 +71,7 @@ function guardFileSize(input, maxMb, label) {
 
 // All templates that share the "couple + event + venue" schema reuse
 // the wedding-shaped form. Birthday is the only outlier (quiz + memories).
-const COUPLE_TYPES = new Set(["wedding", "wedding-noir", "wedding-burgundy", "engagement", "qiraya", "sobou"]);
+const COUPLE_TYPES = new Set(["wedding", "wedding-noir", "wedding-burgundy", "wedding-wizard", "engagement", "qiraya", "sobou"]);
 const BIRTHDAY_TYPES = new Set(["birthday", "birthday-elegant"]);
 const ALL_TYPES    = new Set([...BIRTHDAY_TYPES, ...COUPLE_TYPES]);
 
@@ -81,6 +81,7 @@ const TYPE_TITLE = {
   wedding:           "Create your wedding invitation",
   "wedding-noir":    "Create your wedding invitation — Noir",
   "wedding-burgundy": "Create your wedding invitation — Burgundy",
+  "wedding-wizard":   "Create your wedding invitation — Wizard",
   engagement:        "Create your engagement invitation",
   qiraya:            "اعمل دعوة قراية فاتحة",
   sobou:             "اعمل دعوة سبوع",
@@ -92,6 +93,7 @@ const TYPE_PREVIEW = {
   wedding:            "wedding/index.html?preview=1",
   "wedding-noir":     "wedding-noir/index.html?preview=1",
   "wedding-burgundy": "wedding-burgundy/index.html?preview=1",
+  "wedding-wizard":   "wedding-wizard/index.html?preview=1",
   engagement:         "engagement/index.html?preview=1",
   qiraya:             "qiraya/index.html?preview=1",
   sobou:              "sobou/index.html?preview=1",
@@ -121,7 +123,8 @@ function applyType(t) {
   // birthday has the two cover lines.
   const noGallery = (t === "qiraya" || t === "sobou");
   $("dress-group").hidden   = noGallery;
-  $("gallery-group").hidden = noGallery;
+  $("gallery-group").hidden = noGallery || t === "wedding-wizard";   // the wizard has no gallery
+  $("dress-note-field").hidden = (t !== "wedding-wizard");
   $("elegant-group").style.display = (t === "birthday-elegant") ? "" : "none";
   $("burgundy-group").hidden      = (t !== "wedding-burgundy");
   $("burgundy-gift-group").hidden = (t !== "wedding-burgundy");
@@ -761,6 +764,7 @@ function collectFormForPreview(fileUrl = previewUrl) {
     wedding:        "Wedding",
     "wedding-noir": "Wedding",
     "wedding-burgundy": "Wedding",
+    "wedding-wizard": "Wedding",
     engagement:     "Engagement",
     qiraya:         "قراية فاتحة",
     sobou:          "سبوع",
@@ -792,6 +796,7 @@ function collectFormForPreview(fileUrl = previewUrl) {
     blessing:  $("f-blessing").value,
     dressCode: {
       label:  $("f-dress-code").value,
+      ...(state.type === "wedding-wizard" ? { note: $("f-dress-note").value.trim() } : {}),
       // Pull each live swatch value. Lower-case for consistency; drop
       // the "unset" white sentinel the form seeds the last row with so
       // a 4-colour palette doesn't silently include stray white.
@@ -1307,6 +1312,7 @@ async function loadAdminEditFixtures() {
     setIf("f-venue-maps",    v.mapsEmbedSrc);
     setIf("f-blessing",      p.blessing);
     setIf("f-dress-code",    p.dressCode?.label);
+    setIf("f-dress-note",    p.dressCode?.note);
     setIf("f-groom-full",     c.groomFull);
     setIf("f-bride-full",     c.brideFull);
     setIf("f-family-groom",   p.families?.groom);

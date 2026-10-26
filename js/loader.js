@@ -58,7 +58,7 @@ export function getSlug() {
 // wedding payload and show a broken page. Detect it here and redirect
 // to the right template URL before the loader returns.
 const _PREFIXED_TYPES = new Set([
-  "wedding", "wedding-noir", "wedding-burgundy", "birthday-elegant",
+  "wedding", "wedding-noir", "wedding-burgundy", "wedding-wizard", "birthday-elegant",
   "engagement", "qiraya", "sobou",
 ]);
 

@@ -26,18 +26,19 @@ from models import Event, db
 
 bp = Blueprint("pages", __name__)
 
-TEMPLATES = ("wedding", "wedding-noir", "wedding-burgundy", "engagement", "qiraya", "sobou", "birthday-elegant")
+TEMPLATES = ("wedding", "wedding-noir", "wedding-burgundy", "wedding-wizard", "engagement", "qiraya", "sobou", "birthday-elegant")
 _SAFE_SLUG = re.compile(r"^[a-z0-9][a-z0-9-]{0,38}[a-z0-9]$")
 _TITLE_RE = re.compile(r"<title>.*?</title>", re.S | re.I)
 
 _KIND = {
-    "wedding": "Wedding", "wedding-noir": "Wedding", "wedding-burgundy": "Wedding", "engagement": "Engagement",
+    "wedding": "Wedding", "wedding-noir": "Wedding", "wedding-burgundy": "Wedding",
+    "wedding-wizard": "Wedding", "engagement": "Engagement",
     "qiraya": "قراية فاتحة", "sobou": "سبوع", "birthday-elegant": "Birthday",
 }
 
 
-@bp.get("/<any(wedding, 'wedding-noir', 'wedding-burgundy', engagement, qiraya, sobou, 'birthday-elegant'):tpl>/<slug>")
-@bp.get("/<any(wedding, 'wedding-noir', 'wedding-burgundy', engagement, qiraya, sobou, 'birthday-elegant'):tpl>/<slug>/")
+@bp.get("/<any(wedding, 'wedding-noir', 'wedding-burgundy', 'wedding-wizard', engagement, qiraya, sobou, 'birthday-elegant'):tpl>/<slug>")
+@bp.get("/<any(wedding, 'wedding-noir', 'wedding-burgundy', 'wedding-wizard', engagement, qiraya, sobou, 'birthday-elegant'):tpl>/<slug>/")
 def invitation_page(tpl, slug):
     if not _SAFE_SLUG.match(slug):
         abort(404)
@@ -109,6 +110,8 @@ def preview_fields(tpl: str, p: dict) -> tuple[str, str, str]:
 
     gallery = p.get("gallery") if isinstance(p.get("gallery"), list) else []
     image = next((_s(u) for u in gallery if _s(u)), "")
+    if not image and tpl == "wedding-wizard":
+        image = "/wedding-wizard/images/share.jpg"   # no gallery: the sealed letter
     return title, description, image or "/logo.jpg"
 
 
