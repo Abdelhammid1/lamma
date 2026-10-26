@@ -1,7 +1,8 @@
 // ============================================================================
 //  3D carousel: the current photo large and framed in the middle, the
-//  neighbours turned away on each side. Swipe, arrows, keyboard; tap the
-//  middle photo for the full-screen viewer, tap a side photo to bring it in.
+//  neighbours turned away on each side. Turns by itself every few seconds
+//  while it is on screen; swipe, arrows, keyboard; tap the middle photo for
+//  the full-screen viewer, tap a side photo to bring it in.
 // ============================================================================
 
 import { CONFIG } from "../config.js";
@@ -61,6 +62,7 @@ function layout() {
 function go(i) {
   current = (i + images.length) % images.length;
   layout();
+  autoplay();                    // a fresh full wait after every move
 }
 
 $("car-prev")?.addEventListener("click", () => go(current - 1));
@@ -78,6 +80,7 @@ let swiped = false;              // the click that follows a swipe is not a tap
 track?.addEventListener("pointerdown", (e) => {
   if (!e.isPrimary) return;
   start = { x: e.clientX, y: e.clientY, scroll: window.scrollY };
+  autoplay();                    // never turn under the guest's finger
 });
 track?.addEventListener("pointercancel", () => { start = null; });   // the browser took over: a scroll
 track?.addEventListener("pointerup", (e) => {
@@ -126,3 +129,24 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "ArrowRight") stepLb(1);
   if (e.key === "ArrowLeft") stepLb(-1);
 });
+
+/* ---------- Turning by itself ---------- */
+// One photo every few seconds, but only while the carousel is on screen, the
+// tab is visible, the full-screen viewer is closed and no finger is down.
+// Any move (swipe, tap, arrow) starts the wait again. Guests who asked their
+// phone for reduced motion get a still carousel.
+const AUTO_MS = 4000;
+const still = images.length < 2 || window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+let onScreen = false, autoTimer = 0;
+function autoplay() {
+  clearTimeout(autoTimer);
+  if (still) return;
+  autoTimer = setTimeout(() => {
+    if (onScreen && !document.hidden && !start && !lb?.classList.contains("open")) go(current + 1);
+    else autoplay();
+  }, AUTO_MS);
+}
+if (!still && section) {
+  new IntersectionObserver(([e]) => { onScreen = e.isIntersecting; }, { threshold: 0.5 }).observe(section);
+  autoplay();
+}

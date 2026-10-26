@@ -382,6 +382,7 @@ def test_preview_inside_a_framed_create_page_is_ignored(page, site):
 
 
 def test_burgundy_carousel_moves_only_on_a_sideways_swipe(page, site):
+    page.emulate_media(reduced_motion="reduce")   # holds still: only the guest moves it here
     page.goto(site["base"] + "/wedding-burgundy/")
     page.click("#open-btn")
     # Opening scrolls back to the top after its fade; wait for that first.
@@ -420,4 +421,22 @@ def test_burgundy_carousel_moves_only_on_a_sideways_swipe(page, site):
     page.wait_for_timeout(250)
     assert current() == 2         # tapping a side photo still brings it in
     assert page.locator("#car-count").count() == 0
+    assert page.js_errors == []
+
+
+def test_burgundy_carousel_turns_by_itself(page, site):
+    page.goto(site["base"] + "/wedding-burgundy/")
+    page.click("#open-btn")
+    page.wait_for_function("document.body.classList.contains('opened')")
+    page.wait_for_timeout(300)
+    page.locator("#gallery").scroll_into_view_if_needed()
+    current = "[...document.querySelectorAll('#car-track .slide')].findIndex(s => s.classList.contains('is-current'))"
+    start = page.evaluate(current)
+    page.wait_for_function(f"({current}) === {(start + 1) % 3}", timeout=9000)
+    # While the full-screen viewer is open the carousel stays where it is.
+    page.locator("#car-track .slide.is-current").click()
+    page.wait_for_selector("#lightbox.open")
+    held = page.evaluate(current)
+    page.wait_for_timeout(5000)
+    assert page.evaluate(current) == held
     assert page.js_errors == []
