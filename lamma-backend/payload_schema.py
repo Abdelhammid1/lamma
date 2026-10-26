@@ -190,7 +190,7 @@ def _check_couple(p, errors):
         if not isinstance(it, dict):
             errors.append(f"schedule[{i}] must be an object")
             continue
-        _str_fields(it, ("time", "label"), f"schedule[{i}]", errors)
+        _str_fields(it, ("time", "label", "detail"), f"schedule[{i}]", errors)   # detail: wedding-wizard
 
     for i, c in enumerate(_list(p, "contacts", "contacts", errors)):
         if not isinstance(c, dict):

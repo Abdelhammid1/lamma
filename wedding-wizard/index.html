@@ -6,15 +6,16 @@
   <meta name="theme-color" content="#0b0806" />
   <title>Wedding Invitation</title>
 
-  <!-- Cinzel Decorative (titles, names), Cinzel (labels, buttons),
-       IM Fell English (letter text), Amiri (Arabic text). -->
+  <!-- Harry P (titles, names: self-hosted in fonts/), EB Garamond
+       (everything else), Amiri (Arabic text). -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
-    href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cinzel+Decorative:wght@700&family=Cinzel:wght@500;600;700&family=IM+Fell+English:ital@0;1&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="css/style.css?v=b05119b0" />
+  <link rel="preload" href="/wedding-wizard/fonts/harry-p.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="css/style.css?v=f17838e9" />
 </head>
 <body>
 
@@ -37,26 +38,13 @@
   <!-- ============ The envelope: the wand touches the seal ============ -->
   <div id="envelope-scene" class="envelope-scene">
     <div class="env-stage" aria-hidden="true">
-      <div class="envelope">
-        <svg class="env-lines" viewBox="0 0 330 224" preserveAspectRatio="none"><path d="M14 16 L165 124 L316 16"/><path d="M14 210 L136 112 M316 210 L194 112"/></svg>
-        <span class="env-seal"><img src="/wedding-wizard/images/wax-seal.webp" alt="" /><b data-monogram>O&amp;E</b></span>
-      </div>
-      <svg class="wand" viewBox="0 0 250 170">
-        <defs>
-          <radialGradient id="wand-spark"><stop offset="0" stop-color="#fff6d0"/><stop offset=".4" stop-color="#ffc260" stop-opacity=".85"/><stop offset="1" stop-color="#ff9a2e" stop-opacity="0"/></radialGradient>
-          <linearGradient id="wand-wood" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5b3a22"/><stop offset=".5" stop-color="#2a180d"/><stop offset="1" stop-color="#4a2f1c"/></linearGradient>
-        </defs>
-        <circle class="wand-glow" cx="26" cy="146" r="34" fill="url(#wand-spark)"/>
-        <path d="M26 146 L230 22" stroke="url(#wand-wood)" stroke-width="6" stroke-linecap="round"/>
-        <path d="M176 55 L232 21" stroke="#3a2414" stroke-width="10" stroke-linecap="round"/>
-        <path d="M190 47 l6 -4 M204 39 l6 -4" stroke="#7a5534" stroke-width="2"/>
-      </svg>
-      <span class="sparks" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+      <span class="env-glow"></span>
+      <span class="sparks"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
     </div>
     <p class="env-caption" aria-hidden="true">Sealed with magic</p>
 
     <div class="seal-close" aria-hidden="true">
-      <img src="/wedding-wizard/images/wax-seal.webp" alt="" />
+      <img src="/wedding-wizard/images/seal-photo.webp" alt="" />
       <div class="seal-names">
         <span data-groom>Groom</span>
         <span class="seal-amp">&amp;</span>
@@ -70,58 +58,38 @@
   <main id="invitation">
     <h1 class="sr-only" id="page-title">Wedding invitation</h1>
 
-    <!-- Grab your wand: the enchanted map -->
-    <section class="scene-sec bg-library" id="map">
+    <!-- Grab your wand: the Marauder's Map -->
+    <section class="band bg-map" id="map">
       <div class="map-sheet reveal" aria-hidden="true">
-        <svg class="castle-sketch" viewBox="0 0 354 150"><use href="#castle"/></svg>
-        <span class="map-title">The Enchanted<br />Map</span>
-        <svg class="map-art" viewBox="0 0 402 300">
-          <path class="map-path" d="M40 240 Q120 200 220 236"/>
-          <path class="map-path" d="M260 44 q30 -10 60 4 t70 0"/>
-          <g class="compass"><circle cx="350" cy="56" r="16"/><path d="M350 36 v40 M330 56 h40"/></g>
-          <g class="steps">
-            <ellipse cx="266" cy="250" rx="4.2" ry="7.5" transform="rotate(-30 266 250)" style="--i:0"/>
-            <ellipse cx="284" cy="236" rx="4.2" ry="7.5" transform="rotate(-30 284 236)" style="--i:1"/>
-            <ellipse cx="292" cy="212" rx="4.2" ry="7.5" transform="rotate(-12 292 212)" style="--i:2"/>
-            <ellipse cx="310" cy="196" rx="4.2" ry="7.5" transform="rotate(-12 310 196)" style="--i:3"/>
-            <ellipse cx="312" cy="170" rx="4.2" ry="7.5" style="--i:4"/>
-            <ellipse cx="330" cy="152" rx="4.2" ry="7.5" style="--i:5"/>
-            <ellipse cx="330" cy="126" rx="4.2" ry="7.5" transform="rotate(8 330 126)" style="--i:6"/>
-            <ellipse cx="350" cy="110" rx="4.2" ry="7.5" transform="rotate(8 350 110)" style="--i:7"/>
-          </g>
-        </svg>
+        <img src="/wedding-wizard/images/marauders-map.webp" alt="" />
+        <span class="map-title">The Marauder's Map</span>
       </div>
-      <div class="sec-body reveal">
-        <svg class="wand-divider" viewBox="0 0 200 30" aria-hidden="true"><path d="M4 18 H70 M130 18 H196"/><path class="w-wood" d="M78 24 L122 8"/><path class="w-grip" d="M78 24 L92 19"/><circle cx="123" cy="7.5" r="3"/></svg>
+      <div class="band-text reveal">
+        <svg class="orn quill-divider" viewBox="0 0 240 30" aria-hidden="true"><use href="#quill-divider"/></svg>
         <p class="lead big">Grab your wand,<br />follow the footsteps, and join us<br />for a magical celebration!</p>
-        <a class="btn-gold" href="#letter">Follow the footsteps
-          <svg viewBox="0 0 14 14" aria-hidden="true"><path d="M3 3l4 4 4-4M3 7l4 4 4-4"/></svg>
-        </a>
+        <a class="chevrons" href="#letter" aria-label="Follow the footsteps"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#chevrons"/></svg></a>
       </div>
     </section>
 
     <!-- The letter -->
-    <section class="scene-sec bg-castle" id="letter">
-      <article class="letter parchment reveal">
-        <span class="frame" aria-hidden="true"></span>
+    <section class="band bg-letter" id="letter">
+      <article class="letter paper reveal">
+        <span class="corners" aria-hidden="true"><svg class="fl tl"><use href="#flourish"/></svg><svg class="fl tr"><use href="#flourish"/></svg><svg class="fl bl"><use href="#flourish"/></svg><svg class="fl br"><use href="#flourish"/></svg></span>
         <svg class="castle-sketch" viewBox="0 0 354 150" aria-hidden="true"><use href="#castle"/></svg>
-        <p class="letter-text" id="letter-text" dir="auto">We are pleased to inform you that you have been officially invited to celebrate the magic of our love.</p>
-        <svg class="divider ink" viewBox="0 0 200 22" aria-hidden="true"><use href="#divider"/></svg>
-        <div class="couple">
-          <div><span class="role">The Wizard</span><span class="name" data-groom dir="auto">Groom</span></div>
-          <svg class="bolt" viewBox="0 0 30 40" aria-hidden="true"><path d="M18 2 L6 22 h8 L10 38 L24 15 h-9 Z"/></svg>
-          <div><span class="role">The Witch</span><span class="name" data-bride dir="auto">Bride</span></div>
+        <div class="letter-body">
+          <p class="letter-text" id="letter-text" dir="auto">We are pleased to inform you that you have been officially invited to celebrate the magic of our love.</p>
+          <div class="couple">
+            <div><span class="role"><span class="star" aria-hidden="true">★</span> The Wizard</span><span class="name" data-groom dir="auto">Groom</span></div>
+            <svg class="bolt" viewBox="0 0 30 40" aria-hidden="true"><path d="M18 2 L6 22 h8 L10 38 L24 15 h-9 Z"/></svg>
+            <div><span class="role">The Witch <span class="star" aria-hidden="true">★</span></span><span class="name" data-bride dir="auto">Bride</span></div>
+          </div>
+          <svg class="crest small" viewBox="0 0 100 112" aria-hidden="true"><use href="#crest"/></svg>
         </div>
-        <svg class="crest" viewBox="0 0 64 72" aria-hidden="true"><use href="#crest"/><text x="32" y="43" text-anchor="middle" data-monogram-short>OE</text></svg>
       </article>
     </section>
 
     <!-- Where the magic happens -->
-    <section class="scene-sec bg-study" id="venue">
-      <div class="sec-head reveal">
-        <svg class="divider" viewBox="0 0 200 22" aria-hidden="true"><use href="#divider"/></svg>
-        <h2 class="title">Where the Magic<br />Happens</h2>
-      </div>
+    <section class="band bg-map" id="venue">
       <div class="venue-map reveal" aria-hidden="true">
         <svg viewBox="0 0 358 290">
           <path class="road" d="M30 70 Q120 100 190 70 T336 80"/>
@@ -137,84 +105,98 @@
           <g class="pin"><path d="M190 96 c-18 0 -30 13 -30 29 c0 22 30 50 30 50 s30 -28 30 -50 c0 -16 -12 -29 -30 -29z"/><circle cx="190" cy="125" r="10"/></g>
         </svg>
       </div>
-      <div class="sec-body reveal">
+      <div class="band-text reveal">
+        <svg class="orn star-divider" viewBox="0 0 240 16" aria-hidden="true"><use href="#star-divider"/></svg>
+        <h2 class="title">Where the Magic Happens</h2>
         <p class="venue-name" id="venue-name" dir="auto">—</p>
         <p class="venue-address" id="venue-address" dir="auto">—</p>
         <p class="doors" id="doors" hidden>The doors open at <b id="doors-time">—</b></p>
         <a id="venue-open" class="btn-gold" href="#" target="_blank" rel="noopener noreferrer">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l18-8-8 18-2-8z"/></svg>
-          Reveal the location
+          Reveal the Location
         </a>
       </div>
     </section>
 
-    <!-- The grand day: calendar, time, countdown -->
-    <section class="scene-sec bg-library" id="grand-day">
-      <h2 class="title reveal">The Grand Day</h2>
-      <div class="calendar parchment-square reveal" id="calendar"></div>
-      <div class="sec-body reveal">
-        <p class="date-line" id="date-line">—</p>
-        <p class="lead">The magic begins at <span id="begin-time">—</span></p>
-      </div>
-      <div class="countdown reveal" id="countdown" aria-live="off">
-        <div><b id="cd-days">0</b><span>Days</span></div>
-        <div><b id="cd-hours">0</b><span>Hours</span></div>
-        <div><b id="cd-mins">0</b><span>Minutes</span></div>
-        <div><b id="cd-secs">0</b><span>Seconds</span></div>
-      </div>
-      <p class="countdown-done" id="countdown-done" hidden>The magic is happening today!</p>
-      <div class="cal-links reveal">
-        <button type="button" class="link-btn" id="add-cal" aria-expanded="false">Add to Calendar</button>
-        <div class="cal-menu" id="cal-menu" hidden>
-          <a href="#" id="gcal-btn" target="_blank" rel="noopener">Google Calendar</a>
-          <a href="#" id="ics-btn">Apple / Outlook</a>
+    <!-- The grand day: one parchment, calendar | date + countdown -->
+    <section class="band bg-day" id="grand-day">
+      <div class="day-sheet paper reveal">
+        <svg class="sketch-l" viewBox="0 0 354 150" aria-hidden="true"><use href="#castle"/></svg>
+        <svg class="sketch-r" viewBox="0 0 354 150" aria-hidden="true"><use href="#castle"/></svg>
+        <svg class="crest corner-crest" viewBox="0 0 100 112" aria-hidden="true"><use href="#crest"/></svg>
+        <h2 class="ink-title">The Grand Day</h2>
+        <div class="day-grid">
+          <div class="calendar" id="calendar"></div>
+          <svg class="day-orn" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0 l2 6 6 2 -6 2 -2 6 -2 -6 -6 -2 6 -2z"/></svg>
+          <div class="day-when">
+            <p class="date-line" id="date-line">—</p>
+            <p class="begins">The magic begins at <b id="begin-time">—</b></p>
+            <div class="countdown-row">
+              <div class="countdown" id="countdown" aria-live="off">
+                <div><b id="cd-days">0</b><span>Days</span></div>
+                <div><b id="cd-hours">0</b><span>Hours</span></div>
+                <div><b id="cd-mins">0</b><span>Minutes</span></div>
+                <div><b id="cd-secs">0</b><span>Seconds</span></div>
+              </div>
+              <svg class="hourglass" viewBox="0 0 26 34" aria-hidden="true"><path d="M3 2h20M3 32h20M5 2c0 9 16 9 16 15S5 23 5 32M21 2c0 9-16 9-16 15s16 6 16 15"/><path class="sand" d="M9 28c2-3 6-3 8 0z"/></svg>
+            </div>
+            <p class="countdown-done" id="countdown-done" hidden>The magic is happening today!</p>
+            <div class="cal-links">
+              <button type="button" class="link-btn" id="add-cal" aria-expanded="false">Add to Calendar</button>
+              <div class="cal-menu" id="cal-menu" hidden>
+                <a href="#" id="gcal-btn" target="_blank" rel="noopener">Google Calendar</a>
+                <a href="#" id="ics-btn">Apple / Outlook</a>
+              </div>
+            </div>
+          </div>
         </div>
+        <a class="chevron-tab" href="#plan" aria-label="Next"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#chevrons"/></svg></a>
       </div>
-      <svg class="hourglass" viewBox="0 0 26 34" aria-hidden="true"><path d="M3 2h20M3 32h20M5 2c0 9 16 9 16 15S5 23 5 32M21 2c0 9-16 9-16 15s16 6 16 15"/></svg>
     </section>
 
     <!-- The day's plan (from the host's program) -->
-    <section class="scene-sec bg-study" id="plan" hidden>
-      <div class="sec-head reveal">
-        <h2 class="title">The Day's Plan</h2>
-        <svg class="divider" viewBox="0 0 200 22" aria-hidden="true"><use href="#divider"/></svg>
+    <section class="band bg-plan" id="plan" hidden>
+      <div class="band-head reveal">
+        <h2 class="title with-lines"><span class="line" aria-hidden="true"></span>The Day's Plan<span class="line" aria-hidden="true"></span></h2>
       </div>
       <ol class="plan-cards" id="plan-list"></ol>
     </section>
 
     <!-- Dress code -->
-    <section class="scene-sec bg-library" id="dress-code">
-      <div class="dress parchment-tall reveal">
-        <span class="frame" aria-hidden="true"></span>
-        <svg class="crest" viewBox="0 0 64 72" aria-hidden="true"><use href="#crest"/><text x="32" y="43" text-anchor="middle" data-monogram-short>OE</text></svg>
-        <h2 class="ink-title">Dress Code</h2>
-        <p class="dress-label" id="dress-code-label" dir="auto"></p>
-        <div class="swatches" id="dress-code-swatches"></div>
-        <div class="dress-note" id="dress-note-block" hidden>
-          <p class="note-head"><span></span>Kindly note<span></span></p>
-          <p id="dress-note" dir="auto"></p>
+    <section class="band bg-dress" id="dress-code">
+      <div class="dress paper reveal">
+        <span class="corners" aria-hidden="true"><svg class="fl tl"><use href="#flourish"/></svg><svg class="fl tr"><use href="#flourish"/></svg><svg class="fl bl"><use href="#flourish"/></svg><svg class="fl br"><use href="#flourish"/></svg></span>
+        <svg class="crest dress-crest" viewBox="0 0 100 112" aria-hidden="true"><use href="#crest"/></svg>
+        <div class="dress-body">
+          <h2 class="ink-title">Dress Code</h2>
+          <p class="dress-label" id="dress-code-label" dir="auto"></p>
+          <div class="swatches" id="dress-code-swatches"></div>
+          <div class="dress-note" id="dress-note-block" hidden>
+            <p class="note-head"><span class="arrow l" aria-hidden="true"></span>Kindly note:<span class="arrow r" aria-hidden="true"></span></p>
+            <p id="dress-note" dir="auto"></p>
+          </div>
         </div>
       </div>
     </section>
 
     <!-- RSVP -->
-    <section class="scene-sec bg-study" id="rsvp">
-      <div class="sec-head reveal">
-        <svg class="owl" viewBox="0 0 64 40" aria-hidden="true"><path d="M32 18 C22 6 10 6 2 10 C12 12 20 18 25 24 Z M32 18 C42 6 54 6 62 10 C52 12 44 18 39 24 Z"/><ellipse cx="32" cy="26" rx="8" ry="11"/><circle cx="32" cy="14" r="6"/></svg>
-        <h2 class="title">Will You Be<br />Attending?</h2>
+    <section class="band bg-rsvp" id="rsvp">
+      <div class="band-head reveal">
+        <svg class="orn owl-divider" viewBox="0 0 240 34" aria-hidden="true"><use href="#owl-divider"/></svg>
+        <h2 class="title">Will You Be Attending?</h2>
         <p class="lead">Your presence will make our day even more magical!</p>
       </div>
       <div class="rsvp-choice reveal" id="rsvp-choice">
-        <button type="button" class="btn-parch" data-attend="yes">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20 L18 6 M15 4 l5 5"/></svg>
+        <button type="button" class="btn-pill" data-attend="yes">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M7.5 12.5l3 3 6-6"/></svg>
           Yes, I'll be there!
         </button>
-        <button type="button" class="btn-parch" data-attend="no">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        <button type="button" class="btn-pill" data-attend="no">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8.5 8.5l7 7M15.5 8.5l-7 7"/></svg>
           Sadly, I can't make it.
         </button>
       </div>
-      <form id="rsvp-form" class="rsvp-form parchment" hidden>
+      <form id="rsvp-form" class="rsvp-form paper" hidden>
         <fieldset class="radios">
           <legend class="sr-only">Will you attend?</legend>
           <label><input type="radio" name="attending" value="yes" checked /> <span>I'll be there</span></label>
@@ -232,42 +214,45 @@
         <button type="submit" class="btn-wax">Seal My Reply</button>
         <p class="rsvp-status" id="rsvp-status" role="status"></p>
       </form>
+      <a class="chevrons" href="#guestbook" aria-label="Next"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#chevrons"/></svg></a>
     </section>
 
     <!-- Guestbook -->
-    <section class="scene-sec bg-castle" id="guestbook">
-      <div class="sec-head reveal">
+    <section class="band bg-message" id="guestbook">
+      <div class="band-head reveal">
         <svg class="envelope-icon" viewBox="0 0 40 30" aria-hidden="true"><rect x="2" y="3" width="36" height="24" rx="2"/><path d="M2 5l18 13 18-13"/></svg>
-        <h2 class="title">Leave Us<br />a Message</h2>
-        <p class="lead">Share a memory, a wish, or just a little note for our future. It means the world to us.</p>
+        <h2 class="title">Leave Us a Message</h2>
+        <p class="lead">Share a memory, a wish, or just a little note<br />for our future. It means the world to us.</p>
       </div>
       <form id="gb-form" class="gb-form reveal">
         <div class="field">
-          <label for="gb-name">Your name</label>
-          <input id="gb-name" name="name" type="text" class="parch-field" autocomplete="name" dir="auto" />
+          <label for="gb-name" class="sr-only">Your name</label>
+          <input id="gb-name" name="name" type="text" class="parch-field" placeholder="Your name" autocomplete="name" dir="auto" />
           <span class="error" data-for="gb-name"></span>
         </div>
         <div class="field">
-          <label for="gb-message">Your message</label>
-          <textarea id="gb-message" name="message" rows="4" class="parch-field" placeholder="Write your message here…" dir="auto"></textarea>
+          <label for="gb-message" class="sr-only">Your message</label>
+          <textarea id="gb-message" name="message" rows="4" class="parch-field framed" placeholder="Write your message here…" dir="auto"></textarea>
           <span class="error" data-for="gb-message"></span>
         </div>
-        <div class="gb-actions"><button type="submit" class="btn-wax">Send Your Wishes</button></div>
+        <div class="gb-actions"><button type="submit" class="btn-wax">Send</button></div>
         <p class="rsvp-status" id="gb-status" role="status"></p>
       </form>
       <ul id="gb-list" class="wish-list" aria-live="polite"></ul>
       <p id="gb-empty" class="gb-empty">Be the first to leave a wish</p>
+      <div class="thanks-block">
+        <p class="thanks">Thank you for being part of our story</p>
+        <svg class="orn bolt-divider" viewBox="0 0 240 20" aria-hidden="true"><use href="#bolt-divider"/></svg>
+      </div>
     </section>
 
     <!-- Contacts (shared module) -->
-    <section class="scene-sec bg-castle contacts" id="contacts" aria-labelledby="contacts-title" hidden>
+    <section class="band bg-message contacts" id="contacts" aria-labelledby="contacts-title" hidden>
       <h2 id="contacts-title" class="title">Contacts</h2>
       <div id="contacts-list" class="contacts-list"></div>
     </section>
 
     <footer class="foot">
-      <p class="thanks">Thank you for being part of our story</p>
-      <svg class="divider" viewBox="0 0 200 22" aria-hidden="true"><use href="#divider"/></svg>
       <a href="/">lamma.manasety.ai</a>
     </footer>
   </main>
@@ -280,22 +265,67 @@
         <path d="M30 140 Q120 128 177 140 T330 138"/>
         <path d="M80 112 H262 M80 112 v-8 h6 v8 M96 104 h6 v8 M226 104 h6 v8 M242 104 h6 v8"/>
         <path d="M126 92 h5 M126 100 h5 M162 70 h6 M162 84 h6 M162 104 h6 M198 90 h5 M198 104 h5 M98 98 h5 M228 114 h4"/>
+        <path d="M66 140 v-6 M72 140 v-8 M120 140 v-10 M138 140 v-12 M172 140 v-14 M192 140 v-10 M220 140 v-8 M250 140 v-6" stroke-width=".7"/>
         <path d="M20 148 q20 -6 40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0" stroke-width=".7" opacity=".6"/>
       </g>
     </symbol>
-    <symbol id="divider" viewBox="0 0 200 22">
-      <g fill="none" stroke="currentColor" stroke-linecap="round">
-        <path d="M4 11 H78 M122 11 H196" stroke-width="1"/>
-        <path d="M78 11 c6 -8 14 -8 18 0 c-4 8 -12 8 -18 0z M122 11 c-6 -8 -14 -8 -18 0 c4 8 12 8 18 0z" stroke-width="1.1"/>
+
+    <!-- The four-house crest: lion, serpent, badger, eagle round an H. -->
+    <symbol id="crest" viewBox="0 0 100 112">
+      <g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-linecap="round">
+        <path d="M50 4 C62 10 78 11 93 7 L93 50 C93 79 74 98 50 108 C26 98 7 79 7 50 L7 7 C22 11 38 10 50 4Z" stroke-width="3"/>
+        <path d="M50 10 C61 15 75 16 88 13 L88 50 C88 75 71 92 50 101 C29 92 12 75 12 50 L12 13 C25 16 39 15 50 10Z" stroke-width="1"/>
+        <path d="M50 10 V101 M12 54 H88" stroke-width="2.4"/>
       </g>
-      <path d="M100 4 l2.4 5 5 2 -5 2 -2.4 5 -2.4 -5 -5 -2 5 -2z" fill="currentColor"/>
+      <g fill="currentColor">
+        <path d="M22 46 c0-6 3-10 6-12 c-2-3 0-7 3-7 c3-1 6 1 6 4 c2 1 3 3 2 5 l-3 1 c1 3 1 6-1 9 l3 0 c0 2-2 2-3 1 l-2 0 l0 -3 c-2 1-4 1-6 0 l-1 3 l3 0 c0 2-2 2-3 1z"/>
+        <path d="M23 40 c-3 -1 -5 -4 -4 -7 c1 2 2 3 4 3z"/>
+        <path d="M58 48 C68 49 76 45 71 40 C66 35 58 36 60 29 C62 23 70 24 74 21" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/>
+        <ellipse cx="77" cy="19.5" rx="4" ry="2.6" transform="rotate(-35 77 19.5)"/>
+        <path d="M80 16.5 l3 -2 M80 16.5 l3.4 .2" fill="none" stroke="currentColor" stroke-width=".8"/>
+        <path d="M18 82 c2-6 8-9 16-9 c5 0 8 2 10 5 l3 1 c0 2-2 3-4 3 l-2 0 l0 4 l-3 0 l0 -3 c-4 1-9 1-13 0 l0 3 l-3 0 l0-3 c-2 0-4 0-4-1z"/>
+        <path d="M70 66 c-3 4-9 6-14 5 c3 2 7 3 10 2 c-2 3-5 4-8 4 c3 1 6 1 9-1 l-1 5 c0 3 2 5 4 6 c2-1 4-3 4-6 l-1-5 c3 2 6 2 9 1 c-3 0-6-1-8-4 c3 1 7 0 10-2 c-5 1-11-1-14-5z M70 64 c1 0 2 1 2 2 c0 1-1 1-2 1 c-1 0-2 0-2-1 c0-1 1-2 2-2z"/>
+        <path d="M41 46 l18 0 l0 9 c0 8 -4 12 -9 15 c-5-3-9-7-9-15z"/>
+      </g>
+      <path d="M45 49 v14 M55 49 v14 M45 56 h10" stroke="#f0dcae" stroke-width="2.4" fill="none"/>
     </symbol>
-    <symbol id="crest" viewBox="0 0 64 72">
-      <path d="M32 4 l26 9 v18 c0 18 -12 30 -26 36 c-14 -6 -26 -18 -26 -36 v-18 z" fill="none" stroke="currentColor" stroke-width="2"/>
-      <path d="M32 10 l20 7 v14 c0 14 -9 23 -20 28 c-11 -5 -20 -14 -20 -28 v-14 z" fill="none" stroke="currentColor" stroke-width=".8"/>
+
+    <symbol id="flourish" viewBox="0 0 60 60">
+      <g fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round">
+        <path d="M2 2 H34 M2 2 V34"/>
+        <path d="M6 6 C20 6 24 10 24 20 C24 26 20 28 17 26 C14 24 16 20 19 21"/>
+        <path d="M6 6 C6 20 10 24 20 24 C26 24 28 20 26 17 C24 14 20 16 21 19"/>
+        <path d="M34 2 c4 0 6 2 6 4 M2 34 c0 4 2 6 4 6"/>
+      </g>
+      <circle cx="6" cy="6" r="2" fill="currentColor"/>
+    </symbol>
+    <symbol id="star-divider" viewBox="0 0 240 16">
+      <path d="M4 8 H100 M140 8 H236" fill="none" stroke="currentColor" stroke-linecap="round"/>
+      <path d="M120 1 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2z M106 8 l3 -2.4 3 2.4 -3 2.4z M128 8 l3 -2.4 3 2.4 -3 2.4z" fill="currentColor"/>
+    </symbol>
+    <symbol id="quill-divider" viewBox="0 0 240 30">
+      <path d="M4 22 H92 M148 22 H236" fill="none" stroke="currentColor" stroke-linecap="round"/>
+      <path d="M100 22 l3 -2.4 3 2.4 -3 2.4z M134 22 l3 -2.4 3 2.4 -3 2.4z" fill="currentColor"/>
+      <path d="M110 27 C118 18 128 8 140 2 C136 10 128 18 116 24 Z" fill="currentColor" opacity=".9"/>
+      <path d="M110 27 L131 10" stroke="currentColor" stroke-width=".8"/>
+    </symbol>
+    <symbol id="owl-divider" viewBox="0 0 240 34">
+      <path d="M4 18 H86 M154 18 H236" fill="none" stroke="currentColor" stroke-linecap="round"/>
+      <path d="M92 18 l3 -3 3 3 -3 3z M142 18 l3 -3 3 3 -3 3z" fill="currentColor"/>
+      <path d="M120 14 C111 4 100 4 93 8 C101 10 108 15 112 21 Z M120 14 C129 4 140 4 147 8 C139 10 132 15 128 21 Z" fill="currentColor"/>
+      <ellipse cx="120" cy="22" rx="7" ry="10" fill="currentColor"/>
+      <circle cx="120" cy="11" r="5.5" fill="currentColor"/>
+    </symbol>
+    <symbol id="bolt-divider" viewBox="0 0 240 20">
+      <path d="M4 10 H70 M88 10 H108 M132 10 H152 M170 10 H236" fill="none" stroke="currentColor" stroke-linecap="round"/>
+      <path d="M79 4 l1.6 4 4 1.6 -4 1.6 -1.6 4 -1.6 -4 -4 -1.6 4 -1.6z M161 4 l1.6 4 4 1.6 -4 1.6 -1.6 4 -1.6 -4 -4 -1.6 4 -1.6z" fill="currentColor"/>
+      <path d="M123 1 L114 11 h6 L116 19 L126 8 h-6 Z" fill="currentColor"/>
+    </symbol>
+    <symbol id="chevrons" viewBox="0 0 24 24">
+      <path d="M6 6l6 6 6-6M6 12l6 6 6-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
     </symbol>
   </svg>
 
-  <script type="module" src="js/bootstrap.js?v=368cddd6"></script>
+  <script type="module" src="js/bootstrap.js?v=bc53cbe8"></script>
 </body>
 </html>

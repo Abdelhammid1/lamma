@@ -87,14 +87,20 @@ function renderCalendar(day) {
 }
 
 /* ---------- The day's plan ---------- */
-// One card per program row, an icon from this set in turn.
+// One parchment card per program row, a gold line icon above each, in turn.
 const ICONS = [
-  '<path d="M4 19h16M7 19l3-14 7 5-3 1 2 8"/>',                                    // hat
-  '<circle cx="9" cy="13" r="5"/><circle cx="15" cy="13" r="5"/>',                 // rings
-  '<path d="M5 10h11v4a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5zM16 11h1.5a2 2 0 0 1 0 4H16M8 4c0 2 2 2 2 4M12 4c0 2 2 2 2 4M3 21h16"/>', // cup
-  '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',        // camera
-  '<path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z"/>', // star
-  '<path d="M5 20h14M7 20V10l5-6 5 6v10M10 20v-5h4v5"/>',                           // tower
+  // witch's hat
+  '<path d="M6 34 C14 31 34 31 42 34 C40 37 8 37 6 34Z"/><path d="M12 33 C16 26 18 18 20 12 C23 5 29 4 33 6 C29 7 27 10 26 14 C25 20 28 27 33 32"/><path d="M16 29 C21 28 27 28 31 29"/>',
+  // two rings
+  '<circle cx="18" cy="26" r="9"/><circle cx="30" cy="26" r="9"/><path d="M15 15 l3 -5 3 5 M27 15 l3 -5 3 5"/>',
+  // teacup with steam
+  '<path d="M9 22 H35 V26 C35 32 30 36 24 36 H20 C14 36 9 32 9 26Z"/><path d="M35 24 C40 24 41 31 35 31"/><path d="M5 39 H39"/><path d="M17 17 C15 14 19 12 17 8 M23 17 C21 14 25 12 23 8 M29 17 C27 14 31 12 29 8"/>',
+  // camera
+  '<path d="M6 16 H14 L17 11 H27 L30 16 H38 V36 H6Z"/><circle cx="22" cy="26" r="6.5"/><circle cx="22" cy="26" r="2.5"/><path d="M32 20 h3"/>',
+  // star
+  '<path d="M22 6 l4.6 10 10.9 1.2 -8.1 7.4 2.3 10.7 -9.7 -5.5 -9.7 5.5 2.3 -10.7 -8.1 -7.4 10.9 -1.2z"/>',
+  // castle tower
+  '<path d="M10 38 H34 M13 38 V20 H31 V38 M13 20 V15 h4 v3 h4 v-3 h3 v3 h4 v-3 h3 v5 M22 15 V6 l6 3 -6 3 M19 38 v-7 a3 3 0 0 1 6 0 v7"/>',
 ];
 const items = (Array.isArray(CONFIG.schedule) ? CONFIG.schedule : [])
   .filter((it) => it && s(it.time) && s(it.label));
@@ -102,12 +108,14 @@ const list = $("plan-list");
 if (list && items.length) {
   items.forEach((it, i) => {
     const li = document.createElement("li");
-    li.className = "plan-card reveal";
-    li.style.setProperty("--i", String(i % 2));
+    li.className = "plan-item reveal";
+    li.style.setProperty("--i", String(i % 4));
     const icon = document.createElement("span");
     icon.className = "plan-icon";
     icon.setAttribute("aria-hidden", "true");
-    icon.innerHTML = `<svg viewBox="0 0 24 24">${ICONS[i % ICONS.length]}</svg>`;   // fixed markup, no host text
+    icon.innerHTML = `<svg viewBox="0 0 44 44">${ICONS[i % ICONS.length]}</svg>`;   // fixed markup, no host text
+    const card = document.createElement("div");
+    card.className = "plan-card";
     const time = document.createElement("div");
     time.className = "plan-time";
     time.textContent = ampm(it.time);
@@ -115,7 +123,15 @@ if (list && items.length) {
     what.className = "plan-what";
     what.dir = "auto";
     what.textContent = s(it.label);
-    li.append(icon, time, what);
+    card.append(time, what);
+    if (s(it.detail)) {
+      const detail = document.createElement("p");
+      detail.className = "plan-detail";
+      detail.dir = "auto";
+      detail.textContent = s(it.detail);
+      card.appendChild(detail);
+    }
+    li.append(icon, card);
     list.appendChild(li);
   });
   $("plan").hidden = false;

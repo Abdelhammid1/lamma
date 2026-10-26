@@ -37,10 +37,10 @@ export const CONFIG = {
   },
 
   schedule: [
-    { time: "14:00", label: "Welcome" },
-    { time: "15:00", label: "The Entrance" },
-    { time: "17:00", label: "Drinks & Snacks" },
-    { time: "18:00", label: "Photos" },
+    { time: "14:00", label: "Welcome",               detail: "Let the magic and our guests arrive." },
+    { time: "15:00", label: "The Entrance",          detail: "The bride and groom make their grand entrance." },
+    { time: "17:00", label: "Break & Refreshments",  detail: "A little rest, some treats, and good company." },
+    { time: "18:00", label: "Photos",                detail: "Capture the magic, smiles and special moments." },
   ],
 
   contacts: [],

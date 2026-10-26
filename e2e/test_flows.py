@@ -244,6 +244,7 @@ def test_burgundy_end_to_end(page, site):
     page.wait_for_selector("#burgundy-group:not([hidden])")
     assert page.is_hidden("#elegant-group")
     fill_wedding(page, groom="Karim", bride="Nour")
+    assert page.is_hidden("#schedule-builder .sched-detail")   # descriptions are the wizard's only
     page.fill("#f-groom-full", "Karim Adel")
     page.fill("#f-bride-full", "Nour Samir")
     page.fill("#f-family-groom", "Mr. & Mrs.\nAdel Fathy")
@@ -334,6 +335,7 @@ def test_wizard_end_to_end(page, site):
     page.click("#add-schedule-btn")
     page.fill("#schedule-builder .sched-time", "17:00")
     page.fill("#schedule-builder .sched-label", "Drinks & Snacks")
+    page.fill("#schedule-builder .sched-detail", "A little rest, some treats")
     page.wait_for_function(
         "document.getElementById('slug-preview').textContent === 'lamma.manasety.ai/wedding-wizard/omar-esraa'")
     publish_with(page, "GOOD-CODE-0005")
@@ -352,7 +354,6 @@ def test_wizard_end_to_end(page, site):
     page.wait_for_function("document.body.classList.contains('settled')")
     assert page.is_hidden("#envelope-scene")
     assert page.text_content("#letter [data-groom]") == "Omar"
-    assert page.text_content("#letter [data-monogram-short]") == "OE"
     assert page.text_content("#venue-name") == "The Great Hall"
     assert page.text_content("#doors-time") == "2:00 PM"
     assert page.text_content("#date-line") == "FRIDAY, 11.12.2026"
@@ -361,6 +362,8 @@ def test_wizard_end_to_end(page, site):
     assert int(page.text_content("#cd-days")) >= 0
     assert page.text_content(".plan-card .plan-time") == "5:00 PM"
     assert page.text_content(".plan-card .plan-what") == "Drinks & Snacks"
+    assert page.text_content(".plan-card .plan-detail") == "A little rest, some treats"
+    assert page.text_content(".map-title") == "The Marauder's Map"
     assert page.text_content("#dress-note") == "Keep children away from the dance floor"
     assert page.locator("#dress-code-swatches .swatch").count() >= 1
 
@@ -386,6 +389,7 @@ def test_wizard_end_to_end(page, site):
     page.goto(base + "/user/")
     page.locator(".event-card[data-slug='omar-esraa'] >> text=Edit").click()
     page.wait_for_function("document.getElementById('f-dress-note').value === 'Keep children away from the dance floor'")
+    assert page.input_value("#schedule-builder .sched-detail") == "A little rest, some treats"
     assert page.js_errors == []
 
 

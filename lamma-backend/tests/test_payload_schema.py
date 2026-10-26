@@ -53,6 +53,15 @@ def test_dangerous_links_and_bad_shapes():
     assert "schedule must be a list" in errs and "dressCode.colors[0]" in errs
 
 
+def test_wizard_extras():
+    p = {**WEDDING, "dressCode": {"label": "Light", "colors": ["#efd27a"], "note": "No kids on the dance floor"},
+         "schedule": [{"time": "17:00", "label": "Drinks", "detail": "A little rest"}]}
+    assert validate_payload("wedding-wizard", p) == []
+    bad = {**WEDDING, "dressCode": {"note": 5}, "schedule": [{"time": "17:00", "label": "x", "detail": ["no"]}]}
+    errs = " | ".join(validate_payload("wedding-wizard", bad))
+    assert "dressCode.note must be text" in errs and "schedule[0].detail must be text" in errs
+
+
 def test_limits():
     p = {**WEDDING, "gallery": ["/media/a/x.jpg"] * 13, "blessing": "x" * 6000}
     errs = " | ".join(validate_payload("wedding", p))

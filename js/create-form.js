@@ -125,6 +125,7 @@ function applyType(t) {
   $("dress-group").hidden   = noGallery;
   $("gallery-group").hidden = noGallery || t === "wedding-wizard";   // the wizard has no gallery
   $("dress-note-field").hidden = (t !== "wedding-wizard");
+  $("schedule-builder").classList.toggle("with-detail", t === "wedding-wizard");
   $("elegant-group").style.display = (t === "birthday-elegant") ? "" : "none";
   $("burgundy-group").hidden      = (t !== "wedding-burgundy");
   $("burgundy-gift-group").hidden = (t !== "wedding-burgundy");
@@ -595,13 +596,17 @@ function addScheduleRow(existing) {
     <input type="time" class="sched-time" aria-label="Time">
     <input type="text" class="sched-label" dir="auto" placeholder="e.g. Reception / الاستقبال">
     <button type="button" class="sched-remove" title="Remove item" aria-label="Remove">×</button>
+    <input type="text" class="sched-detail" dir="auto" aria-label="Description (optional)" placeholder="Description (optional), e.g. A little rest, some treats">
   `;
   const timeEl  = row.querySelector(".sched-time");
   const labelEl = row.querySelector(".sched-label");
+  const detailEl = row.querySelector(".sched-detail");
   if (existing && typeof existing === "object") {
     if (/^\d{1,2}:\d{2}$/.test(existing.time || "")) timeEl.value = existing.time;
     if (typeof existing.label === "string")          labelEl.value = existing.label;
+    if (typeof existing.detail === "string")         detailEl.value = existing.detail;
   }
+  detailEl.addEventListener("input", schedulePreview);
   row.querySelector(".sched-remove").addEventListener("click", () => {
     row.remove(); schedulePreview();
   });
@@ -816,10 +821,15 @@ function collectFormForPreview(fileUrl = previewUrl) {
     // the renderer doesn't sort by time (hosts occasionally want an
     // out-of-order ceremonial sequence). Rows missing a time OR a
     // label are dropped so the invitation never shows a blank row.
-    schedule: [...scheduleBuilder.querySelectorAll(".sched-row")].map((row) => ({
-      time:  row.querySelector(".sched-time").value.trim(),
-      label: row.querySelector(".sched-label").value.trim(),
-    })).filter((it) => it.time && it.label),
+    schedule: [...scheduleBuilder.querySelectorAll(".sched-row")].map((row) => {
+      const detail = row.querySelector(".sched-detail").value.trim();
+      return {
+        time:  row.querySelector(".sched-time").value.trim(),
+        label: row.querySelector(".sched-label").value.trim(),
+        // A line under each card's title: only Wedding · Wizard shows it.
+        ...(state.type === "wedding-wizard" && detail ? { detail } : {}),
+      };
+    }).filter((it) => it.time && it.label),
     // Contacts — WhatsApp + Call buttons per person on the invitation.
     // Rows missing name OR phone are dropped so the section never
     // shows a half-row. Role is optional.
@@ -1531,6 +1541,7 @@ function saveDraft() {
     schedule: [...scheduleBuilder.querySelectorAll(".sched-row")].map((row) => ({
       time: row.querySelector(".sched-time").value,
       label: row.querySelector(".sched-label").value,
+      detail: row.querySelector(".sched-detail").value,
     })),
     contacts: [...contactsBuilder.querySelectorAll(".contact-row")].map((row) => ({
       name: row.querySelector(".c-name").value,
