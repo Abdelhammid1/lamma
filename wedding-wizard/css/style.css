@@ -106,6 +106,20 @@ button { font: inherit; color: inherit; }
 /* While the owl video plays, the prompt waits for it to end. */
 .intro.playing .tap-hint { opacity: 0; }
 .intro.playing .intro-tap { background: none; }
+/* Wider than tall (a computer, a tablet or phone on its side): the clip is
+   portrait, so it plays whole and sharp in the middle while a blurred,
+   darkened copy of the same moving picture fills the rest of the screen. */
+.intro-video-fill {
+  position: absolute;
+  inset: -6%;
+  width: 112%;
+  height: 112%;
+  object-fit: cover;
+  filter: blur(26px) brightness(0.55) saturate(1.15);
+}
+@media (min-aspect-ratio: 1/1) {
+  .intro-video { object-fit: contain; background: transparent; filter: drop-shadow(0 0 50px rgba(0, 0, 0, 0.85)); }
+}
 body.env .intro, body.opened .intro { opacity: 0; pointer-events: none; }
 body.opened .intro { display: none; }
 
@@ -707,8 +721,6 @@ body.preview .intro, body.preview .envelope-scene { display: none !important; }
   }
 
   /* The clip is portrait: show all of it over the dimmed scene. */
-  .intro::before { content: ""; position: absolute; inset: 0; background: rgba(5, 4, 3, 0.55); }
-  .intro-video { object-fit: contain; background: transparent; filter: drop-shadow(0 0 40px rgba(0, 0, 0, 0.8)); }
   .seal-close { width: min(78vh, 640px); }
   .seal-names { font-size: min(5.6vh, 52px); }
 

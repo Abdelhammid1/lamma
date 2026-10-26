@@ -73,6 +73,23 @@ if (video && src && /^\/[^/]/.test(src) && !body.classList.contains("preview")) 
   video.addEventListener("error", () => { video.hidden = true; readyToTap("Tap anywhere to begin the magic"); });
   const p = video.play();
   if (p && p.catch) p.catch(() => readyToTap("Tap anywhere to continue"));
+
+  // Wider than tall: a blurred copy of the clip fills the screen round it
+  // (the clip is portrait). Kept in step with the clip; only the clip
+  // decides when the intro ends.
+  const fill = $("intro-video-fill");
+  if (fill && window.matchMedia("(min-aspect-ratio: 1/1)").matches) {
+    fill.src = src;
+    fill.hidden = false;
+    const sync = () => {
+      if (Math.abs(fill.currentTime - video.currentTime) > 0.25) fill.currentTime = video.currentTime;
+    };
+    video.addEventListener("playing", () => { sync(); fill.play().catch(() => {}); });
+    video.addEventListener("timeupdate", sync);
+    video.addEventListener("pause", () => fill.pause());
+    video.addEventListener("ended", () => { fill.pause(); fill.currentTime = video.duration || fill.currentTime; });
+    video.addEventListener("error", () => { fill.hidden = true; });
+  }
 }
 
 /* ---------- Tap → envelope → seal → invitation ---------- */
