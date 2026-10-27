@@ -23,7 +23,7 @@ from datetime import datetime
 MAX_PAYLOAD_BYTES = 200_000
 MAX_STRING = 5_000
 
-COUPLE_TYPES = {"wedding", "wedding-noir", "wedding-burgundy", "wedding-wizard", "engagement", "qiraya", "sobou", "invitation"}
+COUPLE_TYPES = {"wedding", "wedding-noir", "wedding-burgundy", "wedding-wizard", "wedding-blue", "engagement", "qiraya", "sobou", "invitation"}
 BIRTHDAY_TYPES = {"birthday", "birthday-elegant"}
 
 # Generous ceilings: well above what the form allows (8 photos, 4
@@ -167,8 +167,9 @@ def _check_couple(p, errors):
     _web_url(venue.get("mapsEmbedSrc"), "venue.mapsEmbedSrc", errors)
     _web_url(venue.get("mapsDeepLink"), "venue.mapsDeepLink", errors)
 
-    if p.get("blessing") is not None and not isinstance(p.get("blessing"), str):
-        errors.append("blessing must be text")
+    for key in ("blessing", "verse"):          # verse: wedding-blue's opening line
+        if p.get(key) is not None and not isinstance(p.get(key), str):
+            errors.append(f"{key} must be text")
 
     # wedding-burgundy extras (optional everywhere, ignored by the others)
     _str_fields(couple, ("groomFull", "brideFull"), "couple", errors)

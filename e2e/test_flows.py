@@ -409,6 +409,75 @@ def test_wizard_skip_and_reduced_motion(page, site):
     assert page.locator(".footsteps").count() == 0               # no moving trail either
     assert page.js_errors == []
 
+def test_blue_blooms_arabic_end_to_end(page, site):
+    base = site["base"]
+    allowed = (base, "https://fonts.googleapis.com/", "https://fonts.gstatic.com/")
+    outside = []
+    page.on("request", lambda r: outside.append(r.url)
+            if not r.url.startswith(allowed) and not r.url.startswith(("data:", "blob:")) else None)
+
+    sign_in(page, site)
+    page.goto(base + "/create.html?type=wedding-blue")
+    page.wait_for_selector("#verse-field:not([hidden])")
+    assert page.input_value("#f-verse").startswith("بسم الله")      # the default opening line
+    assert page.is_visible("#burgundy-group") and page.is_visible("#burgundy-gift-group")
+    fill_wedding(page, groom="كريم", bride="نور")
+    page.fill("#f-family-groom", "السيد / عادل فتحي")
+    page.fill("#f-ceremony-place", "مسجد السيدة نفيسة")
+    page.fill("#f-reception-time", "20:30")
+    page.fill("#f-gift-message", "حضوركم أجمل هدية")
+    page.wait_for_function("document.getElementById('f-slug').value.length >= 2")
+    slug = page.input_value("#f-slug")
+    publish_with(page, "GOOD-CODE-0006")
+    page.wait_for_selector("#success-screen:not([hidden])", timeout=20_000)
+
+    html = urllib.request.urlopen(base + "/wedding-blue/" + slug).read().decode()
+    assert "<title>كريم &amp; نور · زفاف</title>" in html
+
+    page.goto(base + "/wedding-blue/" + slug)
+    page.wait_for_function("document.getElementById('cover-groom').textContent === 'كريم'")
+    assert page.get_attribute("html", "dir") == "rtl"
+    assert "١٢ ديسمبر ٢٠٢٦" in page.text_content("#cover-date")         # Arabic digits and month
+    page.click("#open-btn")
+    page.wait_for_selector("#invitation", state="visible")
+    assert page.text_content("#verse").startswith("بسم الله")
+    assert page.text_content("#family-groom") == "السيد / عادل فتحي"
+    assert page.text_content("#ceremony-place") == "مسجد السيدة نفيسة"
+    assert page.text_content('[data-time="ceremony"]') == "٧:٠٠ م"
+    assert page.text_content('#reception-time') == "٨:٣٠ م"
+    assert page.text_content(".cal-event") == "١٢"
+    assert page.text_content(".cal-dow") == "سبت"                       # Saturday-first month
+    assert re.match(r"[٠-٩]+ يوم [٠-٩]+ ساعة", page.text_content("#countdown"))
+    assert "٧:٠٠ م" in page.text_content("#schedule-list")               # "Dinner" at 19:00
+    assert "واتساب" in page.text_content("#contacts")
+
+    page.click("#rsvp-open")
+    page.fill("#rsvp-name", "ضيف")
+    page.click("#rsvp-form button[type=submit]")
+    page.wait_for_function("document.getElementById('rsvp-status').textContent.includes('شكرًا')")
+    page.click("#gb-form button[type=submit]")                          # empty: Arabic errors
+    assert page.text_content('.error[data-for="gb-name"]') == "من فضلك اكتب اسمك."
+    page.fill("#gb-name", "ضيف")
+    page.fill("#gb-message", "ألف مبروك")
+    page.click("#gb-form button[type=submit]")
+    page.wait_for_selector("#gb-list li:has-text('ألف مبروك')")
+    assert page.text_content("#gb-list .wish-when") == "الآن"
+    assert outside == [], outside
+    assert page.js_errors == []
+
+    # Edit keeps the verse; clearing it hides it.
+    page.goto(base + "/user/")
+    page.locator(f".event-card[data-slug='{slug}'] >> text=Edit").click()
+    page.wait_for_function("document.getElementById('f-verse').value.startsWith('بسم الله')")
+    page.fill("#f-verse", "")
+    page.click("#publish-btn")
+    page.wait_for_function("document.getElementById('progress-text').textContent === 'Saved.'")
+    page.goto(base + "/wedding-blue/" + slug)
+    page.click("#open-btn")
+    page.wait_for_selector("#invitation", state="visible")
+    assert page.is_hidden("#verse")
+    assert page.js_errors == []
+
 # --- preview links can't be forged -------------------------------------------
 
 def test_hand_made_preview_link_is_ignored_but_create_preview_works(page, site):

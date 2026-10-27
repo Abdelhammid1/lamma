@@ -8,7 +8,17 @@
 //  Shared by every template that uses this markup: each template's
 //  js/guestbook.js passes its own CONFIG in. Edit here, not in the folders.
 
-export function initGuestbook(CONFIG) {
+export function initGuestbook(CONFIG, { text = {}, locale } = {}) {
+
+  // Wording, overridable per template (Wedding · Blue Blooms is Arabic).
+  const T = {
+    nameMissing: "Please enter your name.", messageMissing: "Please write a wish.",
+    sending: "Sending your wish…", saved: "Thank you, your wish has been saved 💌",
+    failed: "Something went wrong. Please try again.", loadFailed: "Could not load wishes right now.",
+    justNow: "just now",
+    minutesAgo: (n) => `${n}m ago`, hoursAgo: (n) => `${n}h ago`, daysAgo: (n) => `${n}d ago`,
+    ...text,
+  };
 
   const SLUG     = CONFIG.slug || "demo";
   const POST_URL = `/api/invitations/${encodeURIComponent(SLUG)}/wishes`;
@@ -43,13 +53,13 @@ export function initGuestbook(CONFIG) {
       const message = (messageEl.value || "").trim();
 
       let ok = true;
-      if (!name)    { showError(nameEl,    nameErr,    "Please enter your name."); ok = false; }
-      if (!message) { showError(messageEl, messageErr, "Please write a wish.");    ok = false; }
+      if (!name)    { showError(nameEl,    nameErr,    T.nameMissing);    ok = false; }
+      if (!message) { showError(messageEl, messageErr, T.messageMissing); ok = false; }
       if (!ok) { (nameEl.value ? messageEl : nameEl).focus(); return; }
 
       submitBtn.disabled = true;
       if (statusEl) {
-        statusEl.textContent = "Sending your wish…";
+        statusEl.textContent = T.sending;
         statusEl.className   = "rsvp-status pending";
       }
 
@@ -62,7 +72,7 @@ export function initGuestbook(CONFIG) {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         form.reset();
         if (statusEl) {
-          statusEl.textContent = "Thank you, your wish has been saved 💌";
+          statusEl.textContent = T.saved;
           statusEl.className   = "rsvp-status success";
         }
         // Pull the fresh list immediately so the submitter sees their own wish.
@@ -70,7 +80,7 @@ export function initGuestbook(CONFIG) {
       } catch (err) {
         console.error(err);
         if (statusEl) {
-          statusEl.textContent = "Something went wrong. Please try again.";
+          statusEl.textContent = T.failed;
           statusEl.className   = "rsvp-status error";
         }
       } finally {
@@ -81,13 +91,13 @@ export function initGuestbook(CONFIG) {
 
   /* ------------------------ Poll-based list render --------------------------- */
   function relativeTime(then) {
-    if (!then) return "just now";
+    if (!then) return T.justNow;
     const s = Math.floor((Date.now() - then.getTime()) / 1000);
-    if (s < 60)        return "just now";
-    if (s < 3600)      return `${Math.floor(s / 60)}m ago`;
-    if (s < 86400)     return `${Math.floor(s / 3600)}h ago`;
-    if (s < 86400 * 7) return `${Math.floor(s / 86400)}d ago`;
-    return then.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+    if (s < 60)        return T.justNow;
+    if (s < 3600)      return T.minutesAgo(Math.floor(s / 60));
+    if (s < 86400)     return T.hoursAgo(Math.floor(s / 3600));
+    if (s < 86400 * 7) return T.daysAgo(Math.floor(s / 86400));
+    return then.toLocaleDateString(locale, { day: "numeric", month: "short", year: "numeric" });
   }
 
   function renderEntries(entries) {
@@ -151,7 +161,7 @@ export function initGuestbook(CONFIG) {
       console.warn("[guestbook]", err);
       if (emptyEl && !listEl.children.length) {
         emptyEl.hidden = false;
-        emptyEl.textContent = "Could not load wishes right now.";
+        emptyEl.textContent = T.loadFailed;
       }
     } finally {
       gbInFlight = false;

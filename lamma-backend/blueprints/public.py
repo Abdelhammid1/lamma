@@ -30,7 +30,7 @@ bp = Blueprint("public_api", __name__, url_prefix="/api")
 
 VALID_EVENT_TYPES = frozenset({
     "birthday", "birthday-elegant",
-    "wedding", "wedding-noir", "wedding-burgundy", "wedding-wizard",
+    "wedding", "wedding-noir", "wedding-burgundy", "wedding-wizard", "wedding-blue",
     "engagement", "qiraya", "sobou", "invitation",
 })
 
@@ -665,7 +665,7 @@ def _build_public_url(event: Event) -> str:
     # served by its own index.html via _redirects. The birthday + any
     # unknown type stays on the /<slug> catch-all.
     domain  = current_app.config["PUBLIC_DOMAIN"]
-    PREFIXED = {"wedding", "wedding-noir", "wedding-burgundy", "wedding-wizard", "birthday-elegant",
+    PREFIXED = {"wedding", "wedding-noir", "wedding-burgundy", "wedding-wizard", "wedding-blue", "birthday-elegant",
                 "engagement", "qiraya", "sobou"}
     if event.event_type in PREFIXED:
         return f"https://lamma.{domain}/{event.event_type}/{event.slug}"

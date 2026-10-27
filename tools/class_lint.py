@@ -29,7 +29,7 @@ import re
 import sys
 from pathlib import Path
 
-TEMPLATES = ["wedding", "wedding-noir", "wedding-burgundy", "wedding-wizard", "engagement", "qiraya", "sobou", "birthday-elegant"]
+TEMPLATES = ["wedding", "wedding-noir", "wedding-burgundy", "wedding-wizard", "wedding-blue", "engagement", "qiraya", "sobou", "birthday-elegant"]
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
 # Classes we never flag even if the template CSS doesn't define them.

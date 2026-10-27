@@ -7,7 +7,18 @@
 //  Shared by every template that uses this markup: each template's
 //  js/rsvp.js passes its own CONFIG in. Edit here, not in the folders.
 
-export function initRsvp(CONFIG) {
+export function initRsvp(CONFIG, { text = {} } = {}) {
+
+  // Wording, overridable per template (Wedding · Blue Blooms is Arabic).
+  const T = {
+    open: "Confirm Attendance", hide: "Hide RSVP",
+    nameMissing: "Please enter your name.", sending: "Sending…",
+    thanksYes: "Thank you! Your RSVP has been received — we can't wait to see you.",
+    thanksNo: "Thank you for letting us know. You'll be missed.",
+    failedWith: (msg) => `Couldn't send your RSVP: ${msg}`,
+    failed: "Something went wrong sending your RSVP. Please try again.",
+    ...text,
+  };
 
   const SLUG = CONFIG.slug || "demo";
   const ENDPOINT = `/api/invitations/${encodeURIComponent(SLUG)}/rsvp`;
@@ -25,7 +36,7 @@ export function initRsvp(CONFIG) {
   if (openBtn && form) {
     openBtn.addEventListener("click", () => {
       form.hidden = !form.hidden;
-      openBtn.textContent = form.hidden ? "Confirm Attendance" : "Hide RSVP";
+      openBtn.textContent = form.hidden ? T.open : T.hide;
       if (!form.hidden) nameInput && nameInput.focus();
     });
   }
@@ -56,7 +67,7 @@ export function initRsvp(CONFIG) {
 
       const name = (nameInput.value || "").trim();
       if (!name) {
-        showNameError("Please enter your name.");
+        showNameError(T.nameMissing);
         nameInput.focus();
         return;
       }
@@ -72,7 +83,7 @@ export function initRsvp(CONFIG) {
 
       submitBtn.disabled = true;
       if (statusEl) {
-        statusEl.textContent = "Sending…";
+        statusEl.textContent = T.sending;
         statusEl.className   = "rsvp-status pending";
       }
 
@@ -92,8 +103,8 @@ export function initRsvp(CONFIG) {
         }
         if (statusEl) {
           statusEl.textContent = attendingBool
-            ? "Thank you! Your RSVP has been received — we can't wait to see you."
-            : "Thank you for letting us know. You'll be missed.";
+            ? T.thanksYes
+            : T.thanksNo;
           statusEl.className = "rsvp-status success";
         }
         form.reset();
@@ -101,7 +112,7 @@ export function initRsvp(CONFIG) {
       } catch (err) {
         console.error(err);
         if (statusEl) {
-          statusEl.textContent = (err && err.message) ? `Couldn't send your RSVP: ${err.message}` : "Something went wrong sending your RSVP. Please try again.";
+          statusEl.textContent = (err && err.message) ? T.failedWith(err.message) : T.failed;
           statusEl.className = "rsvp-status error";
         }
       } finally {

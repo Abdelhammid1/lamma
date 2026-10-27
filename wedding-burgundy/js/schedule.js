@@ -1,5 +1,5 @@
 // Shared module — the real code is /js/shared/schedule.js.
 import { CONFIG } from "../config.js";
-import { renderSchedule } from "/js/shared/schedule.js?v=736d9964";
+import { renderSchedule } from "/js/shared/schedule.js?v=14f3953e";
 
 renderSchedule(CONFIG);   // 12-hour, "5:30 PM"

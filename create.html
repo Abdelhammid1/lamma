@@ -51,6 +51,7 @@
         <button type="button" class="cx-pill" role="tab" data-type="wedding-noir">Wedding · Noir</button>
         <button type="button" class="cx-pill" role="tab" data-type="wedding-burgundy">Wedding · Burgundy</button>
         <button type="button" class="cx-pill" role="tab" data-type="wedding-wizard">Wedding · Wizard</button>
+        <button type="button" class="cx-pill" role="tab" data-type="wedding-blue">زفاف · زهور زرقاء</button>
         <button type="button" class="cx-pill" role="tab" data-type="engagement">Engagement</button>
         <button type="button" class="cx-pill" role="tab" data-type="qiraya">قراية فاتحة</button>
         <button type="button" class="cx-pill" role="tab" data-type="sobou">سبوع</button>
@@ -161,6 +162,10 @@
           </div>
         </div>
         <!-- Only Wedding · Burgundy shows these (applyType toggles the group). -->
+        <div class="cx-field" id="verse-field" hidden>
+          <label for="f-verse">Opening line <span class="cx-hint" style="font-weight:400;">(optional — shown above the names; clear it to show none)</span></label>
+          <textarea id="f-verse" rows="2" dir="rtl">بسم الله الرحمن الرحيم&#10;وَمِنْ آيَاتِهِ أَنْ خَلَقَ لَكُم مِّنْ أَنفُسِكُمْ أَزْوَاجًا لِّتَسْكُنُوا إِلَيْهَا</textarea>
+        </div>
         <div id="burgundy-group">
           <div class="cx-field-row">
             <div class="cx-field">
@@ -355,6 +360,6 @@
 
 </main>
 
-<script type="module" src="js/create-form.js?v=4ec7fbd1"></script>
+<script type="module" src="js/create-form.js?v=2aecba93"></script>
 </body>
 </html>

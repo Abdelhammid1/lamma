@@ -22,12 +22,12 @@ import { previewBanner, trustedPreview } from "/js/preview-guard.js?v=fcba6238";
 
 const RENDERER_MODULES = [
   "./intro.js?v=de4e3bcf",     "./content.js?v=c50569a3",   "./countdown.js?v=42d298ee",
-  "./ics.js?v=fdb9bdd9",       "./rsvp.js?v=3d4953b2",      "./contacts.js?v=69008faa",
-  "./guestbook.js?v=87e3a3a4", "./footsteps.js?v=e28486b8", "./reveal.js?v=3986f32d",    "./view-ping.js?v=ec6e9ac1",
+  "./ics.js?v=fdb9bdd9",       "./rsvp.js?v=67a1d75c",      "./contacts.js?v=8ac65200",
+  "./guestbook.js?v=f8e8df70", "./footsteps.js?v=e28486b8", "./reveal.js?v=3986f32d",    "./view-ping.js?v=ec6e9ac1",
 ];
 
 const RESERVED_SEG = new Set([
-  "", "wedding", "wedding-burgundy", "wedding-noir", "wedding-wizard", "birthday", "birthday-elegant",
+  "", "wedding", "wedding-burgundy", "wedding-noir", "wedding-wizard", "wedding-blue", "birthday", "birthday-elegant",
   "engagement", "qiraya", "sobou", "admin", "create",
   "index.html", "admin.html", "create.html",
 ]);

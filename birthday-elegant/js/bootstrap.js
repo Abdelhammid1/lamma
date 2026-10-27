@@ -13,7 +13,7 @@ import { previewBanner, trustedPreview } from "/js/preview-guard.js?v=fcba6238";
 
 
 const RESERVED_SEG = new Set([
-  "", "birthday", "birthday-elegant", "wedding", "wedding-noir", "wedding-burgundy", "wedding-wizard",
+  "", "birthday", "birthday-elegant", "wedding", "wedding-noir", "wedding-burgundy", "wedding-wizard", "wedding-blue",
   "engagement", "qiraya", "sobou", "admin", "create",
   "index.html", "admin.html", "create.html",
 ]);

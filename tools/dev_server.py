@@ -30,7 +30,7 @@ from flask import request, send_from_directory  # noqa: E402
 
 from app import create_app  # noqa: E402
 
-TEMPLATE_DIRS = ("wedding", "wedding-noir", "wedding-burgundy", "wedding-wizard", "engagement", "qiraya", "sobou", "birthday-elegant")
+TEMPLATE_DIRS = ("wedding", "wedding-noir", "wedding-burgundy", "wedding-wizard", "wedding-blue", "engagement", "qiraya", "sobou", "birthday-elegant")
 _SLUG = re.compile(r"^[a-z0-9][a-z0-9-]{0,38}[a-z0-9]$")
 _BACKEND_PREFIXES = ("/api/", "/admin", "/user", "/data/", "/media/")
 

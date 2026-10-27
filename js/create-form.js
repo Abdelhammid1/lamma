@@ -71,7 +71,7 @@ function guardFileSize(input, maxMb, label) {
 
 // All templates that share the "couple + event + venue" schema reuse
 // the wedding-shaped form. Birthday is the only outlier (quiz + memories).
-const COUPLE_TYPES = new Set(["wedding", "wedding-noir", "wedding-burgundy", "wedding-wizard", "engagement", "qiraya", "sobou"]);
+const COUPLE_TYPES = new Set(["wedding", "wedding-noir", "wedding-burgundy", "wedding-wizard", "wedding-blue", "engagement", "qiraya", "sobou"]);
 const BIRTHDAY_TYPES = new Set(["birthday", "birthday-elegant"]);
 const ALL_TYPES    = new Set([...BIRTHDAY_TYPES, ...COUPLE_TYPES]);
 
@@ -82,6 +82,7 @@ const TYPE_TITLE = {
   "wedding-noir":    "Create your wedding invitation — Noir",
   "wedding-burgundy": "Create your wedding invitation — Burgundy",
   "wedding-wizard":   "Create your wedding invitation — Wizard",
+  "wedding-blue":     "اعمل دعوة زفاف — زهور زرقاء",
   engagement:        "Create your engagement invitation",
   qiraya:            "اعمل دعوة قراية فاتحة",
   sobou:             "اعمل دعوة سبوع",
@@ -94,6 +95,7 @@ const TYPE_PREVIEW = {
   "wedding-noir":     "wedding-noir/index.html?preview=1",
   "wedding-burgundy": "wedding-burgundy/index.html?preview=1",
   "wedding-wizard":   "wedding-wizard/index.html?preview=1",
+  "wedding-blue":     "wedding-blue/index.html?preview=1",
   engagement:         "engagement/index.html?preview=1",
   qiraya:             "qiraya/index.html?preview=1",
   sobou:              "sobou/index.html?preview=1",
@@ -127,8 +129,11 @@ function applyType(t) {
   $("dress-note-field").hidden = (t !== "wedding-wizard");
   $("schedule-builder").classList.toggle("with-detail", t === "wedding-wizard");
   $("elegant-group").style.display = (t === "birthday-elegant") ? "" : "none";
-  $("burgundy-group").hidden      = (t !== "wedding-burgundy");
-  $("burgundy-gift-group").hidden = (t !== "wedding-burgundy");
+  // Wedding · Blue Blooms has Burgundy's ceremony section and gift box.
+  const ceremonyFields = (t === "wedding-burgundy" || t === "wedding-blue");
+  $("burgundy-group").hidden      = !ceremonyFields;
+  $("burgundy-gift-group").hidden = !ceremonyFields;
+  $("verse-field").hidden         = (t !== "wedding-blue");
   updateSlugLink();
   // سبوع isn't a couple — it's a baby's naming ceremony. The groom
   // field holds the baby's name, the bride field holds the family /
@@ -770,6 +775,7 @@ function collectFormForPreview(fileUrl = previewUrl) {
     "wedding-noir": "Wedding",
     "wedding-burgundy": "Wedding",
     "wedding-wizard": "Wedding",
+    "wedding-blue": "زفاف",
     engagement:     "Engagement",
     qiraya:         "قراية فاتحة",
     sobou:          "سبوع",
@@ -782,7 +788,7 @@ function collectFormForPreview(fileUrl = previewUrl) {
       eventType: EVENT_TYPE_LABEL[state.type] || "Wedding",
       groomLabel: "The Groom",
       brideLabel: "The Bride",
-      ...(state.type === "wedding-burgundy"
+      ...(state.type === "wedding-burgundy" || state.type === "wedding-blue"
         ? { groomFull: $("f-groom-full").value.trim(), brideFull: $("f-bride-full").value.trim() }
         : {}),
     },
@@ -845,11 +851,12 @@ function collectFormForPreview(fileUrl = previewUrl) {
       const f = input.files?.[0];
       return f ? fileUrl(f) : (input.dataset.existingUrl || "");
     })(),
-    ...(state.type === "wedding-burgundy" ? burgundyExtras() : {}),
+    ...(state.type === "wedding-burgundy" || state.type === "wedding-blue" ? burgundyExtras() : {}),
+    ...(state.type === "wedding-blue" ? { verse: $("f-verse").value.trim() } : {}),
   };
 }
 
-// Fields only Wedding · Burgundy shows. The full names live on `couple`
+// Fields only Wedding · Burgundy and Blue Blooms show. The full names live on `couple`
 // so every renderer reads the couple from one place.
 function burgundyExtras() {
   const v = (id) => ($(id)?.value || "").trim();
@@ -1332,6 +1339,7 @@ async function loadAdminEditFixtures() {
     setIf("f-ceremony-place", p.ceremony?.name);
     setIf("f-gift-message",   p.gift?.message);
     setIf("f-gift-details",   p.gift?.details);
+    if (typeof p.verse === "string") $("f-verse").value = p.verse;   // an empty verse stays empty
     // Pre-fill the colour swatches from the stored palette. Missing
     // slots stay at their seed default so the host can extend an
     // existing palette by just editing the extra swatches.

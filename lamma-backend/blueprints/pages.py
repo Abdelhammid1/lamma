@@ -26,19 +26,19 @@ from models import Event, db
 
 bp = Blueprint("pages", __name__)
 
-TEMPLATES = ("wedding", "wedding-noir", "wedding-burgundy", "wedding-wizard", "engagement", "qiraya", "sobou", "birthday-elegant")
+TEMPLATES = ("wedding", "wedding-noir", "wedding-burgundy", "wedding-wizard", "wedding-blue", "engagement", "qiraya", "sobou", "birthday-elegant")
 _SAFE_SLUG = re.compile(r"^[a-z0-9][a-z0-9-]{0,38}[a-z0-9]$")
 _TITLE_RE = re.compile(r"<title>.*?</title>", re.S | re.I)
 
 _KIND = {
     "wedding": "Wedding", "wedding-noir": "Wedding", "wedding-burgundy": "Wedding",
-    "wedding-wizard": "Wedding", "engagement": "Engagement",
+    "wedding-wizard": "Wedding", "wedding-blue": "زفاف", "engagement": "Engagement",
     "qiraya": "قراية فاتحة", "sobou": "سبوع", "birthday-elegant": "Birthday",
 }
 
 
-@bp.get("/<any(wedding, 'wedding-noir', 'wedding-burgundy', 'wedding-wizard', engagement, qiraya, sobou, 'birthday-elegant'):tpl>/<slug>")
-@bp.get("/<any(wedding, 'wedding-noir', 'wedding-burgundy', 'wedding-wizard', engagement, qiraya, sobou, 'birthday-elegant'):tpl>/<slug>/")
+@bp.get("/<any(wedding, 'wedding-noir', 'wedding-burgundy', 'wedding-wizard', 'wedding-blue', engagement, qiraya, sobou, 'birthday-elegant'):tpl>/<slug>")
+@bp.get("/<any(wedding, 'wedding-noir', 'wedding-burgundy', 'wedding-wizard', 'wedding-blue', engagement, qiraya, sobou, 'birthday-elegant'):tpl>/<slug>/")
 def invitation_page(tpl, slug):
     if not _SAFE_SLUG.match(slug):
         abort(404)

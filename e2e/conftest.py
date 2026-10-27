@@ -57,7 +57,7 @@ app = create_app()
 with app.app_context():
     db.session.add(Admin(email={creds['admin'][0]!r}, password_hash=hash_password({creds['admin'][1]!r})))
     db.session.add(User(email={creds['host'][0]!r}, password_hash=hash_password({creds['host'][1]!r})))
-    for c in ("GOOD-CODE-0001", "GOOD-CODE-0002", "GOOD-CODE-0003", "GOOD-CODE-0004", "GOOD-CODE-0005"):
+    for c in ("GOOD-CODE-0001", "GOOD-CODE-0002", "GOOD-CODE-0003", "GOOD-CODE-0004", "GOOD-CODE-0005", "GOOD-CODE-0006"):
         db.session.add(ActivationCode(code=c, event_id=None))
     db.session.commit()
 """
