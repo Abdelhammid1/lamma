@@ -353,6 +353,9 @@ def test_wizard_end_to_end(page, site):
     page.wait_for_selector("#invitation", state="visible", timeout=10_000)
     page.wait_for_function("document.body.classList.contains('settled')")
     assert page.is_hidden("#envelope-scene")
+    assert page.locator(".footsteps .step").count() > 10       # the trail down the page
+    page.evaluate("window.scrollTo(0, document.body.scrollHeight / 2)")
+    page.wait_for_function("[...document.querySelectorAll('.footsteps .step')].some(s => +s.style.opacity > 0)")
     assert page.text_content("#letter [data-groom]") == "Omar"
     assert page.text_content("#venue-name") == "The Great Hall"
     assert page.text_content("#doors-time") == "2:00 PM"
@@ -403,6 +406,7 @@ def test_wizard_skip_and_reduced_motion(page, site):
     page.click("#open-btn")                          # no envelope scene at all
     page.wait_for_selector("#invitation", state="visible")
     assert not page.evaluate("document.body.classList.contains('env')")
+    assert page.locator(".footsteps").count() == 0               # no moving trail either
     assert page.js_errors == []
 
 # --- preview links can't be forged -------------------------------------------

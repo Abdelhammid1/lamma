@@ -265,6 +265,12 @@ body.seal .seal-names { animation: sealGlow 1.4s ease-in-out 1s both; }
 
 /* ---------------------------------------------------------------- Page */
 body:not(.opened) #invitation { display: none; }
+/* The scroll footsteps (js/footsteps.js) walk over everything, the
+   parchment included, like ink appearing on the Marauder's Map. They never
+   take a tap. */
+#invitation { position: relative; isolation: isolate; }
+.footsteps { position: absolute; top: 0; left: 0; z-index: 3; overflow: visible; pointer-events: none; }
+.footsteps .step { fill: #f0bf5e; stroke: rgba(45, 22, 6, 0.7); stroke-width: 0.7px; opacity: 0; transition: opacity 0.45s ease; }
 body.opened:not(.settled):not(.preview) #invitation { animation: fadeIn 0.9s ease both; }
 /* Preview inside /create: no intro, the page starts at the map. */
 body.preview .intro, body.preview .envelope-scene { display: none !important; }
@@ -279,7 +285,7 @@ body.preview .intro, body.preview .envelope-scene { display: none !important; }
   justify-content: center;
   gap: 24px;
   text-align: center;
-  isolation: isolate;
+  isolation: isolate;               /* its scene (::before, z -1) stays behind its own content */
   overflow: hidden;
   border-bottom: 1px solid rgba(201, 160, 82, 0.25);
 }
