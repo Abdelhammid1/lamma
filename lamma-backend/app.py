@@ -8,6 +8,7 @@ Usage:
 
 import os
 import re
+from datetime import datetime, timezone
 from pathlib import Path
 
 from flask import Flask, abort, jsonify, redirect, send_from_directory, url_for
@@ -164,6 +165,24 @@ def create_app(config_object: type = Config) -> Flask:
         resp.headers["X-Content-Type-Options"] = "nosniff"
         resp.headers["Content-Security-Policy"] = "sandbox; default-src 'none'"
         return resp
+
+    # Make now()/app_name/brand available to every template so the
+    # shared Manasety-credit footer (_footer.html) can render without
+    # every view having to pass the values in. BRAND_SHOW=0 hides it.
+    @app.context_processor
+    def inject_globals():
+        return {
+            # Lambda avoids the deprecated `datetime.utcnow`; templates still
+            # call it with `now()` to get the current UTC datetime.
+            "now": lambda: datetime.now(timezone.utc),
+            "app_name": "لمة · LAMMA",
+            "brand": {
+                "text": os.getenv("BRAND_TEXT", "Developed by"),
+                "name": os.getenv("BRAND_NAME", "Manasety"),
+                "url":  os.getenv("BRAND_URL",  "https://manasety.ai"),
+                "show": os.getenv("BRAND_SHOW", "1") != "0",
+            },
+        }
 
     # Background cleanup — only under gunicorn / production, not under
     # pytest (TestConfig sets SCHEDULER_ENABLED = False).
