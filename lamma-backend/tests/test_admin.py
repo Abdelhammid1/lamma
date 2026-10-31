@@ -43,7 +43,7 @@ def _make_event(session, slug="medo", status="awaiting_code"):
 def test_login_page_renders(client):
     res = client.get("/admin/login")
     assert res.status_code == 200
-    assert b"LAMMA" in res.data
+    assert "لوحة الإدارة" in res.data.decode()
 
 
 def test_login_success_redirects_to_dashboard(client, admin):
@@ -58,7 +58,7 @@ def test_login_wrong_password_reprompts(client, admin):
     res = client.post("/admin/login", data={"email": "me@example.com",
                                             "password": "wrong"})
     assert res.status_code == 200
-    assert b"Invalid email or password" in res.data
+    assert "الإيميل أو كلمة السر مش صح" in res.data.decode()
 
 
 def test_login_normalizes_email(client, admin):
@@ -96,8 +96,8 @@ def test_dashboard_shows_counts(logged_in, session):
     res = logged_in.get("/admin/")
     assert res.status_code == 200
     body = res.data.decode()
-    assert "Published" in body
-    assert ">2<" in body               # published count = 2
+    assert "منشورة" in body
+    assert ">٢<" in body               # published count = 2
 
 
 def test_events_page_filters_by_status(logged_in, session):
@@ -105,8 +105,8 @@ def test_events_page_filters_by_status(logged_in, session):
     _make_event(session, slug="b", status="draft")
     res = logged_in.get("/admin/events?status=published")
     body = res.data.decode()
-    assert "<code>a</code>" in body
-    assert "<code>b</code>" not in body
+    assert '<code dir="ltr">a</code>' in body
+    assert '<code dir="ltr">b</code>' not in body
 
 
 def test_events_page_search_by_slug(logged_in, session):
@@ -114,8 +114,8 @@ def test_events_page_search_by_slug(logged_in, session):
     _make_event(session, slug="sara")
     res = logged_in.get("/admin/events?q=med")
     body = res.data.decode()
-    assert "<code>medo</code>" in body
-    assert "<code>sara</code>" not in body
+    assert '<code dir="ltr">medo</code>' in body
+    assert '<code dir="ltr">sara</code>' not in body
 
 
 # --- generate code --------------------------------------------------------

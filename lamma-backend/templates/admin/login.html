@@ -1,24 +1,24 @@
 {% extends "base.html" %}
-{% block title %}Sign in · Admin{% endblock %}
+{% block title %}دخول · إدارة لمّة{% endblock %}
+{% block body_attrs %} class="gate-page"{% endblock %}
 {% block content %}
 <div class="gate">
-  <div class="gate-card">
-    <div class="gate-brand">لمة · LAMMA</div>
-    <div class="gate-sub">Admin</div>
-    <form method="post" class="gate-form">
-      <div class="field">
-        <label for="email">Email</label>
-        <input id="email" name="email" type="email" autocomplete="email" required value="{{ email or '' }}">
-      </div>
-      <div class="field">
-        <label for="password">Password</label>
-        <input id="password" name="password" type="password" autocomplete="current-password" required>
-      </div>
-      {% if error %}
-        <p class="error">{{ error }}</p>
-      {% endif %}
-      <button type="submit" class="btn btn-primary" style="width:100%">Continue</button>
-    </form>
-  </div>
+  <img class="gate-logo" src="/logo.jpg" alt="لمّة">
+  <h1>لوحة الإدارة</h1>
+  <p class="gate-lede">ادخل عشان تدير الدعوات والأكواد.</p>
+  <form method="post" class="gate-form">
+    <div class="field">
+      <label for="email">الإيميل</label>
+      <input id="email" name="email" type="email" dir="ltr" autocomplete="email" required value="{{ email or '' }}">
+    </div>
+    <div class="field">
+      <label for="password">كلمة السر</label>
+      <input id="password" name="password" type="password" dir="ltr" autocomplete="current-password" required>
+    </div>
+    {% if error %}
+      <p class="error" role="alert">{{ error }}</p>
+    {% endif %}
+    <button type="submit" class="btn btn-primary btn-block">دخول</button>
+  </form>
 </div>
 {% endblock %}

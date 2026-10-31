@@ -1,30 +1,51 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Create — لمّة · LAMMA</title>
+<title>اعمل دعوتك · لمّة</title>
 <link rel="icon" href="logo.jpg" type="image/jpeg" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,600&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Cairo:wght@400;600;700&family=Manrope:wght@400;500;600;700&display=swap"
+<link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap"
       rel="stylesheet" />
-<link rel="stylesheet" href="create.css?v=1508fe38" />
+<link rel="stylesheet" href="create.css?v=87f14418" />
 </head>
 <body>
 
 <header class="cx-topbar">
-  <a href="/" class="cx-brand">
-    <img src="logo.jpg" alt="LAMMA" />
-    <span class="cx-brand-name">لمّة · LAMMA</span>
-  </a>
-  <a href="/user/" class="cx-admin-link">My invitations →</a>
+  <a href="/" class="cx-brand" aria-label="لمّة، الصفحة الرئيسية"><img src="logo.jpg" alt="" /></a>
+  <a href="/user/" class="cx-admin-link">دعواتي</a>
 </header>
 
 <main class="cx-shell">
 
   <!-- Screen 1: form + preview -->
-  <div id="editor-screen" class="cx-editor">
+  <div id="editor-screen">
+    <div class="cx-head">
+      <h1 class="cx-title" id="cx-title">اعمل دعوتك</h1>
+      <p class="cx-lede">اكتب بياناتك، والدعوة بتتغير قدامك وانت بتكتب. لما تعجبك، حط كود التفعيل وانشرها.</p>
+      <p class="cx-hint" id="draft-note" hidden></p>
+
+      <!-- Template-switcher pills — one tap flips state.type, swaps
+           the field groups + the preview iframe, keeps whatever name /
+           groom / bride / venue the host has already typed. The active
+           pill gets .is-active via create-form.js applyType(). -->
+      <div class="cx-pills" id="type-pills" role="tablist" aria-label="النموذج">
+        <button type="button" class="cx-pill" role="tab" data-type="wedding-blue">فرح · زهور زرقاء</button>
+        <button type="button" class="cx-pill" role="tab" data-type="wedding-burgundy">فرح · عنّابي</button>
+        <button type="button" class="cx-pill" role="tab" data-type="wedding-wizard">فرح · الساحر</button>
+        <button type="button" class="cx-pill" role="tab" data-type="wedding">فرح · كلاسيك</button>
+        <button type="button" class="cx-pill" role="tab" data-type="wedding-noir">فرح · نوار</button>
+        <button type="button" class="cx-pill" role="tab" data-type="engagement">خطوبة</button>
+        <button type="button" class="cx-pill" role="tab" data-type="qiraya">قراية فاتحة</button>
+        <button type="button" class="cx-pill" role="tab" data-type="sobou">سبوع</button>
+        <button type="button" class="cx-pill" role="tab" data-type="birthday-elegant">عيد ميلاد · أنيق</button>
+        <button type="button" class="cx-pill" role="tab" data-type="birthday">عيد ميلاد · كلاسيك</button>
+      </div>
+    </div>
+
+    <div class="cx-editor">
     <section class="cx-form">
       <!-- Admin-only field: which host email should own the new event.
            create-form.js shows this only when ADMIN_MODE === 'create'
@@ -32,334 +53,345 @@
            without an owner. For public hosts the field stays hidden —
            they're already signed in by that point so the backend takes
            their user_id automatically. -->
-      <div class="cx-field" id="host-email-wrapper" style="display:none;">
-        <label for="f-host-email">Host email <span class="cx-hint" style="font-weight:400;">(the account this invitation will land in)</span></label>
-        <input id="f-host-email" type="email" autocomplete="off" placeholder="host@example.com" />
-        <span class="cx-hint">If this email isn't registered yet we'll create the account for the host — after publishing you'll get a one-time link to send them so they can set their password.</span>
-      </div>
-
-      <h1 class="cx-title" id="cx-title">Create your invitation</h1>
-      <p class="cx-lede">Fill in your details. The preview updates as you type. When you're happy, enter your activation code and publish.</p>
-      <p class="cx-hint" id="draft-note" hidden></p>
-
-      <!-- Template-switcher pills — one tap flips state.type, swaps
-           the field groups + the preview iframe, keeps whatever name /
-           groom / bride / venue the host has already typed. The active
-           pill gets .is-active via create-form.js applyType(). -->
-      <div class="cx-pills" id="type-pills" role="tablist" aria-label="Template">
-        <button type="button" class="cx-pill" role="tab" data-type="wedding">Wedding</button>
-        <button type="button" class="cx-pill" role="tab" data-type="wedding-noir">Wedding · Noir</button>
-        <button type="button" class="cx-pill" role="tab" data-type="wedding-burgundy">Wedding · Burgundy</button>
-        <button type="button" class="cx-pill" role="tab" data-type="wedding-wizard">Wedding · Wizard</button>
-        <button type="button" class="cx-pill" role="tab" data-type="wedding-blue">زفاف · زهور زرقاء</button>
-        <button type="button" class="cx-pill" role="tab" data-type="engagement">Engagement</button>
-        <button type="button" class="cx-pill" role="tab" data-type="qiraya">قراية فاتحة</button>
-        <button type="button" class="cx-pill" role="tab" data-type="sobou">سبوع</button>
-        <button type="button" class="cx-pill" role="tab" data-type="birthday">Birthday</button>
-        <button type="button" class="cx-pill" role="tab" data-type="birthday-elegant">Birthday · Elegant</button>
-      </div>
-
-      <!-- Basics: shared -->
-      <!-- The top name field is only used by the birthday variants
-           (CONFIG.name) and by slugify() as the auto-slug seed. Couple
-           templates read from the Groom + Bride fields below instead,
-           so applyType() in create-form.js hides this wrapper for
-           every COUPLE_TYPES value and auto-fills f-name from groom+
-           bride so the Publish gate + slug seeding still work. -->
-      <div class="cx-field" id="name-field-wrapper">
-        <label for="f-name">Name (or couple)</label>
-        <input id="f-name" type="text" autocomplete="off" dir="auto" />
-        <span class="cx-hint">e.g. "Medo" or "Ahmed & Sara"</span>
-      </div>
-      <div class="cx-field">
-        <label for="f-slug">URL slug</label>
-        <input id="f-slug" type="text" autocomplete="off" spellcheck="false" />
-        <span class="cx-hint">English letters, numbers and hyphens. Your link: <code id="slug-preview">lamma.manasety.ai/&lt;slug&gt;</code></span>
-        <span class="cx-error" id="slug-error"></span>
+      <div class="cx-card cx-field" id="host-email-wrapper" style="display:none;">
+        <label for="f-host-email">إيميل صاحب الدعوة</label>
+        <input id="f-host-email" type="email" dir="ltr" autocomplete="off" placeholder="host@example.com" />
+        <span class="cx-hint">لو الإيميل ده مش متسجل، هنعمله حساب. بعد النشر هيظهرلك لينك مرة واحدة تبعته لصاحب الدعوة عشان يحط كلمة السر.</span>
       </div>
 
       <!-- ─────────── BIRTHDAY FIELDS ─────────── -->
-      <div id="birthday-fields">
-        <!-- Only the elegant birthday shows these two lines on its cover. -->
-        <div id="elegant-group" class="cx-field-row">
-          <div class="cx-field">
-            <label for="f-honorific">Line under the name</label>
-            <input id="f-honorific" type="text" dir="auto" placeholder="A Birthday" />
+      <div id="birthday-fields" class="cx-cards">
+        <section class="cx-card">
+          <h2 class="cx-section">الاسم</h2>
+          <!-- The top name field is only used by the birthday variants
+               (CONFIG.name) and by slugify() as the auto-slug seed. Couple
+               templates read from the Groom + Bride fields below instead,
+               so applyType() in create-form.js hides this wrapper for
+               every COUPLE_TYPES value and auto-fills f-name from groom+
+               bride so the Publish gate + slug seeding still work. -->
+          <div class="cx-field" id="name-field-wrapper">
+            <label for="f-name">اسم صاحب العيد</label>
+            <input id="f-name" type="text" autocomplete="off" dir="auto" />
           </div>
-          <div class="cx-field">
-            <label for="f-date-label">Date line (optional)</label>
-            <input id="f-date-label" type="text" dir="auto" placeholder="Saturday, 14 November 2026" />
+          <!-- Only the elegant birthday shows these two lines on its cover. -->
+          <div id="elegant-group" class="cx-field-row">
+            <div class="cx-field">
+              <label for="f-honorific">السطر اللي تحت الاسم</label>
+              <input id="f-honorific" type="text" dir="auto" placeholder="A Birthday" />
+            </div>
+            <div class="cx-field">
+              <label for="f-date-label">سطر التاريخ (اختياري)</label>
+              <input id="f-date-label" type="text" dir="auto" placeholder="Saturday, 14 November 2026" />
+            </div>
           </div>
-        </div>
+        </section>
+
         <!-- Quiz is only used by the classic birthday template; the
              elegant variant is a formal single-scroll with no quiz. -->
-        <div id="quiz-group">
-          <h2 class="cx-section">Quiz</h2>
-          <p class="cx-hint">Wrong answers show a playful modal. Correct answers stay selected.</p>
+        <section id="quiz-group" class="cx-card">
+          <h2 class="cx-section">الأسئلة</h2>
+          <p class="cx-hint">الإجابة الغلط بتطلع رسالة هزار، والصح بتفضل متعلّمة.</p>
           <div id="quiz-builder"></div>
-          <button type="button" id="add-question-btn" class="cx-btn cx-btn-ghost">+ Add question</button>
-        </div>
+          <button type="button" id="add-question-btn" class="cx-btn cx-btn-add">+ ضيف سؤال</button>
+        </section>
 
-        <h2 class="cx-section">Memories (photos)</h2>
-        <p class="cx-hint">Up to 6 photos. Warned above 250 MB, refused above 300 MB each.</p>
-        <div id="memories-builder"></div>
-        <button type="button" id="add-memory-btn" class="cx-btn cx-btn-ghost">+ Add photo</button>
+        <section class="cx-card">
+          <h2 class="cx-section">الذكريات</h2>
+          <p class="cx-hint">لحد ٦ صور. بننبهك فوق ٢٥٠ ميجا، وأقصى حجم للصورة ٣٠٠ ميجا.</p>
+          <div id="memories-builder"></div>
+          <button type="button" id="add-memory-btn" class="cx-btn cx-btn-add">+ ضيف صورة</button>
+        </section>
 
-        <h2 class="cx-section">Letter</h2>
-        <div class="cx-field">
-          <label for="f-letterAr">Arabic body</label>
-          <textarea id="f-letterAr" rows="4" dir="rtl"></textarea>
-        </div>
-        <div class="cx-field">
-          <label for="f-letterEn">English body</label>
-          <textarea id="f-letterEn" rows="4"></textarea>
-        </div>
-        <div class="cx-field-row">
+        <section class="cx-card">
+          <h2 class="cx-section">الجواب</h2>
           <div class="cx-field">
-            <label for="f-signatureEn">Signature (English)</label>
-            <input id="f-signatureEn" type="text" placeholder="Your girl ❤️" />
+            <label for="f-letterAr">النص بالعربي</label>
+            <textarea id="f-letterAr" rows="4" dir="rtl"></textarea>
           </div>
           <div class="cx-field">
-            <label for="f-signatureAr">Signature (Arabic)</label>
-            <input id="f-signatureAr" type="text" dir="auto" />
+            <label for="f-letterEn">النص بالإنجليزي</label>
+            <textarea id="f-letterEn" rows="4" dir="ltr"></textarea>
           </div>
-        </div>
+          <div class="cx-field-row">
+            <div class="cx-field">
+              <label for="f-signatureEn">التوقيع بالإنجليزي</label>
+              <input id="f-signatureEn" type="text" dir="ltr" placeholder="Your girl ❤️" />
+            </div>
+            <div class="cx-field">
+              <label for="f-signatureAr">التوقيع بالعربي</label>
+              <input id="f-signatureAr" type="text" dir="auto" />
+            </div>
+          </div>
+        </section>
 
-        <h2 class="cx-section">Video (optional)</h2>
-        <div class="cx-field">
-          <label for="f-video-file">Upload a video file</label>
-          <input id="f-video-file" type="file" accept="video/*" />
-          <button type="button" class="cx-btn cx-btn-ghost cx-clear" data-clear="f-video-file" hidden>Remove</button>
-          <span class="cx-hint">MP4 / MOV / WebM. Max 300 MB.</span>
-        </div>
-        <div class="cx-field">
-          <label for="f-video-url">…or paste a YouTube / direct video URL</label>
-          <input id="f-video-url" type="url" placeholder="https://youtube.com/watch?v=…" />
-        </div>
-
-        <h2 class="cx-section">Background music (optional)</h2>
-        <div class="cx-field">
-          <label for="f-music-file">Upload an audio file</label>
-          <input id="f-music-file" type="file" accept="audio/*" />
-          <button type="button" class="cx-btn cx-btn-ghost cx-clear" data-clear="f-music-file" hidden>Remove</button>
-          <span class="cx-hint">MP3 / M4A / OGG. Max 50 MB. Plays after the guest presses Start.</span>
-        </div>
+        <section class="cx-card">
+          <h2 class="cx-section">الفيديو والأغنية</h2>
+          <p class="cx-hint">الاتنين اختياريين.</p>
+          <div class="cx-field">
+            <label for="f-video-file">ارفع فيديو</label>
+            <input id="f-video-file" type="file" accept="video/*" />
+            <button type="button" class="cx-btn cx-btn-ghost cx-clear" data-clear="f-video-file" hidden>شيل</button>
+            <span class="cx-hint">MP4 أو MOV أو WebM، لحد ٣٠٠ ميجا.</span>
+          </div>
+          <div class="cx-field">
+            <label for="f-video-url">أو حط لينك يوتيوب أو فيديو</label>
+            <input id="f-video-url" type="url" dir="ltr" placeholder="https://youtube.com/watch?v=…" />
+          </div>
+          <div class="cx-field">
+            <label for="f-music-file">ارفع أغنية</label>
+            <input id="f-music-file" type="file" accept="audio/*" />
+            <button type="button" class="cx-btn cx-btn-ghost cx-clear" data-clear="f-music-file" hidden>شيل</button>
+            <span class="cx-hint">MP3 أو M4A أو OGG، لحد ٥٠ ميجا. بتشتغل لما الضيف يدوس ابدأ.</span>
+          </div>
+        </section>
       </div>
 
       <!-- ─────────── WEDDING FIELDS ─────────── -->
-      <div id="wedding-fields" hidden>
-        <div class="cx-field-row">
-          <div class="cx-field">
-            <!-- Labels are rewritten per template type in create-form.js
-                 (applyType). "Groom/Bride" fits wedding/engagement/qiraya;
-                 سبوع instead uses "Baby's name / Family name". -->
-            <label for="f-groom" id="f-groom-label">Groom name</label>
-            <input id="f-groom" type="text" dir="auto" />
-          </div>
-          <div class="cx-field">
-            <label for="f-bride" id="f-bride-label">Bride name</label>
-            <input id="f-bride" type="text" dir="auto" />
-          </div>
-        </div>
-        <!-- Only Wedding · Burgundy shows these (applyType toggles the group). -->
-        <div class="cx-field" id="verse-field" hidden>
-          <label for="f-verse">Opening line <span class="cx-hint" style="font-weight:400;">(optional — shown above the names; clear it to show none)</span></label>
-          <textarea id="f-verse" rows="2" dir="rtl">بسم الله الرحمن الرحيم&#10;وَمِنْ آيَاتِهِ أَنْ خَلَقَ لَكُم مِّنْ أَنفُسِكُمْ أَزْوَاجًا لِّتَسْكُنُوا إِلَيْهَا</textarea>
-        </div>
-        <div id="burgundy-group">
+      <div id="wedding-fields" class="cx-cards" hidden>
+        <section class="cx-card">
+          <h2 class="cx-section">الأسامي</h2>
           <div class="cx-field-row">
             <div class="cx-field">
-              <label for="f-groom-full">Groom's full name <span class="cx-hint" style="font-weight:400;">(optional)</span></label>
-              <input id="f-groom-full" type="text" dir="auto" placeholder="Omar Hassan" />
+              <!-- Labels are rewritten per template type in create-form.js
+                   (applyType). "Groom/Bride" fits wedding/engagement/qiraya;
+                   سبوع instead uses "Baby's name / Family name". -->
+              <label for="f-groom" id="f-groom-label">اسم العريس</label>
+              <input id="f-groom" type="text" dir="auto" />
             </div>
             <div class="cx-field">
-              <label for="f-bride-full">Bride's full name <span class="cx-hint" style="font-weight:400;">(optional)</span></label>
-              <input id="f-bride-full" type="text" dir="auto" placeholder="Laila Mahmoud" />
+              <label for="f-bride" id="f-bride-label">اسم العروسة</label>
+              <input id="f-bride" type="text" dir="auto" />
+            </div>
+          </div>
+          <!-- Only Wedding · Blue Blooms shows this (applyType toggles it). -->
+          <div class="cx-field" id="verse-field" hidden>
+            <label for="f-verse">السطر الافتتاحي (اختياري)</label>
+            <textarea id="f-verse" rows="2" dir="rtl">بسم الله الرحمن الرحيم&#10;وَمِنْ آيَاتِهِ أَنْ خَلَقَ لَكُم مِّنْ أَنفُسِكُمْ أَزْوَاجًا لِّتَسْكُنُوا إِلَيْهَا</textarea>
+            <span class="cx-hint">بيظهر فوق الأسامي. امسحه لو مش عايزه.</span>
+          </div>
+          <div id="burgundy-group">
+            <div class="cx-field-row">
+              <div class="cx-field">
+                <label for="f-groom-full">اسم العريس بالكامل (اختياري)</label>
+                <input id="f-groom-full" type="text" dir="auto" placeholder="عمر حسن" />
+              </div>
+              <div class="cx-field">
+                <label for="f-bride-full">اسم العروسة بالكامل (اختياري)</label>
+                <input id="f-bride-full" type="text" dir="auto" placeholder="ليلى محمود" />
+              </div>
+            </div>
+            <div class="cx-field-row">
+              <div class="cx-field">
+                <label for="f-family-groom">عيلة العريس</label>
+                <textarea id="f-family-groom" rows="2" dir="auto" placeholder="السيد / حسن عبد الرحمن وحرمه"></textarea>
+              </div>
+              <div class="cx-field">
+                <label for="f-family-bride">عيلة العروسة</label>
+                <textarea id="f-family-bride" rows="2" dir="auto" placeholder="السيد / محمود فاروق وحرمه"></textarea>
+              </div>
+            </div>
+            <div class="cx-field">
+              <label for="f-ceremony-place">مكان كتب الكتاب (اختياري)</label>
+              <input id="f-ceremony-place" type="text" dir="auto" placeholder="مسجد السيدة نفيسة" />
+              <span class="cx-hint">لو مختلف عن القاعة.</span>
+            </div>
+          </div>
+          <div class="cx-field">
+            <label for="f-blessing">كلمة قصيرة</label>
+            <textarea id="f-blessing" rows="3" dir="auto"></textarea>
+          </div>
+        </section>
+
+        <section class="cx-card">
+          <h2 class="cx-section">الميعاد والمكان</h2>
+          <div class="cx-field">
+            <label for="f-event-datetime">الميعاد</label>
+            <input id="f-event-datetime" type="datetime-local" />
+          </div>
+          <div class="cx-field-row">
+            <div class="cx-field">
+              <label for="f-welcome-time">ميعاد الاستقبال</label>
+              <input id="f-welcome-time" type="text" dir="auto" placeholder="٥:٣٠ م" />
+            </div>
+            <div class="cx-field">
+              <label for="f-reception-time">ميعاد الحفلة</label>
+              <input id="f-reception-time" type="text" dir="auto" placeholder="٧:٠٠ م" />
             </div>
           </div>
           <div class="cx-field-row">
             <div class="cx-field">
-              <label for="f-family-groom">Groom's family</label>
-              <textarea id="f-family-groom" rows="2" dir="auto" placeholder="Mr. &amp; Mrs.&#10;Hassan Abdelrahman"></textarea>
+              <label for="f-venue-name">اسم القاعة</label>
+              <input id="f-venue-name" type="text" dir="auto" />
             </div>
             <div class="cx-field">
-              <label for="f-family-bride">Bride's family</label>
-              <textarea id="f-family-bride" rows="2" dir="auto" placeholder="Mr. &amp; Mrs.&#10;Mahmoud Farouk"></textarea>
+              <label for="f-venue-address">العنوان</label>
+              <input id="f-venue-address" type="text" dir="auto" />
             </div>
           </div>
           <div class="cx-field">
-            <label for="f-ceremony-place">Ceremony place <span class="cx-hint" style="font-weight:400;">(optional — if it's not the venue below)</span></label>
-            <input id="f-ceremony-place" type="text" dir="auto" placeholder="e.g. Al-Sayeda Nafisa Mosque" />
+            <label for="f-venue-maps">لينك جوجل مابس</label>
+            <input id="f-venue-maps" type="url" dir="ltr" placeholder="https://maps.app.goo.gl/…" />
+            <span class="cx-hint">حط أي لينك من جوجل مابس. اللينكات القصيرة (maps.app.goo.gl) الخريطة بتدور فيها باسم القاعة والعنوان، فاكتبهم.</span>
           </div>
-        </div>
-        <div class="cx-field">
-          <label for="f-event-datetime">Event date &amp; time</label>
-          <input id="f-event-datetime" type="datetime-local" />
-        </div>
-        <div class="cx-field-row">
-          <div class="cx-field">
-            <label for="f-welcome-time">Welcome time</label>
-            <input id="f-welcome-time" type="text" placeholder="5:30 PM" />
-          </div>
-          <div class="cx-field">
-            <label for="f-reception-time">Reception time</label>
-            <input id="f-reception-time" type="text" placeholder="7:00 PM" />
-          </div>
-        </div>
-        <div class="cx-field">
-          <label for="f-venue-name">Venue name</label>
-          <input id="f-venue-name" type="text" dir="auto" />
-        </div>
-        <div class="cx-field">
-          <label for="f-venue-address">Venue address</label>
-          <input id="f-venue-address" type="text" dir="auto" />
-        </div>
-        <div class="cx-field">
-          <label for="f-venue-maps">Google Maps URL</label>
-          <input id="f-venue-maps" type="url"
-                 placeholder="https://www.google.com/maps/embed?pb=…" />
-          <span class="cx-hint">Paste any Google Maps link. For short share links (maps.app.goo.gl) the map finds the place by the venue name and address above, so fill those in.</span>
-        </div>
-        <div class="cx-field">
-          <label for="f-blessing">Blessing / short message</label>
-          <textarea id="f-blessing" rows="3" dir="auto"></textarea>
-        </div>
+        </section>
 
-        <!-- Program / schedule — vertical timeline rendered on the
-             invitation page. Each row is one event (time + label);
-             rows are kept in display order which is the order the host
-             typed them (the renderer doesn't re-sort). -->
-        <h2 class="cx-section">Program (optional)</h2>
-        <p class="cx-hint">Timeline items — reception, dinner, first dance, etc. Leave blank to hide the section on the invitation.</p>
-        <div id="schedule-builder"></div>
-        <button type="button" id="add-schedule-btn" class="cx-btn cx-btn-ghost">+ Add item</button>
-
-        <!-- Contacts — up to 4 people guests can reach via WhatsApp +
-             phone call. Blank rows (missing name OR phone) are dropped
-             before publish so the invitation never shows a half-row. -->
-        <h2 class="cx-section">Contacts (optional)</h2>
-        <p class="cx-hint">Up to 4 people guests can message or call — the brothers, best man, event coordinator.</p>
-        <div id="contacts-builder"></div>
-        <button type="button" id="add-contact-btn" class="cx-btn cx-btn-ghost">+ Add contact</button>
-        <!-- Dress code + gallery: only the templates that have those
-             sections show them (applyType hides them for qiraya / sobou). -->
-        <div id="dress-group">
-        <div class="cx-field">
-          <label for="f-dress-code">Dress code label</label>
-          <input id="f-dress-code" type="text" placeholder="Pink dresses" />
-        </div>
-        <div class="cx-field" id="dress-note-field" hidden>
-          <label for="f-dress-note">Note for guests <span class="cx-hint" style="font-weight:400;">(optional)</span></label>
-          <input id="f-dress-note" type="text" dir="auto" placeholder="Just for their safety, keep children away from the dance floor." />
-        </div>
-        <div class="cx-field">
-          <label>Dress code colors</label>
-          <!-- Up to five swatches, each a native <input type="color">.
-               Rows left blank are dropped before publish, so a wedding
-               with two colours only sends those two. Pre-populated with
-               the pink palette so the form isn't empty on first load. -->
-          <div id="dress-colors" class="cx-colors">
-            <input type="color" class="cx-color" value="#f7d9e1" aria-label="Color 1" />
-            <input type="color" class="cx-color" value="#efc8d2" aria-label="Color 2" />
-            <input type="color" class="cx-color" value="#a13b58" aria-label="Color 3" />
-            <input type="color" class="cx-color" value="#c9a86a" aria-label="Color 4" />
-            <input type="color" class="cx-color" value="#ffffff" aria-label="Color 5" />
-          </div>
-          <span class="cx-hint">Up to 5. The hex code shows under each swatch on the invitation.</span>
-        </div>
-        </div>
-
-        <div id="gallery-group">
-        <h2 class="cx-section">Gallery photos</h2>
-        <p class="cx-hint">Up to 8 photos. First photo becomes the hero. Max 35 MB each.</p>
-        <div id="gallery-builder"></div>
-        <button type="button" id="add-gallery-btn" class="cx-btn cx-btn-ghost">+ Add photo</button>
-        </div>
-
-        <h2 class="cx-section">Background music (optional)</h2>
-        <div class="cx-field">
-          <label for="f-wedding-music">Upload an audio file</label>
-          <input id="f-wedding-music" type="file" accept="audio/*" />
-          <button type="button" class="cx-btn cx-btn-ghost cx-clear" data-clear="f-wedding-music" hidden>Remove</button>
-          <span class="cx-hint">MP3 / M4A / OGG. Max 50 MB. Plays after the guest presses Open Invitation.</span>
-        </div>
-
-        <div id="burgundy-gift-group">
-          <h2 class="cx-section">Gift box (optional)</h2>
-          <p class="cx-hint">Guests tap a gift box to open it. Leave both empty to hide the section.</p>
-          <div class="cx-field">
-            <label for="f-gift-message">Message</label>
-            <input id="f-gift-message" type="text" dir="auto" placeholder="Your presence would be the greatest gift we could receive!" />
+        <section class="cx-card" id="media-card">
+          <h2 class="cx-section">الصور والأغنية</h2>
+          <div id="gallery-group">
+            <p class="cx-hint">لحد ٨ صور، وأول صورة بتظهر في الأول. أقصى حجم للصورة ٣٥ ميجا.</p>
+            <div id="gallery-builder"></div>
+            <button type="button" id="add-gallery-btn" class="cx-btn cx-btn-add">+ ضيف صورة</button>
           </div>
           <div class="cx-field">
-            <label for="f-gift-details">Gift details <span class="cx-hint" style="font-weight:400;">(optional — InstaPay, wallet number…; guests get a Copy button)</span></label>
-            <textarea id="f-gift-details" rows="2" dir="auto"></textarea>
+            <label for="f-wedding-music">ارفع أغنية (اختياري)</label>
+            <input id="f-wedding-music" type="file" accept="audio/*" />
+            <button type="button" class="cx-btn cx-btn-ghost cx-clear" data-clear="f-wedding-music" hidden>شيل</button>
+            <span class="cx-hint">MP3 أو M4A أو OGG، لحد ٥٠ ميجا. بتشتغل لما الضيف يفتح الدعوة.</span>
           </div>
-        </div>
+        </section>
+
+        <section class="cx-card">
+          <h2 class="cx-section">تفاصيل اليوم</h2>
+          <p class="cx-hint">كله اختياري. اللي تسيبه فاضي مش بيظهر في الدعوة.</p>
+
+          <!-- Program / schedule — vertical timeline rendered on the
+               invitation page. Each row is one event (time + label);
+               rows are kept in display order which is the order the host
+               typed them (the renderer doesn't re-sort). -->
+          <details class="cx-optional" id="schedule-group">
+            <summary>برنامج اليوم</summary>
+            <p class="cx-hint">الاستقبال، العشا، أول رقصة، وهكذا.</p>
+            <div id="schedule-builder"></div>
+            <button type="button" id="add-schedule-btn" class="cx-btn cx-btn-add">+ ضيف فقرة</button>
+          </details>
+
+          <!-- Contacts — up to 4 people guests can reach via WhatsApp +
+               phone call. Blank rows (missing name OR phone) are dropped
+               before publish so the invitation never shows a half-row. -->
+          <details class="cx-optional" id="contacts-group">
+            <summary>للتواصل</summary>
+            <p class="cx-hint">لحد ٤ أشخاص الضيوف يكلموهم أو يبعتولهم واتساب.</p>
+            <div id="contacts-builder"></div>
+            <button type="button" id="add-contact-btn" class="cx-btn cx-btn-add">+ ضيف شخص</button>
+          </details>
+
+          <!-- Dress code: only the templates that have that section show it
+               (applyType hides it for qiraya / sobou). -->
+          <details class="cx-optional" id="dress-group">
+            <summary>اللبس</summary>
+            <div class="cx-field">
+              <label for="f-dress-code">نوع اللبس</label>
+              <input id="f-dress-code" type="text" dir="auto" placeholder="فساتين بينك" />
+            </div>
+            <div class="cx-field" id="dress-note-field" hidden>
+              <label for="f-dress-note">ملاحظة للضيوف (اختياري)</label>
+              <input id="f-dress-note" type="text" dir="auto" placeholder="ياريت الأطفال يفضلوا بعيد عن ساحة الرقص." />
+            </div>
+            <div class="cx-field">
+              <span class="cx-label">ألوان اللبس</span>
+              <!-- Up to five swatches, each a native <input type="color">.
+                   Rows left blank are dropped before publish, so a wedding
+                   with two colours only sends those two. Pre-populated with
+                   the pink palette so the form isn't empty on first load. -->
+              <div id="dress-colors" class="cx-colors">
+                <input type="color" class="cx-color" value="#f7d9e1" aria-label="لون ١" />
+                <input type="color" class="cx-color" value="#efc8d2" aria-label="لون ٢" />
+                <input type="color" class="cx-color" value="#a13b58" aria-label="لون ٣" />
+                <input type="color" class="cx-color" value="#c9a86a" aria-label="لون ٤" />
+                <input type="color" class="cx-color" value="#ffffff" aria-label="لون ٥" />
+              </div>
+              <span class="cx-hint">لحد ٥ ألوان.</span>
+            </div>
+          </details>
+
+          <details class="cx-optional" id="burgundy-gift-group">
+            <summary>صندوق الهدايا</summary>
+            <p class="cx-hint">الضيف بيدوس على الصندوق يفتحه. سيب الخانتين فاضيين لو مش عايزه.</p>
+            <div class="cx-field">
+              <label for="f-gift-message">الرسالة</label>
+              <input id="f-gift-message" type="text" dir="auto" placeholder="وجودكم معانا أحلى هدية" />
+            </div>
+            <div class="cx-field">
+              <label for="f-gift-details">تفاصيل الهدية (اختياري)</label>
+              <textarea id="f-gift-details" rows="2" dir="auto"></textarea>
+              <span class="cx-hint">إنستاباي أو رقم محفظة. الضيف هيلاقي زرار ينسخها.</span>
+            </div>
+          </details>
+        </section>
       </div>
 
       <!-- Publish gate -->
-      <div class="cx-publish-card">
-        <h2 class="cx-section">Publish</h2>
-        <p class="cx-hint">
-          You'll receive an activation code from us after payment (WhatsApp / Instapay).
-          Enter it below to publish your page.
-        </p>
-        <div class="cx-field">
-          <label for="f-code">Activation code</label>
-          <input id="f-code" type="text" autocomplete="off" spellcheck="false"
-                 placeholder="AH3F-9K2P-XZLB" />
-          <span class="cx-error" id="code-error"></span>
+      <section class="cx-publish-card">
+        <h2 class="cx-section" id="publish-heading">انشر الدعوة</h2>
+        <p class="cx-hint" id="publish-lede">بيوصلك كود التفعيل مننا بعد الدفع، على واتساب أو إنستاباي.</p>
+        <div class="cx-field-row">
+          <div class="cx-field">
+            <label for="f-slug">لينك الدعوة</label>
+            <input id="f-slug" type="text" dir="ltr" autocomplete="off" spellcheck="false" />
+            <span class="cx-hint cx-link-hint" id="slug-preview" dir="ltr">lamma.manasety.ai/&lt;slug&gt;</span>
+            <span class="cx-error" id="slug-error"></span>
+          </div>
+          <div class="cx-field">
+            <label for="f-code">كود التفعيل</label>
+            <input id="f-code" type="text" dir="ltr" autocomplete="off" spellcheck="false"
+                   placeholder="AH3F-9K2P-XZLB" />
+            <span class="cx-error" id="code-error"></span>
+          </div>
         </div>
         <div class="cx-progress" id="publish-progress" hidden>
           <div class="cx-progress-bar"><div id="progress-fill"></div></div>
-          <p class="cx-progress-text" id="progress-text">Working…</p>
+          <p class="cx-progress-text" id="progress-text" role="status">لحظة…</p>
         </div>
         <div id="signin-gate" class="cx-signin" hidden>
-          <p>Sign in to publish. Everything you typed is saved on this device; after signing in you'll come back here. Photos and music need to be picked again.</p>
-          <a id="signin-login"  class="cx-btn cx-btn-primary" href="/user/login">Sign in</a>
-          <a id="signin-signup" class="cx-btn cx-btn-ghost"   href="/user/signup">Create an account</a>
+          <p>ادخل على حسابك عشان تنشر. كل اللي كتبته متسجل على الجهاز ده، وهترجع هنا بعد الدخول. الصور والأغنية لازم تختارهم تاني.</p>
+          <a id="signin-login"  class="cx-btn cx-btn-primary" href="/user/login">ادخل</a>
+          <a id="signin-signup" class="cx-btn cx-btn-ghost"   href="/user/signup">اعمل حساب</a>
         </div>
-        <button type="button" id="publish-btn" class="cx-btn cx-btn-primary" disabled>
-          Publish
-        </button>
-        <p class="cx-hint" id="publish-hint">Fill in a name, slug, and activation code to enable.</p>
-      </div>
+        <button type="button" id="publish-btn" class="cx-btn cx-btn-primary" disabled>انشر الدعوة</button>
+        <p class="cx-hint" id="publish-hint">اكتب الاسم واللينك وكود التفعيل عشان تقدر تنشر.</p>
+      </section>
     </section>
 
     <!-- Live preview panel -->
-    <aside class="cx-preview">
-      <div class="cx-preview-head">
-        <span>Live preview</span>
-        <button type="button" id="preview-open" class="cx-btn cx-btn-ghost">Open in new tab</button>
-      </div>
+    <aside class="cx-preview" aria-label="معاينة الدعوة">
       <div class="cx-preview-stage">
-        <iframe id="preview-frame" title="Preview" src="birthday.html?preview=1"></iframe>
+        <iframe id="preview-frame" title="معاينة الدعوة" src="birthday.html?preview=1"></iframe>
+      </div>
+      <div class="cx-preview-head">
+        <span>معاينة مباشرة</span>
+        <button type="button" id="preview-open" class="cx-btn cx-btn-plain">افتحها في تاب جديد</button>
       </div>
     </aside>
+    </div>
   </div>
 
   <!-- Screen 2: success -->
   <div id="success-screen" hidden>
     <div class="cx-success">
-      <div class="cx-success-mark">🎉</div>
-      <h1 class="cx-title">Published!</h1>
-      <p class="cx-lede">Your invitation is live at:</p>
-      <p><a id="success-url" class="cx-success-url" target="_blank" rel="noopener"></a></p>
-      <div class="cx-success-buttons">
-        <button type="button" id="copy-url-btn"    class="cx-btn cx-btn-primary">Copy link</button>
-        <a href="/create.html" class="cx-btn cx-btn-ghost">Create another</a>
+      <div class="cx-success-copy">
+        <h1 class="cx-title">مبروك،<br>دعوتكم جاهزة</h1>
+        <p class="cx-lede">اللينك ده بقى شغال. ابعته لكل حبايبك:</p>
+        <a id="success-url" class="cx-success-url" dir="ltr" target="_blank" rel="noopener"></a>
+        <div class="cx-success-buttons">
+          <a id="success-wa" class="cx-btn cx-btn-primary" target="_blank" rel="noopener" href="#">ابعت على واتساب</a>
+          <button type="button" id="copy-url-btn" class="cx-btn cx-btn-ghost">انسخ اللينك</button>
+        </div>
+        <div class="cx-success-links">
+          <a id="success-responses" href="/user/">تابع الردود</a>
+          <a id="success-another" href="/create.html">اعمل دعوة تانية</a>
+        </div>
+        <div id="claim-block" hidden>
+          <p>ابعت اللينك ده لصاحب الدعوة عشان يحط كلمة السر ويشوف دعوته. بيشتغل مرة واحدة وبيظهر دلوقتي بس، وتقدر تعمل واحد جديد من الإدارة، صفحة الدعوات، لينك كلمة السر.</p>
+          <p class="cx-claim-url"><code id="claim-url" dir="ltr"></code></p>
+          <button type="button" id="copy-claim-btn" class="cx-btn cx-btn-ghost">انسخ لينك صاحب الدعوة</button>
+        </div>
       </div>
-      <div id="claim-block" hidden style="margin-top: 24px;">
-        <p class="cx-lede">Send this link to the host so they can set their password and see their invitation. It works once and shows only now (you can make a new one from Admin → Events → Password link):</p>
-        <p><code id="claim-url" style="word-break: break-all;"></code></p>
-        <button type="button" id="copy-claim-btn" class="cx-btn cx-btn-ghost">Copy host link</button>
-      </div>
+      <img id="success-phone" class="cx-success-phone" src="images/landing/blue.webp" alt="" />
     </div>
   </div>
 
 </main>
 
-<script type="module" src="js/create-form.js?v=2aecba93"></script>
+<script type="module" src="js/create-form.js?v=5c436dbb"></script>
 </body>
 </html>

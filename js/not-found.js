@@ -7,26 +7,29 @@
 // ============================================================================
 
 export function showNotFound() {
-  document.title = "Invitation not available · لمّة";
+  document.title = "الدعوة مش متاحة · لمّة";
+  document.documentElement.lang = "ar";
+  document.documentElement.dir = "rtl";
   document.body.className = "";
   document.body.removeAttribute("style");
+  document.body.style.margin = "0";
+  const fonts = document.createElement("link");
+  fonts.rel = "stylesheet";
+  fonts.href = "https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@700&family=IBM+Plex+Sans+Arabic:wght@400;600&display=swap";
+  document.head.appendChild(fonts);
   const wrap = document.createElement("main");
   wrap.setAttribute("role", "main");
   wrap.style.cssText =
-    "min-height:100vh;display:flex;flex-direction:column;align-items:center;" +
-    "justify-content:center;gap:12px;padding:24px 16px;text-align:center;" +
-    "background:#faf6f1;color:#3d2230;font-family:Georgia,'Times New Roman',serif;";
+    "min-height:100vh;min-height:100dvh;box-sizing:border-box;padding:24px;display:flex;" +
+    "flex-direction:column;justify-content:center;background:#f3e9dc;color:#2c1a12;" +
+    "font-family:'IBM Plex Sans Arabic',Tahoma,sans-serif;font-size:18px;line-height:1.65;text-align:right;";
   wrap.innerHTML = `
-    <p style="font-size:40px;margin:0;" aria-hidden="true">💌</p>
-    <h1 style="font-size:24px;font-weight:500;margin:0;">This invitation isn't available</h1>
-    <p dir="rtl" lang="ar" style="font-size:20px;margin:0;">الدعوة دي مش متاحة</p>
-    <p style="max-width:340px;margin:8px 0 0;font-size:15px;line-height:1.5;color:#6b5560;">
-      The link may be mistyped, or the invitation isn't live yet.
-      Check the link with whoever sent it to you.
-    </p>
-    <p dir="rtl" lang="ar" style="max-width:340px;margin:0;font-size:15px;line-height:1.6;color:#6b5560;">
-      اتأكد من اللينك مع اللي بعتهولك.
-    </p>
-    <a href="/" style="margin-top:12px;color:#a13b58;font-size:14px;">lamma.manasety.ai</a>`;
+    <div style="width:100%;max-width:420px;margin:0 auto;">
+      <img src="/logo.jpg" alt="لمّة" width="64" height="64" style="display:block;border-radius:50%;object-fit:cover;">
+      <h1 style="margin:18px 0 0;font-family:'Aref Ruqaa','Times New Roman',serif;font-weight:700;font-size:52px;line-height:1.25;color:#4a2c19;">الدعوة دي<br>مش متاحة</h1>
+      <p style="margin:10px 0 0;color:#5c4537;">ممكن اللينك يكون مكتوب غلط، أو الدعوة لسه ما اتنشرتش. اتأكد من اللينك مع اللي بعتهولك.</p>
+      <p lang="en" dir="ltr" style="margin:14px 0 0;font-size:15px;color:#5c4537;text-align:right;">This invitation isn't available. Check the link with whoever sent it to you.</p>
+      <a href="/" style="display:inline-flex;align-items:center;min-height:44px;margin-top:14px;color:#7c4f2e;font-weight:600;">اعمل دعوتك مع لمّة</a>
+    </div>`;
   document.body.replaceChildren(wrap);
 }

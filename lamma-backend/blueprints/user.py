@@ -167,9 +167,9 @@ def signup():
         ), 400
 
     if not _EMAIL_RE.match(email):
-        return _err("Please enter a valid email.")
+        return _err("اكتب إيميل صحيح.")
     if len(password) < 8:
-        return _err("Password must be at least 8 characters.")
+        return _err("كلمة السر لازم تكون ٨ حروف على الأقل.")
 
     existing = db.session.query(User).filter_by(email=email).first()
     if existing:
@@ -179,7 +179,7 @@ def signup():
         # host's email can grab the account before them. Return the same
         # message in both cases so an attacker can't enumerate which
         # addresses are already linked to events.
-        return _err("An account with that email already exists. Sign in — or if the admin set one up for you, use the claim link they shared.")
+        return _err("فيه حساب بالإيميل ده. ادخل منه، ولو الفريق عملهولك استخدم اللينك اللي بعتهولك.")
 
     row = User(email=email, password_hash=hash_password(password), name=name)
     db.session.add(row)
@@ -224,7 +224,7 @@ def claim(token):
         return render_template(
             "user/claim.html",
             valid=False, email=None,
-            error="This claim link is invalid or has expired. Ask the admin for a new one.",
+            error="اللينك انتهى أو اتستخدم قبل كده. كلمنا ونبعتلك لينك جديد.",
         ), 400
 
     password = (request.form.get("password") or "")
@@ -232,7 +232,7 @@ def claim(token):
         return render_template(
             "user/claim.html",
             valid=True, email=row.email,
-            error="Password must be at least 8 characters.",
+            error="كلمة السر لازم تكون ٨ حروف على الأقل.",
         ), 400
 
     # Burn the token + set the password + log in.
@@ -276,7 +276,7 @@ def login():
 
     row = db.session.query(User).filter_by(email=email).first() if _EMAIL_RE.match(email) else None
     if not row or not row.password_hash or not verify_password(password, row.password_hash):
-        return _err("That email and password don't match.")
+        return _err("الإيميل وكلمة السر مش متطابقين.")
 
     row.last_login_at = datetime.utcnow()
     db.session.commit()
@@ -323,7 +323,9 @@ def event_responses(event_id):
     event = db.session.get(Event, event_id)
     if event is None or event.user_id != current_user.id:
         abort(404)
-    return render_template("user/responses.html", event=event)
+    from blueprints.pages import display_name
+    return render_template("user/responses.html", event=event,
+                           name=display_name(event.event_type, event.payload_json))
 
 
 # --------------------------------------------------------------------------

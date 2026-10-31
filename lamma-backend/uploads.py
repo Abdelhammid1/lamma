@@ -147,11 +147,11 @@ def stage_upload(event_id: str, file_storage) -> dict:
     Raises `UploadError` on any validation failure.
     """
     if file_storage is None or not file_storage.filename:
-        raise UploadError("no_file", "No file was uploaded.")
+        raise UploadError("no_file", "ما اترفعش أي ملف.")
 
     mime = (file_storage.mimetype or "").lower()
     if mime not in ALLOWED_MIME:
-        raise UploadError("bad_type", "Only images, videos and audio are allowed.")
+        raise UploadError("bad_type", "مسموح بالصور والفيديو والصوت بس.")
 
     filename = safe_filename(file_storage.filename)
     # Second gate: the Content-Type is client-supplied, so a hostile
@@ -162,7 +162,7 @@ def stage_upload(event_id: str, file_storage) -> dict:
     if not _ext_is_safe(filename):
         raise UploadError(
             "bad_ext",
-            "File extension is not allowed. Use jpg, png, webp, gif, mp4, mov, webm, mp3, m4a or ogg.",
+            "نوع الملف مش مسموح. استخدم jpg أو png أو webp أو gif أو mp4 أو mov أو webm أو mp3 أو m4a أو ogg.",
         )
 
     # Stream to a temp file in 1 MB chunks, hashing and counting as we
@@ -185,17 +185,17 @@ def stage_upload(event_id: str, file_storage) -> dict:
                 if size > MAX_FILE_BYTES:
                     raise UploadError(
                         "too_large",
-                        f"File is too large (max {MAX_FILE_BYTES // (1024 * 1024)} MB).",
+                        f"الملف كبير (الحد الأقصى {MAX_FILE_BYTES // (1024 * 1024)} ميجا).",
                     )
                 if existing + size > MAX_EVENT_BYTES:
                     raise UploadError(
                         "event_quota",
-                        f"This event's media limit is {MAX_EVENT_BYTES // (1024 * 1024)} MB.",
+                        f"أقصى حجم لملفات الدعوة {MAX_EVENT_BYTES // (1024 * 1024)} ميجا.",
                     )
                 hasher.update(chunk)
                 out.write(chunk)
         if size == 0:
-            raise UploadError("empty", "The uploaded file is empty.")
+            raise UploadError("empty", "الملف فاضي.")
         content_hash = hasher.hexdigest()
 
         dest = os.path.join(dest_dir, filename)

@@ -58,7 +58,7 @@ function guardFileSize(input, maxMb, label) {
   if (!f) return null;
   const mb = f.size / 1024 / 1024;
   if (mb > maxMb) {
-    alert(`${label} too large (${mb.toFixed(1)} MB). Max ${maxMb} MB.`);
+    alert(`حجم ${label} كبير (${mb.toFixed(1)} ميجا). الحد الأقصى ${maxMb} ميجا.`);
     input.value = "";
     return null;
   }
@@ -75,18 +75,21 @@ const COUPLE_TYPES = new Set(["wedding", "wedding-noir", "wedding-burgundy", "we
 const BIRTHDAY_TYPES = new Set(["birthday", "birthday-elegant"]);
 const ALL_TYPES    = new Set([...BIRTHDAY_TYPES, ...COUPLE_TYPES]);
 
-const TYPE_TITLE = {
-  birthday:          "Create your birthday invitation",
-  "birthday-elegant":"Create your birthday invitation — Elegant",
-  wedding:           "Create your wedding invitation",
-  "wedding-noir":    "Create your wedding invitation — Noir",
-  "wedding-burgundy": "Create your wedding invitation — Burgundy",
-  "wedding-wizard":   "Create your wedding invitation — Wizard",
-  "wedding-blue":     "اعمل دعوة زفاف — زهور زرقاء",
-  engagement:        "Create your engagement invitation",
-  qiraya:            "اعمل دعوة قراية فاتحة",
-  sobou:             "اعمل دعوة سبوع",
+// The picture on the "published" screen.
+const SUCCESS_PHONE = {
+  "wedding-blue":     "images/landing/blue.webp",
+  "wedding-burgundy": "images/landing/burgundy.webp",
+  "wedding-wizard":   "images/landing/wizard.webp",
+  wedding:            "images/landing/wedding.webp",
+  "wedding-noir":     "images/landing/noir.webp",
+  engagement:         "images/landing/engagement.webp",
+  qiraya:             "images/landing/qiraya.webp",
+  sobou:              "images/landing/sobou.webp",
+  birthday:           "images/landing/birthday.webp",
+  "birthday-elegant": "images/landing/birthday.webp",
 };
+// Also how the edit screen finds and removes the note before re-adding it.
+const CURRENT_SONG = "الأغنية الحالية:";
 
 const TYPE_PREVIEW = {
   birthday:           "birthday.html?preview=1",
@@ -142,11 +145,11 @@ function applyType(t) {
   const groomLbl = $("f-groom-label");
   const brideLbl = $("f-bride-label");
   if (t === "sobou") {
-    if (groomLbl) groomLbl.textContent = "Baby's name";
-    if (brideLbl) brideLbl.textContent = "Family / parents";
+    if (groomLbl) groomLbl.textContent = "اسم البيبي";
+    if (brideLbl) brideLbl.textContent = "العيلة أو الوالدين";
   } else if (groomLbl && brideLbl) {
-    groomLbl.textContent = "Groom name";
-    brideLbl.textContent = "Bride name";
+    groomLbl.textContent = "اسم العريس";
+    brideLbl.textContent = "اسم العروسة";
   }
   // The top "Name (or couple)" field is only read by birthday variants
   // (CONFIG.name) and by slugify() as the auto-slug seed. Couple
@@ -159,10 +162,6 @@ function applyType(t) {
   const nameWrap = $("name-field-wrapper");
   if (nameWrap) nameWrap.style.display = usesCoupleForm ? "none" : "";
   if (usesCoupleForm) syncNameFromCouple();
-  // Edit mode keeps its own heading (set by applyAdminChrome); loading
-  // the event calls applyType and used to overwrite it with "Create…".
-  const title = $("cx-title");
-  if (title && ADMIN_MODE !== "edit") title.textContent = TYPE_TITLE[t];
   // Fresh frame for the new template; it pushes the form's data into
   // itself once loaded (the buffered swap in sendPreview takes over
   // from the next change on).
@@ -284,12 +283,12 @@ async function checkSlug(slug) {
 
   if (!slug) return;
   if (!SLUG_RE.test(slug)) {
-    errEl.textContent = "Use lowercase English letters, digits, or hyphens (2–40 chars).";
+    errEl.textContent = "استخدم حروف إنجليزي صغيرة وأرقام وشرطة (من ٢ لـ ٤٠ حرف).";
     $("f-slug").classList.add("invalid");
     return;
   }
   if (RESERVED_SLUGS.has(slug)) {
-    errEl.textContent = "That name is reserved. Try another.";
+    errEl.textContent = "الاسم ده محجوز. جرب اسم تاني.";
     $("f-slug").classList.add("invalid");
     return;
   }
@@ -298,7 +297,7 @@ async function checkSlug(slug) {
     if (r.available) {
       state.slugAvailable = true;
     } else {
-      errEl.textContent = r.message || "That name is already taken.";
+      errEl.textContent = r.message || "الاسم ده متاخد. جرب اسم تاني.";
       $("f-slug").classList.add("invalid");
       state.slugAvailable = false;
     }
@@ -325,15 +324,15 @@ function addQuizRow(q) {
   row.className = "q-row";
   row.innerHTML = `
     <div class="q-row-header">
-      <span class="q-num">Question ${idx + 1}</span>
-      <button type="button" class="cx-btn cx-btn-ghost" data-remove-q>Remove</button>
+      <span class="q-num">سؤال ${idx + 1}</span>
+      <button type="button" class="cx-btn cx-btn-ghost" data-remove-q>شيل</button>
     </div>
-    <textarea class="q-text" placeholder="Your question…" dir="auto"></textarea>
+    <textarea class="q-text" placeholder="اكتب السؤال…" dir="auto"></textarea>
     <div class="q-options">
       ${[0, 1, 2].map((i) => `
         <div class="q-option-row">
-          <input type="radio" name="${groupName}" value="${i}" ${i === q.correctIndex ? "checked" : ""} title="Mark as correct">
-          <input type="text" class="q-option-text" placeholder="Option ${i + 1}" dir="auto">
+          <input type="radio" name="${groupName}" value="${i}" ${i === q.correctIndex ? "checked" : ""} title="الإجابة الصح" aria-label="الإجابة الصح">
+          <input type="text" class="q-option-text" placeholder="اختيار ${i + 1}" dir="auto">
         </div>
       `).join("")}
     </div>
@@ -352,7 +351,7 @@ function addQuizRow(q) {
 
 function renumberQuiz() {
   quizBuilder.querySelectorAll(".q-row .q-num").forEach((el, i) => {
-    el.textContent = `Question ${i + 1}`;
+    el.textContent = `سؤال ${i + 1}`;
   });
 }
 
@@ -382,16 +381,16 @@ function addMemoryRow(existing) {
     <div class="mem-thumb"><div class="mem-thumb-num">#${idx + 1}</div></div>
     <div class="mem-fields">
       <div class="cx-field">
-        <label>Photo</label>
+        <label>صورة</label>
         <input type="file" class="mem-file" accept="image/*">
-        <button type="button" class="cx-btn cx-btn-ghost cx-clear mem-clear" hidden>Remove photo</button>
+        <button type="button" class="cx-btn cx-btn-ghost cx-clear mem-clear" hidden>شيل الصورة</button>
       </div>
       <div class="cx-field">
-        <label>Date caption (optional)</label>
+        <label>التاريخ (اختياري)</label>
         <input type="text" class="mem-date" placeholder="NOV 2024 · 23">
       </div>
     </div>
-    <button type="button" class="mem-remove" title="Remove entire row">×</button>
+    <button type="button" class="mem-remove" title="شيل" aria-label="شيل">×</button>
   `;
   const fileInput = row.querySelector(".mem-file");
   const thumb     = row.querySelector(".mem-thumb");
@@ -424,7 +423,7 @@ function addMemoryRow(existing) {
     const f = e.target.files?.[0];
     if (!f) { clearBtn.hidden = true; resetThumb(); schedulePreview(); return; }
     if (f.size / 1024 / 1024 > MAX_MB) {
-      alert(`Photo too large (${(f.size / 1024 / 1024).toFixed(1)} MB). Max ${MAX_MB} MB.`);
+      alert(`حجم الصورة كبير (${(f.size / 1024 / 1024).toFixed(1)} ميجا). الحد الأقصى ${MAX_MB} ميجا.`);
       fileInput.value = "";
       clearBtn.hidden = true;
       return;
@@ -459,11 +458,11 @@ addMemoryRow();  // seed one row
 /* ================= Birthday video + music guards ================= */
 
 $("f-video-file").addEventListener("change", (e) => {
-  if (guardFileSize(e.target, MAX_MB, "Video")) schedulePreview();
+  if (guardFileSize(e.target, MAX_MB, "الفيديو")) schedulePreview();
   syncClearButton(e.target);
 });
 $("f-music-file").addEventListener("change", (e) => {
-  if (guardFileSize(e.target, MAX_AUDIO_MB, "Audio")) schedulePreview();
+  if (guardFileSize(e.target, MAX_AUDIO_MB, "الأغنية")) schedulePreview();
   syncClearButton(e.target);
 });
 
@@ -493,19 +492,19 @@ $("add-gallery-btn").addEventListener("click", () => { addGalleryRow(); schedule
 
 function addGalleryRow(existingUrl) {
   const rows = galleryBuilder.querySelectorAll(".mem-row").length;
-  if (rows >= 8) { alert("Up to 8 gallery photos."); return; }
+  if (rows >= 8) { alert("لحد ٨ صور بس."); return; }
   const row = document.createElement("div");
   row.className = "mem-row";
   row.innerHTML = `
     <div class="mem-thumb"><div class="mem-thumb-num">#${rows + 1}</div></div>
     <div class="mem-fields">
       <div class="cx-field">
-        <label>Photo${rows === 0 ? " (hero)" : ""}</label>
+        <label>${rows === 0 ? "الصورة الأولى" : "صورة"}</label>
         <input type="file" class="mem-file" accept="image/*">
-        <button type="button" class="cx-btn cx-btn-ghost cx-clear mem-clear" hidden>Remove photo</button>
+        <button type="button" class="cx-btn cx-btn-ghost cx-clear mem-clear" hidden>شيل الصورة</button>
       </div>
     </div>
-    <button type="button" class="mem-remove" title="Remove entire row">×</button>
+    <button type="button" class="mem-remove" title="شيل" aria-label="شيل">×</button>
   `;
   const fileInput = row.querySelector(".mem-file");
   const thumb     = row.querySelector(".mem-thumb");
@@ -527,7 +526,7 @@ function addGalleryRow(existingUrl) {
     thumb.innerHTML = `<div class="mem-thumb-num">#${num}</div>`;
   };
   fileInput.addEventListener("change", (e) => {
-    const f = guardFileSize(e.target, MAX_MB, "Photo");
+    const f = guardFileSize(e.target, MAX_MB, "الصورة");
     if (!f) { clearBtn.hidden = true; resetThumb(); schedulePreview(); return; }
     delete row.dataset.existingUrl;
     thumb.innerHTML = `<img src="${URL.createObjectURL(f)}" alt="">`;
@@ -551,7 +550,7 @@ function addGalleryRow(existingUrl) {
 }
 
 $("f-wedding-music").addEventListener("change", (e) => {
-  if (guardFileSize(e.target, MAX_AUDIO_MB, "Audio")) schedulePreview();
+  if (guardFileSize(e.target, MAX_AUDIO_MB, "الأغنية")) schedulePreview();
   syncClearButton(e.target);
 });
 
@@ -567,7 +566,7 @@ $("add-schedule-btn").addEventListener("click", () => { addScheduleRow(); schedu
 const contactsBuilder = $("contacts-builder");
 $("add-contact-btn").addEventListener("click", () => {
   if (contactsBuilder.querySelectorAll(".contact-row").length >= 4) {
-    alert("Up to 4 contacts."); return;
+    alert("لحد ٤ أشخاص بس."); return;
   }
   addContactRow(); schedulePreview();
 });
@@ -576,10 +575,10 @@ function addContactRow(existing) {
   const row = document.createElement("div");
   row.className = "contact-row";
   row.innerHTML = `
-    <input type="text" class="c-name"  dir="auto" placeholder="Name (e.g. Mark Yasser)">
-    <input type="text" class="c-role"  dir="auto" placeholder="Role (e.g. Groom Brother)">
+    <input type="text" class="c-name"  dir="auto" placeholder="الاسم">
+    <input type="text" class="c-role"  dir="auto" placeholder="صلة القرابة، زي أخو العريس">
     <input type="tel"  class="c-phone" dir="ltr"  placeholder="+20 10 1234 5678">
-    <button type="button" class="c-remove" title="Remove" aria-label="Remove">×</button>
+    <button type="button" class="c-remove" title="شيل" aria-label="شيل">×</button>
   `;
   const nameEl  = row.querySelector(".c-name");
   const roleEl  = row.querySelector(".c-role");
@@ -598,10 +597,10 @@ function addScheduleRow(existing) {
   const row = document.createElement("div");
   row.className = "sched-row";
   row.innerHTML = `
-    <input type="time" class="sched-time" aria-label="Time">
-    <input type="text" class="sched-label" dir="auto" placeholder="e.g. Reception / الاستقبال">
-    <button type="button" class="sched-remove" title="Remove item" aria-label="Remove">×</button>
-    <input type="text" class="sched-detail" dir="auto" aria-label="Description (optional)" placeholder="Description (optional), e.g. A little rest, some treats">
+    <input type="time" class="sched-time" aria-label="الوقت">
+    <input type="text" class="sched-label" dir="auto" placeholder="زي الاستقبال">
+    <button type="button" class="sched-remove" title="شيل" aria-label="شيل">×</button>
+    <input type="text" class="sched-detail" dir="auto" aria-label="وصف (اختياري)" placeholder="وصف (اختياري)">
   `;
   const timeEl  = row.querySelector(".sched-time");
   const labelEl = row.querySelector(".sched-label");
@@ -652,7 +651,7 @@ function sendPreview() {
   const mine = ++previewSeq;
   document.querySelectorAll(".cx-preview-stage iframe.is-loading").forEach((f) => f.remove());
   const next = document.createElement("iframe");
-  next.title = "Preview";
+  next.title = "معاينة الدعوة";
   next.className = "is-loading";
   next.addEventListener("load", async () => {
     await renderedOrTimeout(next, 1500);
@@ -810,8 +809,10 @@ function collectFormForPreview(fileUrl = previewUrl) {
       ...(state.type === "wedding-wizard" ? { note: $("f-dress-note").value.trim() } : {}),
       // Pull each live swatch value. Lower-case for consistency; drop
       // the "unset" white sentinel the form seeds the last row with so
-      // a 4-colour palette doesn't silently include stray white.
-      colors: [...document.querySelectorAll("#dress-colors .cx-color")]
+      // a 4-colour palette doesn't silently include stray white. The
+      // swatches are seeded, so they only count once the section is open:
+      // a host who never opened it shouldn't publish colours they never saw.
+      colors: !$("dress-group").open ? [] : [...document.querySelectorAll("#dress-colors .cx-color")]
                  .map((el) => (el.value || "").toLowerCase().trim())
                  .filter((c) => c && c !== "#ffffff"),
     },
@@ -892,11 +893,11 @@ function updatePublishGate() {
   $("publish-hint").hidden  = canPublish;
   if (!canPublish) {
     const bits = [];
-    if (!nameOk)      bits.push("name");
-    if (!slugOk)      bits.push("valid available slug");
-    if (!codeOk)      bits.push("activation code");
-    if (!hostEmailOk) bits.push("host email");
-    $("publish-hint").textContent = "Fill in: " + bits.join(", ") + ".";
+    if (!nameOk)      bits.push("الاسم");
+    if (!slugOk)      bits.push("لينك متاح");
+    if (!codeOk)      bits.push("كود التفعيل");
+    if (!hostEmailOk) bits.push("إيميل صاحب الدعوة");
+    $("publish-hint").textContent = "ناقص: " + bits.join("، ") + ".";
   }
 }
 
@@ -937,10 +938,10 @@ async function publish() {
     //    so a typo costs one round-trip instead of every upload plus a
     //    name that then reads as "taken". Activate re-checks and burns it.
     if (!ADMIN_MODE) {
-      setProgress(3, "Checking your code…");
+      setProgress(3, "بنراجع الكود…");
       const chk = await apiJson("POST", "/api/check-code", { code });
       if (!chk.valid) {
-        showCodeErr(chk.message || "Invalid activation code.");
+        showCodeErr(chk.message || "الكود ده مش صحيح.");
         hideProgress();
         btn.disabled = false;
         return;
@@ -956,7 +957,7 @@ async function publish() {
     // 2. Create the event with the finalized payload. The backend
     //    reserves the slug in its DB here (unique constraint) — this is
     //    what holds the name while the files upload.
-    setProgress(5, "Reserving your name…");
+    setProgress(5, "بنحجز اللينك…");
     // Admin-create passes the host's email so the backend creates (or
     // finds) a User row and attaches it to this event. Non-admin flows
     // use the signed-in host from the session cookie — the backend
@@ -976,10 +977,10 @@ async function publish() {
       if (ADMIN_MODE === "create" && err?.status === 409 && err?.data?.error === "existing_account") {
         const hasPwd = err.data.has_password;
         const ok = confirm(
-          `An account for ${err.data.email} already exists ` +
-          (hasPwd ? "(the host set a password)."
-                  : "(the host hasn't set a password yet).") +
-          "\n\nAttach this invitation to that account?"
+          `فيه حساب بالإيميل ${err.data.email} ` +
+          (hasPwd ? "(صاحبه حط كلمة سر)."
+                  : "(صاحبه لسه ما حطش كلمة سر).") +
+          "\n\nتضيف الدعوة دي للحساب ده؟"
         );
         if (!ok) throw err;
         createBody.host_email_confirm_existing = true;
@@ -996,11 +997,11 @@ async function publish() {
     for (let i = 0; i < files.length; i++) {
       const f = files[i];
       const label = f.field.startsWith("photo") || f.field.startsWith("gallery")
-        ? "photo" : f.field;
+        ? "صورة" : (f.field === "video" ? "الفيديو" : "الأغنية");
       const mbTotal = (f.file.size / 1024 / 1024).toFixed(1);
       const base    = 10 + (i / (files.length + 1)) * 80;
       const slice   = (1 / (files.length + 1)) * 80;
-      setProgress(base, `Uploading ${label} ${i + 1}/${files.length} — 0.0 / ${mbTotal} MB`);
+      setProgress(base, `بنرفع ${label} ${i + 1}/${files.length}، 0.0 من ${mbTotal} ميجا`);
       await uploadFileWithProgress(
         `/api/events/${eventId}/media`,
         f.uploadFile,
@@ -1009,7 +1010,7 @@ async function publish() {
           const mbSent = (bytesSent / 1024 / 1024).toFixed(1);
           setProgress(
             base + pct * slice,
-            `Uploading ${label} ${i + 1}/${files.length} — ${mbSent} / ${mbTotal} MB`
+            `بنرفع ${label} ${i + 1}/${files.length}، ${mbSent} من ${mbTotal} ميجا`
           );
         }
       );
@@ -1019,7 +1020,7 @@ async function publish() {
     //    customer flow this verifies the activation code and burns it.
     //    For admin create (Flask-Login session already proves identity)
     //    the dedicated /admin/api/.../publish endpoint skips both.
-    setProgress(95, "Publishing your invitation…");
+    setProgress(95, "بننشر الدعوة…");
     const act = ADMIN_MODE === "create"
       ? await apiJson("POST", `/admin/api/events/${eventId}/publish`, {})
       : await apiJson("POST", `/api/events/${eventId}/activate`, { code });
@@ -1033,6 +1034,8 @@ async function publish() {
     const publicUrl = act.public_url || `${location.origin}${slugPath}`;
     $("success-url").href = publicUrl;
     $("success-url").textContent = publicUrl;
+    $("success-wa").href = "https://wa.me/?text=" + encodeURIComponent(publicUrl);
+    $("success-phone").src = SUCCESS_PHONE[type] || SUCCESS_PHONE["wedding-blue"];
     // Admin created a brand-new host account: this one-time link is the
     // only way the host can set a password (only its hash is stored).
     if (evt.claim_url) {
@@ -1042,13 +1045,15 @@ async function publish() {
       $("copy-claim-btn").onclick = async () => {
         try {
           await navigator.clipboard.writeText(claimUrl);
-          $("copy-claim-btn").textContent = "Copied ✓";
+          $("copy-claim-btn").textContent = "اتنسخ ✓";
         } catch (_) { /* ignore */ }
       };
     }
     clearDraft();
     $("editor-screen").hidden = true;
     $("success-screen").hidden = false;
+    document.body.classList.add("is-published");
+    window.scrollTo(0, 0);
     hideProgress();
 
   } catch (err) {
@@ -1064,8 +1069,8 @@ async function publish() {
       $("f-slug").classList.add("invalid");
     } else if (!$("code-error").textContent && !$("slug-error").textContent) {
       alert(
-        "Publish failed: " + msg +
-        "\n\nYour code is still valid — please retry."
+        "النشر ما كملش: " + msg +
+        "\n\nالكود لسه شغال، جرب تاني."
       );
     }
     hideProgress();
@@ -1114,7 +1119,7 @@ function uploadFileWithProgress(url, file, onProgress) {
       err.data   = body;
       reject(err);
     };
-    xhr.onerror = () => reject(new Error("Network error uploading file."));
+    xhr.onerror = () => reject(new Error("النت فصل وإحنا بنرفع الملف."));
     const fd = new FormData();
     fd.append("file", file, file.name);
     xhr.send(fd);
@@ -1218,8 +1223,8 @@ $("copy-url-btn").addEventListener("click", async () => {
   const url = $("success-url").textContent;
   try {
     await navigator.clipboard.writeText(url);
-    $("copy-url-btn").textContent = "Copied ✓";
-    setTimeout(() => { $("copy-url-btn").textContent = "Copy link"; }, 1500);
+    $("copy-url-btn").textContent = "اتنسخ ✓";
+    setTimeout(() => { $("copy-url-btn").textContent = "انسخ اللينك"; }, 1500);
   } catch (_) { /* ignore */ }
 });
 
@@ -1239,21 +1244,29 @@ function applyAdminChrome() {
   const codeField = $("f-code")?.closest(".cx-field");
   if (codeField) codeField.hidden = true;
   if ($("publish-hint")) $("publish-hint").hidden = true;
+  $("publish-lede").hidden = true;
+  if (ADMIN_MODE === "edit") $("publish-heading").textContent = "احفظ التعديلات";
+  // The success screen's links would otherwise lead into the host flow.
+  if (ADMIN_MODE === "create") {
+    $("success-responses").href = "/admin/events";
+    $("success-responses").textContent = "الدعوات";
+    $("success-another").href = "/admin/events";
+  }
   const title = $("cx-title");
   if (title) {
     title.textContent = ADMIN_MODE === "edit"
-      ? "Edit your invitation"
-      : "Create invitation (admin)";
+      ? "عدّل دعوتك"
+      : "اعمل دعوة لعميل";
   }
   const lede = document.querySelector(".cx-lede");
   if (lede) {
     lede.textContent = ADMIN_MODE === "edit"
-      ? "Change anything below and press Save — guests see it right away. No activation code needed."
-      : "Admin create: publishes immediately without an activation code.";
+      ? "غيّر اللي انت عايزه ودوس احفظ. الضيوف هيشوفوا التعديل على طول، ومش محتاج كود."
+      : "الدعوة هتتنشر على طول من غير كود تفعيل.";
   }
   if ($("publish-btn")) {
     $("publish-btn").textContent =
-      ADMIN_MODE === "edit" ? "Save changes" : "Publish (admin)";
+      ADMIN_MODE === "edit" ? "احفظ التعديلات" : "انشر الدعوة";
   }
 }
 
@@ -1265,7 +1278,7 @@ async function loadAdminEditFixtures() {
   try {
     evt = await apiJson("GET", `/admin/api/events/${ADMIN_EDIT_ID}`, null);
   } catch (e) {
-    alert("Couldn't load this invitation: " + (e?.data?.message || e.message));
+    alert("ما عرفناش نفتح الدعوة: " + (e?.data?.message || e.message));
     return;
   }
   applyType(ALL_TYPES.has(evt.event_type) ? evt.event_type : "birthday");
@@ -1351,6 +1364,8 @@ async function loadAdminEditFixtures() {
         el.value = hex.toLowerCase();
       }
     });
+    // A stored palette must stay open, or saving would drop it.
+    $("dress-group").open = storedColors.length > 0;
     // Rebuild gallery rows from the stored photos. The seed row
     // addGalleryRow() ran at module init is replaced here so the host
     // doesn't see a stray empty row above their actual photos.
@@ -1374,8 +1389,18 @@ async function loadAdminEditFixtures() {
     }
   }
 
+  openFilledSections();
   schedulePreview();
   updatePublishGate();
+}
+
+/* Optional sections start folded; unfold any that already hold something
+ * when an invitation or a draft is loaded, so nothing looks lost. */
+function openFilledSections() {
+  document.querySelectorAll("details.cx-optional").forEach((d) => {
+    d.open = d.open || [...d.querySelectorAll("input, textarea")].some((el) =>
+      el.type !== "color" && el.value.trim() !== "");
+  });
 }
 
 /* A blob: URL only lives inside the tab that created it — older saves
@@ -1395,11 +1420,11 @@ function showExistingAudio(inputId, url) {
   const note = document.createElement("div");
   note.className = "cx-hint";
   const label = document.createElement("span");
-  label.textContent = `Current song: ${decodeURIComponent(url.split("/").pop())} — pick a file to replace it. `;
+  label.textContent = `${CURRENT_SONG} ${decodeURIComponent(url.split("/").pop())}. اختار ملف تاني لو عايز تغيرها. `;
   const rm = document.createElement("button");
   rm.type = "button";
   rm.className = "cx-btn cx-btn-ghost";
-  rm.textContent = "Remove song";
+  rm.textContent = "شيل الأغنية";
   rm.addEventListener("click", () => {
     delete input.dataset.existingUrl;
     note.remove();
@@ -1428,7 +1453,7 @@ function pickedFiles() {
 async function publishAdminEdit() {
   const btn = $("publish-btn");
   btn.disabled = true;
-  btn.textContent = "Saving…";
+  btn.textContent = "بنحفظ…";
   try {
     const picked = pickedFiles();
     const uploaded = new Map();
@@ -1436,7 +1461,7 @@ async function publishAdminEdit() {
     for (let i = 0; i < picked.length; i++) {
       const { file, field } = picked[i];
       setProgress(5 + Math.round((i / picked.length) * 80),
-                  `Uploading ${i + 1} of ${picked.length}…`);
+                  `بنرفع ${i + 1} من ${picked.length}…`);
       // Unique name per save so a re-upload never collides with (or
       // overwrites) a file the live page already points at.
       const name = safeFilename(`${field}-${stamp}-${i + 1}-${file.name}`);
@@ -1451,20 +1476,20 @@ async function publishAdminEdit() {
     if (Array.isArray(nextPayload.memories)) {
       nextPayload.memories = nextPayload.memories.filter((m) => m.url);
     }
-    setProgress(90, "Saving changes…");
+    setProgress(90, "بنحفظ التعديلات…");
     await apiJson("PATCH", `/admin/api/events/${ADMIN_EDIT_ID}`, {
       payload_json: nextPayload,
     });
     // Uploaded files are now the "existing" ones — clear the inputs so
     // a second Save doesn't upload them again.
     reseedAfterSave(uploaded);
-    setProgress(100, "Saved.");
-    setTimeout(() => { hideProgress(); btn.textContent = "Save changes"; btn.disabled = false; }, 600);
+    setProgress(100, "اتحفظ.");
+    setTimeout(() => { hideProgress(); btn.textContent = "احفظ التعديلات"; btn.disabled = false; }, 600);
   } catch (err) {
     console.error("[admin-edit]", err);
-    alert("Save failed: " + (err?.data?.message || err.message || String(err)));
+    alert("الحفظ ما كملش: " + (err?.data?.message || err.message || String(err)));
     hideProgress();
-    btn.textContent = "Save changes";
+    btn.textContent = "احفظ التعديلات";
     btn.disabled = false;
   }
 }
@@ -1486,7 +1511,7 @@ function reseedAfterSave(uploaded) {
     input.value = "";
     syncClearButton(input);
     input.parentElement.querySelectorAll(".cx-hint").forEach((n) => {
-      if (n.textContent.startsWith("Current song")) n.remove();
+      if (n.textContent.startsWith(CURRENT_SONG)) n.remove();
     });
     showExistingAudio(id, url);
   }
@@ -1557,6 +1582,7 @@ function saveDraft() {
       phone: row.querySelector(".c-phone").value,
     })),
     colors: [...document.querySelectorAll("#dress-colors .cx-color")].map((el) => el.value),
+    dressOpen: $("dress-group").open,
   };
   try { localStorage.setItem(DRAFT_KEY, JSON.stringify(draft)); } catch (_) { /* storage off */ }
 }
@@ -1600,6 +1626,8 @@ function restoreDraft() {
       if (/^#[0-9a-f]{6}$/i.test(d.colors[i] || "")) el.value = d.colors[i];
     });
   }
+  $("dress-group").open = !!d.dressOpen;
+  openFilledSections();
   if (d.slugEdited) $("f-slug").dataset.userEdited = "1";
   const slug = $("f-slug").value.trim();
   if (slug) checkSlug(slug).then(updatePublishGate);
@@ -1608,11 +1636,11 @@ function restoreDraft() {
   updatePublishGate();
 
   const note = $("draft-note");
-  note.textContent = `Restored what you typed on ${new Date(d.savedAt).toLocaleString()}. Photos and music need to be picked again. `;
+  note.textContent = `رجعنالك اللي كتبته يوم ${new Date(d.savedAt).toLocaleString("ar-EG")}. الصور والأغنية لازم تختارهم تاني. `;
   const reset = document.createElement("button");
   reset.type = "button";
   reset.className = "cx-btn cx-btn-ghost";
-  reset.textContent = "Start over";
+  reset.textContent = "ابدأ من الأول";
   reset.addEventListener("click", () => {
     clearDraft();
     location.href = `/create.html?type=${state.type}`;
@@ -1622,6 +1650,9 @@ function restoreDraft() {
 }
 
 /* ================= boot (last: all `let` bindings are alive) ================= */
+
+// Opening the section is what turns its colours on.
+$("dress-group").addEventListener("toggle", () => { schedulePreview(); saveDraft(); });
 
 const initialType = new URLSearchParams(location.search).get("type");
 applyType(ALL_TYPES.has(initialType) ? initialType : "birthday");

@@ -1,8 +1,10 @@
 {% extends "base.html" %}
-{% block title %}Events · Admin{% endblock %}
+{% import "_ar.html" as ar %}
+{% block title %}الدعوات · إدارة لمّة{% endblock %}
+{% block shell_class %} shell-wide{% endblock %}
 {% block content %}
-<div class="page-title-row" style="display:flex; align-items:center; justify-content:space-between; gap:16px;">
-  <h1 class="page-title" style="margin:0;">Events</h1>
+<div class="page-head">
+  <h1 class="page-title">الدعوات</h1>
   <!-- "New invitation" opens /create in admin-create mode: no code gate,
        publishes immediately via /admin/api/.../publish. -->
   <!-- Explicit .html so nginx static serves the file directly. The bare
@@ -11,85 +13,106 @@
        rule; without that extra rule nginx falls to try_files and ends
        up on /index.html, which doesn't carry the ?type= param forward,
        so the create form defaults to birthday. -->
-  <a href="/create.html?admin_create=1&amp;type=birthday" class="btn btn-primary">+ Birthday</a>
-  <a href="/create.html?admin_create=1&amp;type=birthday-elegant" class="btn btn-primary">+ Birthday · Elegant</a>
-  <a href="/create.html?admin_create=1&amp;type=wedding" class="btn btn-primary">+ Wedding</a>
-  <a href="/create.html?admin_create=1&amp;type=wedding-noir" class="btn btn-primary">+ Wedding · Noir</a>
-  <a href="/create.html?admin_create=1&amp;type=wedding-burgundy" class="btn btn-primary">+ Wedding · Burgundy</a>
-  <a href="/create.html?admin_create=1&amp;type=wedding-wizard" class="btn btn-primary">+ Wedding · Wizard</a>
-  <a href="/create.html?admin_create=1&amp;type=wedding-blue" class="btn btn-primary">+ زفاف · زهور زرقاء</a>
-  <a href="/create.html?admin_create=1&amp;type=engagement" class="btn btn-primary">+ Engagement</a>
-  <a href="/create.html?admin_create=1&amp;type=qiraya" class="btn btn-primary">+ قراية فاتحة</a>
-  <a href="/create.html?admin_create=1&amp;type=sobou" class="btn btn-primary">+ سبوع</a>
+  <form class="new-event" onsubmit="location.href = this.elements.tpl.value; return false;">
+    <div class="field">
+      <label for="tpl">دعوة جديدة لعميل</label>
+      <select id="tpl" name="tpl">
+        <option value="/create.html?admin_create=1&amp;type=wedding-blue">فرح · زهور زرقاء</option>
+        <option value="/create.html?admin_create=1&amp;type=wedding-burgundy">فرح · عنّابي</option>
+        <option value="/create.html?admin_create=1&amp;type=wedding-wizard">فرح · الساحر</option>
+        <option value="/create.html?admin_create=1&amp;type=wedding">فرح · كلاسيك</option>
+        <option value="/create.html?admin_create=1&amp;type=wedding-noir">فرح · نوار</option>
+        <option value="/create.html?admin_create=1&amp;type=engagement">خطوبة</option>
+        <option value="/create.html?admin_create=1&amp;type=qiraya">قراية فاتحة</option>
+        <option value="/create.html?admin_create=1&amp;type=sobou">سبوع</option>
+        <option value="/create.html?admin_create=1&amp;type=birthday-elegant">عيد ميلاد · أنيق</option>
+        <option value="/create.html?admin_create=1&amp;type=birthday">عيد ميلاد · كلاسيك</option>
+      </select>
+    </div>
+    <button type="submit" class="btn btn-primary btn-tall">ابدأ</button>
+  </form>
 </div>
 
-<form class="filter-bar" method="get">
-  <input name="q" type="search" placeholder="Search slug…" value="{{ q or '' }}">
-  <select name="status">
-    <option value="">All statuses</option>
-    {% for s in ['draft','awaiting_code','published','expired','deleted'] %}
-      <option value="{{ s }}" {% if s == status %}selected{% endif %}>{{ s }}</option>
-    {% endfor %}
-  </select>
-  <button type="submit" class="btn btn-outline">Filter</button>
+<form class="filter-bar" method="get" role="search">
+  <div class="field field-search">
+    <label for="q">دور باللينك</label>
+    <input id="q" name="q" type="search" dir="ltr" value="{{ q or '' }}">
+  </div>
+  <div class="field">
+    <label for="status">الحالة</label>
+    <select id="status" name="status">
+      <option value="">الكل</option>
+      {% for s in ['draft','awaiting_code','published','expired','deleted'] %}
+        <option value="{{ s }}" {% if s == status %}selected{% endif %}>{{ ar.status(s) }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <button type="submit" class="btn btn-tall">صفّي</button>
 </form>
 
 {% if events %}
-<table class="event-table">
-  <thead>
-    <tr>
-      <th>Slug</th>
-      <th>Type</th>
-      <th>Status</th>
-      <th>Host</th>
-      <th>Created</th>
-      <th>Actions</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for ev in events %}
-    <tr>
-      <td><code>{{ ev.slug }}</code></td>
-      <td>{{ ev.event_type }}</td>
-      <td><span class="status status-{{ ev.status }}">{{ ev.status }}</span></td>
-      <td>
-        {% set owner = owners.get(ev.user_id) %}
-        {% if owner %}
-          {{ owner.email }}
-          {% if not owner.password_hash %}<span class="hint">· no password yet</span>{% endif %}
-          <form method="post" action="{{ url_for('admin.new_claim_link', user_id=owner.id) }}" class="inline">
-            <button type="submit" class="btn btn-ghost btn-sm"
-                    title="One-time link to set or reset the host's password">Password link</button>
-          </form>
-        {% else %}
-          {{ ev.contact or '—' }}
-        {% endif %}
-      </td>
-      <td class="when">{{ ev.created_at.strftime('%Y-%m-%d %H:%M') if ev.created_at else '' }}</td>
-      <td class="actions">
-        {% if ev.status in ('draft', 'awaiting_code') %}
-          <form method="post" action="{{ url_for('admin.generate_code_for_event', event_id=ev.id) }}" class="inline">
-            <input type="number" name="expires_hours" placeholder="hours" min="1" max="720" style="width:70px">
-            <input type="text" name="notes" placeholder="notes (payment ref)" style="width:180px">
-            <button type="submit" class="btn btn-primary btn-sm">Generate code</button>
-          </form>
-        {% endif %}
-        {% if ev.status != 'deleted' %}
-          <a href="/create.html?admin_edit={{ ev.id }}" class="btn btn-outline btn-sm">Edit</a>
-          {% if ev.status == 'published' %}
-            <a href="{{ url_for('admin.event_responses', event_id=ev.id) }}" class="btn btn-ghost btn-sm">Responses</a>
-          {% endif %}
-        {% endif %}
-        <form method="post" action="{{ url_for('admin.delete_event', event_id=ev.id) }}"
-              onsubmit="return confirm('Delete {{ ev.slug }}?')" class="inline">
-          <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-        </form>
-      </td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
+<div class="card table-card">
+  <div class="table-wrap">
+    <table class="event-table">
+      <thead>
+        <tr>
+          <th>اللينك</th>
+          <th>النموذج</th>
+          <th>الحالة</th>
+          <th>صاحب الدعوة</th>
+          <th>اتعملت</th>
+          <th>إجراءات</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ev in events %}
+        <tr>
+          <td class="slug"><code dir="ltr">{{ ev.slug }}</code></td>
+          <td>{{ ar.template_name(ev.event_type) }}</td>
+          <td class="status status-{{ ev.status }}">{{ ar.status(ev.status) }}</td>
+          <td>
+            {% set owner = owners.get(ev.user_id) %}
+            {% if owner %}
+              <span dir="ltr">{{ owner.email }}</span>
+              {% if not owner.password_hash %}<br><span class="hint-sm">لسه من غير كلمة سر</span>{% endif %}
+              <form method="post" action="{{ url_for('admin.new_claim_link', user_id=owner.id) }}">
+                <button type="submit" class="linkish" title="لينك مرة واحدة يحط أو يغير منه صاحب الدعوة كلمة السر">لينك كلمة السر</button>
+              </form>
+            {% else %}
+              <span dir="auto">{{ ev.contact or '—' }}</span>
+            {% endif %}
+          </td>
+          <td class="when">{{ ar.when(ev.created_at) }}</td>
+          <td>
+            <div class="actions">
+              {% if ev.status in ('draft', 'awaiting_code') %}
+                <form method="post" action="{{ url_for('admin.generate_code_for_event', event_id=ev.id) }}" class="inline">
+                  <label class="sr-only" for="notes-{{ ev.id }}">ملاحظات الكود</label>
+                  <input id="notes-{{ ev.id }}" type="text" name="notes" dir="auto" placeholder="رقم التحويل">
+                  <label class="sr-only" for="hours-{{ ev.id }}">ينتهي بعد كام ساعة</label>
+                  <input id="hours-{{ ev.id }}" type="number" name="expires_hours" min="1" max="720" placeholder="ساعات">
+                  <button type="submit" class="btn btn-primary btn-sm">اعمل كود</button>
+                </form>
+              {% endif %}
+              {% if ev.status != 'deleted' %}
+                <a href="/create.html?admin_edit={{ ev.id }}" class="btn btn-sm">تعديل</a>
+                {% if ev.status == 'published' %}
+                  <a href="{{ url_for('admin.event_responses', event_id=ev.id) }}" class="btn btn-sm">الردود</a>
+                {% endif %}
+              {% endif %}
+              <form method="post" action="{{ url_for('admin.delete_event', event_id=ev.id) }}"
+                    onsubmit="return confirm('تمسح {{ ev.slug }}؟')" class="inline">
+                <button type="submit" class="btn btn-danger btn-sm">مسح</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
 {% else %}
-<p class="empty">No events match.</p>
+<p class="empty">مفيش دعوات بالبحث ده.</p>
 {% endif %}
 {% endblock %}

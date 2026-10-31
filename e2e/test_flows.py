@@ -40,7 +40,12 @@ def pick_file(page, selector, src, name):
     )
 
 
+def open_sections(page):
+    page.evaluate("document.querySelectorAll('details.cx-optional').forEach((d) => { d.open = true; })")
+
+
 def fill_wedding(page, groom="Omar", bride="Laila"):
+    open_sections(page)
     page.fill("#f-groom", groom)
     page.fill("#f-bride", bride)
     page.fill("#f-event-datetime", "2026-12-12T19:00")
@@ -151,19 +156,19 @@ def test_owner_dashboard_activate_later_and_edit(page, site):
     card = page.locator(".event-card[data-slug='baby-yassin']")
     card.locator("input[name=code]").fill("GOOD-CODE-0002")
     card.locator("button[type=submit]").click()
-    page.wait_for_selector(".event-card[data-slug='baby-yassin'] >> text=Published")
+    page.wait_for_selector(".event-card[data-slug='baby-yassin'] >> text=منشورة")
 
     wedding = page.locator(".event-card[data-slug='omar-laila']")
     assert "Omar & Laila" in wedding.inner_text()
-    assert "1 attending" in re.sub(r"\s+", " ", wedding.inner_text())
+    assert wedding.locator('[data-metric="attending"] .num').inner_text() == "١"
 
     # Edit: change the venue, keep the song.
-    wedding.locator("text=Edit").click()
-    page.wait_for_selector("text=Current song")
-    assert page.text_content("#cx-title") == "Edit your invitation"
+    wedding.locator("text=تعديل").click()
+    page.wait_for_selector("text=الأغنية الحالية")
+    assert page.text_content("#cx-title") == "عدّل دعوتك"
     page.fill("#f-venue-name", "Solitaire Hall Maadi")
     page.click("#publish-btn")
-    page.wait_for_function("document.getElementById('progress-text').textContent === 'Saved.'")
+    page.wait_for_function("document.getElementById('progress-text').textContent === 'اتحفظ.'")
     data = urllib.request.urlopen(base + "/data/omar-laila.json").read().decode()
     assert "Solitaire Hall Maadi" in data and "/media/omar-laila/music-" in data
     assert page.js_errors == []
@@ -299,12 +304,12 @@ def test_burgundy_end_to_end(page, site):
 
     # Edit: change only the gift message; song, photo and the rest stay.
     page.goto(base + "/user/")
-    page.locator(".event-card[data-slug='karim-nour'] >> text=Edit").click()
-    page.wait_for_selector("text=Current song")
+    page.locator(".event-card[data-slug='karim-nour'] >> text=تعديل").click()
+    page.wait_for_selector("text=الأغنية الحالية")
     assert page.input_value("#f-family-bride") == "Mr. & Mrs.\nSamir Lotfy"
     page.fill("#f-gift-message", "Thank you for coming")
     page.click("#publish-btn")
-    page.wait_for_function("document.getElementById('progress-text').textContent === 'Saved.'")
+    page.wait_for_function("document.getElementById('progress-text').textContent === 'اتحفظ.'")
     data = urllib.request.urlopen(base + "/data/karim-nour.json").read().decode()
     for kept in ("Thank you for coming", "InstaPay: karim@instapay", "Al-Sayeda Nafisa Mosque",
                  "/media/karim-nour/music-", "/media/karim-nour/gallery-", "Karim Adel"):
@@ -321,6 +326,7 @@ def test_wizard_end_to_end(page, site):
 
     sign_in(page, site)
     page.goto(base + "/create.html?type=wedding-wizard")
+    open_sections(page)
     page.wait_for_selector("#dress-note-field:not([hidden])")
     assert page.is_hidden("#gallery-group")          # the wizard has no photo gallery
     assert page.is_hidden("#burgundy-group")
@@ -390,7 +396,7 @@ def test_wizard_end_to_end(page, site):
 
     # Edit keeps the note.
     page.goto(base + "/user/")
-    page.locator(".event-card[data-slug='omar-esraa'] >> text=Edit").click()
+    page.locator(".event-card[data-slug='omar-esraa'] >> text=تعديل").click()
     page.wait_for_function("document.getElementById('f-dress-note').value === 'Keep children away from the dance floor'")
     assert page.input_value("#schedule-builder .sched-detail") == "A little rest, some treats"
     assert page.js_errors == []
@@ -408,6 +414,18 @@ def test_wizard_skip_and_reduced_motion(page, site):
     assert not page.evaluate("document.body.classList.contains('env')")
     assert page.locator(".footsteps").count() == 0               # no moving trail either
     assert page.js_errors == []
+
+def test_folded_dress_section_adds_no_colours(page, site):
+    page.goto(site["base"] + "/create.html?type=wedding-blue")
+    swatches = page.frame_locator("#preview-frame").locator("#dress-code-swatches .swatch")
+    page.fill("#f-groom", "Omar")
+    page.wait_for_timeout(1500)
+    assert swatches.count() == 0
+    open_sections(page)
+    page.wait_for_timeout(1500)
+    assert swatches.count() >= 1
+    assert page.js_errors == []
+
 
 def test_blue_blooms_arabic_end_to_end(page, site):
     base = site["base"]
@@ -467,11 +485,11 @@ def test_blue_blooms_arabic_end_to_end(page, site):
 
     # Edit keeps the verse; clearing it hides it.
     page.goto(base + "/user/")
-    page.locator(f".event-card[data-slug='{slug}'] >> text=Edit").click()
+    page.locator(f".event-card[data-slug='{slug}'] >> text=تعديل").click()
     page.wait_for_function("document.getElementById('f-verse').value.startsWith('بسم الله')")
     page.fill("#f-verse", "")
     page.click("#publish-btn")
-    page.wait_for_function("document.getElementById('progress-text').textContent === 'Saved.'")
+    page.wait_for_function("document.getElementById('progress-text').textContent === 'اتحفظ.'")
     page.goto(base + "/wedding-blue/" + slug)
     page.click("#open-btn")
     page.wait_for_selector("#invitation", state="visible")

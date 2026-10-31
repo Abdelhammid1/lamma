@@ -1,105 +1,146 @@
 <!doctype html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{% block title %}لمة · LAMMA{% endblock %}</title>
+<title>{% block title %}لمّة{% endblock %}</title>
 <link rel="icon" href="/logo.jpg" type="image/jpeg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Manrope:wght@400;500;600;700&family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --plum:      #310b1e;
-    --plum-2:    #4a2033;
-    --accent:    #ffdea4;
-    --bg:        #fbf9f6;
-    --surface:   #ffffff;
-    --rule:      #e5e0d7;
-    --ink:       #1b1c1a;
-    --muted:     #504347;
-    --danger:    #a0372a;
+    --sand:   #f3e9dc;
+    --paper:  #faf4ec;
+    --ink:    #2c1a12;
+    --brown:  #4a2c19;
+    --bronze: #7c4f2e;
+    --muted:  #5c4537;
+    --plum:   #2b0e1b;
+    --cream:  #f6ecdf;
+    --gold:   #e3bd84;
+    --line:   #c9b59b;
+    --field:  #fffdf9;
+    --rule:   #d8c7b1;
+    --green:  #2f6a3a;
+    --red:    #8e2b2b;
+    --display: 'Aref Ruqaa', 'Times New Roman', serif;
+    --body:    'IBM Plex Sans Arabic', Tahoma, sans-serif;
     color-scheme: light;
   }
   * { box-sizing: border-box; }
   body {
-    margin: 0; padding: 0;
-    background: var(--bg); color: var(--ink);
-    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
-    font-size: 15px; line-height: 1.5;
+    margin: 0;
+    background: var(--sand); color: var(--ink);
+    font-family: var(--body);
+    font-size: 17px; line-height: 1.6;
   }
-  a { color: var(--plum); }
+  a { color: var(--bronze); }
+  :focus-visible { outline: 2px solid var(--bronze); outline-offset: 2px; }
+
   .topbar {
-    background: var(--surface);
-    border-bottom: 1px solid var(--rule);
-    padding: 14px 24px;
+    max-width: 1040px; margin: 0 auto; padding: 18px 24px 0;
     display: flex; align-items: center; justify-content: space-between;
-    gap: 20px; flex-wrap: wrap;
+    gap: 12px; flex-wrap: wrap;
   }
-  .brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: var(--plum); }
-  .brand-mark { font-size: 22px; }
-  .brand-name { font-family: 'Playfair Display', serif; font-weight: 600; font-size: 18px; }
-  .brand-sub  { color: var(--muted); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; margin-left: 6px; }
-  .topbar nav a {
-    text-decoration: none; color: var(--muted); margin-right: 14px;
-    font-size: 14px; padding-bottom: 4px;
+  .brand img { display: block; width: 50px; height: 50px; border-radius: 50%; object-fit: cover; }
+  .who { display: inline-flex; align-items: center; gap: 14px; flex-wrap: wrap; color: var(--muted); font-size: 15px; }
+  .who form { display: inline; }
+  .signout {
+    min-height: 44px; padding: 0; border: 0; background: none; cursor: pointer;
+    color: var(--ink); font: 500 17px var(--body); text-decoration: underline;
   }
-  .topbar nav a.on { color: var(--plum); border-bottom: 2px solid var(--plum); }
-  .who { display: inline-flex; align-items: center; gap: 10px; font-size: 13px; color: var(--muted); }
-  .shell { max-width: 920px; margin: 32px auto; padding: 0 20px; }
-  .page-title { font-family: 'Playfair Display', serif; font-size: 24px; margin: 0; color: var(--plum); }
+
+  .shell { max-width: 1040px; margin: 0 auto; padding: 22px 24px 72px; }
+  .page-head {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+    gap: 14px 24px;
+  }
+  .page-title {
+    margin: 0; font-family: var(--display); font-weight: 700;
+    font-size: clamp(40px, 5vw, 66px); line-height: 1.25; color: var(--brown);
+  }
   .muted { color: var(--muted); }
+  .lede { margin: 2px 0 0; color: var(--muted); }
+
   .btn {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 9px 16px; border-radius: 8px; border: 1px solid transparent;
-    font-size: 14px; font-weight: 600; cursor: pointer;
-    font-family: inherit; text-decoration: none;
-    transition: background 0.15s ease, color 0.15s ease;
+    display: inline-flex; align-items: center; justify-content: center;
+    min-height: 44px; padding: 0 18px;
+    border: 1px solid var(--bronze); border-radius: 999px;
+    background: transparent; color: var(--brown);
+    font: 500 16px var(--body); text-decoration: none; cursor: pointer;
+    transition: background-color .15s ease, color .15s ease;
   }
-  .btn-primary { background: var(--plum); color: #fff; }
-  .btn-primary:hover { background: var(--plum-2); }
-  .btn-outline { background: transparent; color: var(--plum); border-color: var(--plum); }
-  .btn-outline:hover { background: var(--plum); color: #fff; }
-  .btn-ghost   { background: transparent; color: var(--muted); }
-  .btn-ghost:hover { color: var(--plum); }
-  .btn-sm      { padding: 5px 10px; font-size: 12px; }
-  .btn-danger  { background: var(--danger); color: #fff; }
+  .btn:hover { background: rgba(124, 79, 46, .1); }
+  .btn:disabled { opacity: .6; cursor: default; }
+  .btn-primary { background: var(--plum); border-color: var(--plum); color: var(--cream); }
+  .btn-primary:hover { background: #431a2d; }
+  .btn-plain { border-color: transparent; padding: 0 8px; text-decoration: underline; }
+  .btn-plain:hover { background: none; color: var(--bronze); }
+  .btn-block { width: 100%; min-height: 54px; font-size: 18px; font-weight: 600; }
+  .btn-wide { min-height: 50px; padding: 0 28px; font-weight: 600; }
+
   input[type="email"], input[type="password"], input[type="text"] {
-    width: 100%; padding: 10px 12px; border: 1px solid var(--rule);
-    border-radius: 8px; font: inherit; background: #fff;
+    width: 100%; min-height: 50px; margin-top: 4px; padding: 0 14px;
+    border: 1px solid var(--line); border-radius: 10px;
+    background: var(--field); color: var(--ink); font: 17px var(--body);
   }
-  input:focus { outline: 2px solid var(--plum); outline-offset: 1px; border-color: var(--plum); }
-  .field { margin-bottom: 14px; }
-  .field label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; font-weight: 500; }
-  .flash { padding: 10px 14px; border-radius: 8px; margin-bottom: 16px; font-size: 14px; }
-  .flash-info  { background: #eaf3fb; color: #285a7a; }
-  .flash-warn  { background: #fdefd5; color: #7a5222; }
-  .flash-err   { background: #fde6e2; color: var(--danger); }
-  .error       { color: var(--danger); font-size: 13px; margin-top: 4px; }
-  .card {
-    background: var(--surface); border: 1px solid var(--rule);
-    border-radius: 12px; padding: 24px;
-    box-shadow: 0 10px 30px -22px rgba(0,0,0,0.3);
+  input:focus { outline: 2px solid var(--bronze); outline-offset: 1px; border-color: var(--bronze); }
+  .field label { display: block; font-weight: 500; }
+
+  .flash { padding: 12px 16px; border-radius: 10px; margin-bottom: 16px; }
+  .flash-info { background: #e8efe3; color: var(--green); }
+  .flash-warn { background: #f4e4c8; color: var(--brown); }
+  .flash-err  { background: #f6e1dc; color: var(--red); }
+  .error { color: var(--red); }
+
+  .card { background: var(--paper); border-radius: 14px; padding: 22px; }
+
+  /* Sign-in, sign-up and claim: a single column over the sand page. */
+  body.auth-page { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; }
+  body.auth-page .shell {
+    flex: 1; width: 100%; max-width: none; padding: 32px 24px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
   }
-  .center { max-width: 420px; margin: 60px auto; }
+  body.auth-page .flash { width: 100%; max-width: 420px; }
+  .auth { position: relative; width: 100%; max-width: 420px; }
+  .auth-leaf {
+    position: fixed; top: -160px; left: -140px; z-index: -1;
+    width: min(900px, 130vw); height: auto; opacity: .16; filter: blur(5px);
+    pointer-events: none;
+  }
+  .auth-logo { display: block; width: 64px; height: 64px; border-radius: 50%; object-fit: cover; }
+  .auth h1 {
+    margin: 16px 0 0; font-family: var(--display); font-weight: 700;
+    font-size: 50px; line-height: 1.25; color: var(--brown);
+  }
+  .auth-lede { margin: 4px 0 0; color: var(--muted); }
+  .auth form { display: grid; gap: 14px; margin-top: 22px; }
+  .auth-note { margin: 16px 0 0; }
+  .auth-note a { display: inline-flex; align-items: center; min-height: 44px; font-weight: 600; }
+  .auth-small { margin: 2px 0 0; font-size: 15px; color: var(--muted); }
+
+  .site-footer { margin-top: 40px; padding: 14px 24px; border-top: 1px solid var(--rule); text-align: center; font-size: 13px; color: var(--muted); }
+  .site-footer a { margin-left: 4px; font-weight: 600; color: var(--brown); text-decoration: none; }
+
+  @media (max-width: 560px) {
+    .auth h1 { font-size: 42px; }
+    .topbar, .shell { padding-inline: 16px; }
+    body.auth-page .shell { padding: 28px 16px; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
+{% block head %}{% endblock %}
 </head>
-<body>
+<body{% block body_attrs %}{% endblock %}>
 
 {% if current_user.is_authenticated and current_user.__class__.__name__ == 'HostUser' %}
 <header class="topbar">
-  <a href="/" class="brand">
-    <span class="brand-mark">🌸</span>
-    <span class="brand-name">لمة · LAMMA</span>
-    <span class="brand-sub">Host</span>
-  </a>
-  <nav>
-    <a href="{{ url_for('user.dashboard') }}" {% if request.endpoint == 'user.dashboard' %}class="on"{% endif %}>My events</a>
-  </nav>
+  <a href="/" class="brand" aria-label="لمّة، الصفحة الرئيسية"><img src="/logo.jpg" alt=""></a>
   <div class="who">
-    <span>{{ current_user.email }}</span>
-    <form action="{{ url_for('user.logout') }}" method="post" style="display:inline">
-      <button type="submit" class="btn btn-ghost btn-sm">Sign out</button>
+    <span dir="ltr">{{ current_user.email }}</span>
+    <form action="{{ url_for('user.logout') }}" method="post">
+      <button type="submit" class="signout">خروج</button>
     </form>
   </div>
 </header>

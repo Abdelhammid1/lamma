@@ -1,84 +1,122 @@
 {% extends "user/base.html" %}
-{% block title %}My events · لمة · LAMMA{% endblock %}
+{% import "_ar.html" as ar %}
+{% block title %}دعواتي · لمّة{% endblock %}
+{% block head %}
+<style>
+  .events { display: grid; gap: 18px; margin-top: 24px; }
+  .event-head {
+    display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between;
+    gap: 4px 16px;
+  }
+  .event-card h2 {
+    margin: 0; font-family: var(--display); font-weight: 400;
+    font-size: 34px; line-height: 1.3; color: var(--brown);
+  }
+  .event-state { font-weight: 600; }
+  .state-published { color: var(--green); }
+  .state-waiting { color: var(--bronze); }
+  .state-ended { color: var(--muted); }
+  .event-link { margin: 2px 0 0; font-size: 15px; color: var(--muted); text-align: right; overflow-wrap: anywhere; }
+  .event-note { margin: 2px 0 0; color: var(--muted); }
+  .metrics {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+    gap: 10px; margin: 18px 0 0;
+  }
+  .metrics > div { display: flex; flex-direction: column-reverse; justify-content: flex-end; }
+  .metrics .num { margin: 0; font-size: 28px; font-weight: 600; line-height: 1.2; }
+  .metrics .label { font-size: 15px; color: var(--muted); }
+  .latest { margin: 12px 0 0; font-size: 15px; color: var(--muted); }
+  .latest:empty { display: none; }
+  .event-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+  .activate-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; margin-top: 14px; }
+  .activate-form .field { flex: 1 1 220px; max-width: 320px; }
+  .activate-form input { min-height: 48px; text-transform: uppercase; }
+  .activate-form .btn { min-height: 48px; }
+  .activate-msg { flex-basis: 100%; color: var(--red); }
+  .activate-msg:empty { display: none; }
+  .event-ended { background: transparent; border: 1px solid var(--rule); }
+  .event-ended h2 { font-size: 30px; color: var(--muted); }
+  .empty { margin-top: 32px; text-align: center; }
+  .empty p { margin: 0 0 14px; }
+  @media (max-width: 560px) {
+    .event-card h2 { font-size: 30px; }
+    .event-actions .btn { flex: 1 1 calc(50% - 4px); }
+  }
+</style>
+{% endblock %}
 {% block content %}
-<div style="display:flex; align-items:center; justify-content:space-between; gap: 16px; flex-wrap: wrap;">
-  <div>
-    <h1 class="page-title">My events</h1>
-    <p class="muted" style="margin: 4px 0 0;">
-      Everything you've created. Click an event to edit it, see who's coming, or share the link.
-    </p>
-  </div>
-  <a href="/" class="btn btn-primary">+ Create new</a>
+<div class="page-head">
+  <h1 class="page-title">دعواتي</h1>
+  <a href="/" class="btn btn-primary btn-wide">+ دعوة جديدة</a>
 </div>
 
 {% if events %}
-<div style="display:grid; gap: 12px; margin-top: 24px;" id="events-grid">
+<div class="events" id="events-grid">
   {% for ev in events %}
     {% set prefix = ev.event_type %}
     {% set public_href = '/' ~ prefix ~ '/' ~ ev.slug if prefix in ('wedding','wedding-noir','wedding-burgundy','wedding-wizard','wedding-blue','birthday-elegant','engagement','qiraya','sobou') else '/' ~ ev.slug %}
-    <div class="card event-card" data-slug="{{ ev.slug }}" data-event-id="{{ ev.id }}" data-status="{{ ev.status }}" style="padding: 18px 20px;">
-      <div style="display:flex; align-items:flex-start; justify-content:space-between; gap: 12px; flex-wrap: wrap;">
-        <div style="min-width: 0; flex: 1;">
-          <div style="font-family:'Playfair Display',serif; font-size:18px; color: var(--plum);" dir="auto">
-            {{ names.get(ev.id) or ev.slug }}
-          </div>
-          <div class="muted" style="font-size: 12px; margin-top: 2px;">
-            {{ ev.event_type }} · <code style="font-family:'Manrope',sans-serif;">{{ ev.slug }}</code>
-          </div>
-          <div class="muted" style="font-size: 12px; margin-top: 4px;">
-            {% if ev.status == 'published' %}
-              <span style="color:#2b662a; font-weight: 600;">● Published</span>
-              · {{ ev.activated_at.strftime('%Y-%m-%d') if ev.activated_at else '' }}
-            {% elif ev.status in ('awaiting_code', 'draft') %}
-              <span style="color:#7a5222; font-weight: 600;">● Awaiting activation</span>
-              {% if ev.id in hours_left %}
-                · <span style="color:#7a5222;">enter your code within {{ hours_left[ev.id] }} h, or it expires and the uploads are deleted</span>
-              {% endif %}
-            {% elif ev.status == 'expired' %}
-              <span style="color: var(--muted); font-weight: 600;">● Expired</span>
-              · not activated within 48 h — create it again to publish
-            {% else %}
-              {{ ev.status }}
-            {% endif %}
-          </div>
-          <div class="responses-preview muted" style="font-size: 12px; margin-top: 8px; display: flex; gap: 14px; flex-wrap: wrap;">
-            {% if ev.event_type in ('wedding', 'wedding-noir', 'wedding-burgundy', 'wedding-wizard', 'wedding-blue') %}
-            <span data-metric="attending">
-              <span class="num" style="color: var(--plum); font-weight: 600;">·</span> attending
-            </span>
-            <span data-metric="guests">
-              <span class="num" style="color: var(--plum); font-weight: 600;">·</span> guests
-            </span>
-            {% endif %}
-            <span data-metric="wishes">
-              <span class="num" style="color: var(--plum); font-weight: 600;">·</span> wishes
-            </span>
-            <span data-metric="views" title="unique / total">
-              <span class="num" style="color: var(--plum); font-weight: 600;">·</span> views
-            </span>
-            <span data-metric="latest" style="font-style: italic; color: var(--muted);"></span>
-          </div>
-        </div>
-        <div style="display:flex; gap: 6px; flex-wrap: wrap;">
-          {% if ev.status == 'published' %}
-            <a href="{{ public_href }}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">View live</a>
-            <button type="button" class="btn btn-outline btn-sm copy-link" data-href="{{ public_href }}">Copy link</button>
-            <a class="btn btn-outline btn-sm share-wa" data-href="{{ public_href }}" target="_blank" rel="noopener" href="#">WhatsApp</a>
-          {% endif %}
-          <a href="{{ url_for('user.event_responses', event_id=ev.id) }}" class="btn btn-outline btn-sm">Responses</a>
-          <a href="/create.html?admin_edit={{ ev.id }}" class="btn btn-outline btn-sm">Edit</a>
-        </div>
+    <article class="card event-card{% if ev.status in ('expired', 'deleted') %} event-ended{% endif %}" data-slug="{{ ev.slug }}" data-event-id="{{ ev.id }}" data-status="{{ ev.status }}">
+      <div class="event-head">
+        <h2 dir="auto">{{ names.get(ev.id) or ev.slug }}</h2>
+        {% if ev.status == 'published' %}
+          <span class="event-state state-published">منشورة</span>
+        {% elif ev.status in ('awaiting_code', 'draft') %}
+          <span class="event-state state-waiting">مستنية التفعيل</span>
+        {% elif ev.status == 'expired' %}
+          <span class="event-state state-ended">انتهت</span>
+        {% else %}
+          <span class="event-state state-ended">{{ ar.status(ev.status) }}</span>
+        {% endif %}
       </div>
-      {% if ev.status in ('awaiting_code', 'draft') %}
-        <form class="activate-form" data-event-id="{{ ev.id }}" style="display:flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 12px;">
-          <label for="code-{{ ev.id }}" class="muted" style="font-size: 12px;">Activation code</label>
-          <input id="code-{{ ev.id }}" name="code" type="text" autocomplete="off" spellcheck="false"
-                 placeholder="XXXX-XXXX-XXXX" style="width: 170px; font-family: monospace; text-transform: uppercase;">
-          <button type="submit" class="btn btn-primary btn-sm">Activate</button>
-          <span class="activate-msg" role="status" style="font-size: 12px; color: #a33;"></span>
-        </form>
+
+      {% if ev.status == 'published' %}
+        <p class="event-link" dir="ltr">{{ request.host }}{{ public_href }}</p>
+      {% elif ev.status in ('awaiting_code', 'draft') %}
+        {% if ev.id in hours_left %}
+          <p class="event-note">فاضل {{ ar.digits(hours_left[ev.id]) }} ساعة. لو الكود ما اتحطش، الدعوة بتنتهي والصور بتتمسح.</p>
+        {% endif %}
+      {% elif ev.status == 'expired' %}
+        <p class="event-note">ما اتفعلتش خلال ٤٨ ساعة. اعملها تاني عشان تنشرها.</p>
       {% endif %}
-    </div>
+
+      {% if ev.status not in ('expired', 'deleted') %}
+        {% if ev.status == 'published' %}
+        <dl class="metrics">
+          {% if ev.event_type in ('wedding', 'wedding-noir', 'wedding-burgundy', 'wedding-wizard', 'wedding-blue') %}
+          <div data-metric="attending"><dt class="label">جايين</dt><dd class="num">·</dd></div>
+          <div data-metric="guests"><dt class="label">فرد</dt><dd class="num">·</dd></div>
+          {% endif %}
+          <div data-metric="wishes"><dt class="label">تهنئة</dt><dd class="num">·</dd></div>
+          <div data-metric="views"><dt class="label">زيارة</dt><dd class="num">·</dd></div>
+        </dl>
+        <p class="latest" data-metric="latest"></p>
+        {% endif %}
+
+        {% if ev.status in ('awaiting_code', 'draft') %}
+        <form class="activate-form" data-event-id="{{ ev.id }}">
+          <div class="field">
+            <label for="code-{{ ev.id }}">كود التفعيل</label>
+            <input id="code-{{ ev.id }}" name="code" type="text" dir="ltr" autocomplete="off" spellcheck="false" placeholder="XXXX-XXXX-XXXX">
+          </div>
+          <button type="submit" class="btn btn-primary">فعّل</button>
+          <a href="/create.html?admin_edit={{ ev.id }}" class="btn btn-plain">تعديل</a>
+          <span class="activate-msg" role="status"></span>
+        </form>
+        {% else %}
+        <div class="event-actions">
+          {% if ev.status == 'published' %}
+            <a class="btn btn-primary share-wa" data-href="{{ public_href }}" target="_blank" rel="noopener" href="#">ابعت على واتساب</a>
+            <button type="button" class="btn copy-link" data-href="{{ public_href }}">انسخ اللينك</button>
+          {% endif %}
+          <a href="{{ url_for('user.event_responses', event_id=ev.id) }}" class="btn">الردود</a>
+          <a href="/create.html?admin_edit={{ ev.id }}" class="btn">تعديل</a>
+          {% if ev.status == 'published' %}
+            <a href="{{ public_href }}" target="_blank" rel="noopener" class="btn btn-plain">شوف الدعوة</a>
+          {% endif %}
+        </div>
+        {% endif %}
+      {% endif %}
+    </article>
   {% endfor %}
 </div>
 
@@ -86,6 +124,7 @@
 // Everything comes from Flask now — RSVPs, wishes and views via the
 // owner-aware /admin/api/events/<id>/{rsvps,wishes,views} endpoints.
 // No Firestore access from this page.
+const AR = new Intl.NumberFormat("ar-EG");
 function parseWhen(v) {
   if (!v) return null;
   if (typeof v === "string") return new Date(v);
@@ -101,6 +140,7 @@ async function jget(url) {
 async function loadCard(card) {
   const slug = card.dataset.slug;
   const eventId = card.dataset.eventId;
+  if (!card.querySelector("[data-metric]")) return;
   try {
     const [rsvpR, wishR, viewR] = await Promise.all([
       jget(`/admin/api/events/${eventId}/rsvps`).catch(() => ({ rsvps: [], summary: { attending: 0, guests: 0 } })),
@@ -112,12 +152,12 @@ async function loadCard(card) {
 
     const set = (metric, value) => {
       const el = card.querySelector(`[data-metric="${metric}"] .num`);
-      if (el) el.textContent = value;
+      if (el) el.textContent = AR.format(value);
     };
     set("attending", rsvpR.summary ? rsvpR.summary.attending : 0);
     set("guests",    rsvpR.summary ? rsvpR.summary.guests    : 0);
     set("wishes",    wishes.length);
-    set("views",     `${viewR.unique_lifetime} / ${viewR.total}`);
+    set("views",     viewR.total);
 
     const latest = [
       ...rsvps.map((r) => ({ name: r.name, when: parseWhen(r.created_at) })),
@@ -125,7 +165,7 @@ async function loadCard(card) {
     ].filter((r) => r.when && r.name).sort((a, b) => b.when - a.when)[0];
     if (latest) {
       const el = card.querySelector('[data-metric="latest"]');
-      if (el) el.textContent = `· most recent: ${latest.name}`;
+      if (el) el.textContent = `آخر رد: ${latest.name}`;
     }
   } catch (e) {
     console.warn("[dashboard preview]", slug, e);
@@ -139,9 +179,9 @@ document.querySelectorAll(".copy-link").forEach((btn) => {
   btn.addEventListener("click", async () => {
     try {
       await navigator.clipboard.writeText(location.origin + btn.dataset.href);
-      btn.textContent = "Copied ✓";
-      setTimeout(() => { btn.textContent = "Copy link"; }, 1500);
-    } catch (_) { /* clipboard blocked — the View live link still works */ }
+      btn.textContent = "اتنسخ ✓";
+      setTimeout(() => { btn.textContent = "انسخ اللينك"; }, 1500);
+    } catch (_) { /* clipboard blocked — the view link still works */ }
   });
 });
 document.querySelectorAll(".share-wa").forEach((a) => {
@@ -156,7 +196,7 @@ document.querySelectorAll(".activate-form").forEach((form) => {
     const msg = form.querySelector(".activate-msg");
     const btn = form.querySelector("button");
     const code = form.querySelector("input").value.trim();
-    if (!code) { msg.textContent = "Enter the code we sent you."; return; }
+    if (!code) { msg.textContent = "اكتب الكود اللي بعتناهولك."; return; }
     btn.disabled = true;
     msg.textContent = "";
     try {
@@ -167,7 +207,7 @@ document.querySelectorAll(".activate-form").forEach((form) => {
         body: JSON.stringify({ code }),
       });
       const j = await r.json().catch(() => ({}));
-      if (!r.ok) throw new Error(j.message || "Something went wrong. Please try again.");
+      if (!r.ok) throw new Error(j.message || "حصلت مشكلة. جرب تاني.");
       location.reload();
     } catch (err) {
       msg.textContent = err.message;
@@ -177,9 +217,9 @@ document.querySelectorAll(".activate-form").forEach((form) => {
 });
 </script>
 {% else %}
-<div class="card" style="text-align: center; margin-top: 32px;">
-  <p style="margin: 0 0 12px; font-size: 15px;">You haven't created an invitation yet.</p>
-  <a href="/" class="btn btn-primary">+ Create your first invitation</a>
+<div class="card empty">
+  <p>لسه ما عملتش دعوة.</p>
+  <a href="/" class="btn btn-primary btn-wide">+ اعمل أول دعوة</a>
 </div>
 {% endif %}
 {% endblock %}

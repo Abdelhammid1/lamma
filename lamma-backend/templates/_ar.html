@@ -1,0 +1,33 @@
+{# Arabic display helpers shared by the host and admin pages. #}
+{% macro digits(value) -%}
+  {{ value|string|replace('0','٠')|replace('1','١')|replace('2','٢')|replace('3','٣')|replace('4','٤')|replace('5','٥')|replace('6','٦')|replace('7','٧')|replace('8','٨')|replace('9','٩') }}
+{%- endmacro %}
+
+{% macro date(dt) -%}
+  {% set months = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'] -%}
+  {% if dt %}{{ digits(dt.day) }} {{ months[dt.month - 1] }} {{ digits(dt.year) }}{% endif %}
+{%- endmacro %}
+
+{% macro when(dt) -%}
+  {% if dt -%}
+    {% set h = dt.hour % 12 or 12 -%}
+    {{ date(dt) }}، {{ digits(h) }}:{{ digits('%02d' % dt.minute) }} {{ 'ص' if dt.hour < 12 else 'م' }}
+  {%- endif %}
+{%- endmacro %}
+
+{% macro status(s) -%}
+  {{ {'draft': 'مسودة', 'awaiting_code': 'مستنية كود', 'published': 'منشورة', 'expired': 'انتهت', 'deleted': 'اتمسحت'}.get(s, s) }}
+{%- endmacro %}
+
+{% macro template_name(t) -%}
+  {{ {'wedding-blue': 'زهور زرقاء', 'wedding-burgundy': 'عنّابي', 'wedding-wizard': 'الساحر',
+      'wedding': 'كلاسيك', 'wedding-noir': 'نوار', 'engagement': 'خطوبة', 'qiraya': 'قراية فاتحة',
+      'sobou': 'سبوع', 'birthday-elegant': 'عيد ميلاد · أنيق', 'birthday': 'عيد ميلاد · كلاسيك'}.get(t, t) }}
+{%- endmacro %}
+
+{% macro device(ua) -%}
+  {% set u = ua or '' -%}
+  {% if not u %}—{% else -%}
+    {{ 'Android' if 'Android' in u else 'iPhone' if 'iPhone' in u else 'iPad' if 'iPad' in u else 'Windows' if 'Windows' in u else 'Mac' if 'Macintosh' in u else 'Linux' if 'Linux' in u else 'جهاز تاني' }} · {{ 'Instagram' if 'Instagram' in u else 'Facebook' if 'FBAN' in u or 'FBAV' in u else 'TikTok' if 'TikTok' in u or 'musical_ly' in u else 'Edge' if 'Edg/' in u else 'Chrome' if 'Chrome' in u else 'Firefox' if 'Firefox' in u else 'Safari' if 'Safari' in u else 'متصفح تاني' }}
+  {%- endif %}
+{%- endmacro %}

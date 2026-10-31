@@ -88,14 +88,14 @@ def test_dashboard_offers_activate_with_time_left(client, session, host):
     session.add(ev); session.commit()
     html = client.get("/user/").get_data(as_text=True)
     assert 'class="activate-form"' in html
-    assert "within 37 h" in html or "within 38 h" in html
+    assert "فاضل ٣٧ ساعة" in html or "فاضل ٣٨ ساعة" in html
 
 
 def test_dashboard_marks_expired(client, session, host):
     session.add(Event(slug="farah", event_type="wedding", status="expired", user_id=host.id))
     session.commit()
     html = client.get("/user/").get_data(as_text=True)
-    assert "Expired" in html and 'class="activate-form"' not in html
+    assert "انتهت" in html and 'class="activate-form"' not in html
 
 
 # --- #3: admin password links -----------------------------------------------
@@ -131,5 +131,5 @@ def test_dashboard_names_share_and_metrics(client, session, host):
     session.commit()
     html = client.get("/user/").get_data(as_text=True)
     assert "Mohamed &amp; Farida" in html and "Yassin" in html
-    assert html.count('class="btn btn-outline btn-sm copy-link"') == 2
+    assert html.count('class="btn copy-link"') == 2
     assert html.count('data-metric="attending"') == 1      # only the wedding has RSVP

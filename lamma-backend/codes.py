@@ -48,14 +48,14 @@ def validate_code_for_event(code_row, event_id: str, now: Optional[datetime] = N
     now = now or datetime.utcnow()
 
     if code_row is None:
-        raise ActivationError("not_found", "Invalid activation code.")
+        raise ActivationError("not_found", "الكود ده مش صحيح.")
     if code_row.used:
-        raise ActivationError("used", "This code has already been used.")
+        raise ActivationError("used", "الكود ده اتستخدم قبل كده.")
     if code_row.expires_at and code_row.expires_at < now:
-        raise ActivationError("expired", "This code has expired. Ask the team for a new one.")
+        raise ActivationError("expired", "الكود ده انتهى. كلمنا ونبعتلك كود جديد.")
     if code_row.event_id is not None and code_row.event_id != event_id:
         # Code was minted for a different event — never let it cross-use
-        raise ActivationError("wrong_event", "This code is not valid for this page.")
+        raise ActivationError("wrong_event", "الكود ده مش للدعوة دي.")
 
 
 def make_expiry(hours: Optional[int]) -> Optional[datetime]:

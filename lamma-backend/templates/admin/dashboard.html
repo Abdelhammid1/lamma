@@ -1,74 +1,55 @@
 {% extends "base.html" %}
-{% block title %}Dashboard · Admin{% endblock %}
+{% import "_ar.html" as ar %}
+{% block title %}الرئيسية · إدارة لمّة{% endblock %}
 {% block content %}
-<h1 class="page-title">Dashboard</h1>
+<h1 class="page-title">الرئيسية</h1>
+
+<dl class="stat-grid">
+  <div class="stat stat-dark"><dt>منشورة</dt><dd>{{ ar.digits(counts.get('published', 0)) }}</dd></div>
+  <div class="stat"><dt>مستنية كود</dt><dd>{{ ar.digits(counts.get('awaiting_code', 0)) }}</dd></div>
+  <div class="stat"><dt>مسودة</dt><dd>{{ ar.digits(counts.get('draft', 0)) }}</dd></div>
+  <div class="stat"><dt>انتهت أو اتمسحت</dt><dd>{{ ar.digits(counts.get('expired', 0) + counts.get('deleted', 0)) }}</dd></div>
+</dl>
 
 <section class="card">
-  <div class="card-head">
-    <h2>Generate activation code</h2>
-  </div>
-  <p class="hint" style="margin-bottom:12px;">
-    Mint a code for a customer <em>before</em> they open <code>/create</code>.
-    Send it via WhatsApp/Instapay after payment. First activation binds
-    it to whatever slug they pick — single-use after that.
-  </p>
-  <form method="post" action="{{ url_for('admin.generate_unbound_code') }}"
-        style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
-    <div style="flex:1; min-width:120px;">
-      <label for="expires_hours" style="font-size:12px; color:#666; display:block;">
-        Expires (hours, blank = never)
-      </label>
-      <input id="expires_hours" name="expires_hours" type="number" min="1" placeholder="e.g. 48"
-             style="width:100%; padding:8px;" />
+  <h2>اعمل كود تفعيل</h2>
+  <p class="hint">ابعته للعميل بعد الدفع على واتساب أو إنستاباي. بيتربط بأول دعوة يتفعل عليها، ويشتغل مرة واحدة.</p>
+  <form method="post" action="{{ url_for('admin.generate_unbound_code') }}" class="code-form">
+    <div class="field field-hours">
+      <label for="expires_hours">ينتهي بعد (ساعات، فاضي = مش بينتهي)</label>
+      <input id="expires_hours" name="expires_hours" type="number" min="1" placeholder="٤٨">
     </div>
-    <div style="flex:2; min-width:200px;">
-      <label for="notes" style="font-size:12px; color:#666; display:block;">
-        Notes (payment ref, customer name, etc.)
-      </label>
-      <input id="notes" name="notes" type="text" placeholder="Instapay #12345 — Ahmed"
-             style="width:100%; padding:8px;" />
+    <div class="field field-notes">
+      <label for="notes">ملاحظات (رقم التحويل، اسم العميل)</label>
+      <input id="notes" name="notes" type="text" dir="auto" placeholder="إنستاباي ١٢٣٤٥ · أحمد">
     </div>
-    <button type="submit" class="btn btn-primary">Generate code</button>
+    <button type="submit" class="btn btn-primary btn-tall">اعمل الكود</button>
   </form>
 </section>
 
-<section class="stat-grid">
-  <div class="stat">
-    <div class="stat-value">{{ counts.get('published', 0) }}</div>
-    <div class="stat-label">Published</div>
-  </div>
-  <div class="stat">
-    <div class="stat-value">{{ counts.get('awaiting_code', 0) }}</div>
-    <div class="stat-label">Awaiting code</div>
-  </div>
-  <div class="stat">
-    <div class="stat-value">{{ counts.get('draft', 0) }}</div>
-    <div class="stat-label">Draft</div>
-  </div>
-  <div class="stat">
-    <div class="stat-value">{{ counts.get('expired', 0) + counts.get('deleted', 0) }}</div>
-    <div class="stat-label">Expired / deleted</div>
-  </div>
-</section>
-
 <section class="card">
   <div class="card-head">
-    <h2>Recent events</h2>
-    <a href="{{ url_for('admin.events') }}" class="btn btn-outline">See all</a>
+    <h2>آخر الدعوات</h2>
+    <a href="{{ url_for('admin.events') }}" class="more">كل الدعوات</a>
   </div>
   {% if recent %}
-    <ul class="event-list">
-      {% for ev in recent %}
-        <li>
-          <span class="slug"><code>{{ ev.slug }}</code></span>
-          <span class="etype">{{ ev.event_type }}</span>
-          <span class="status status-{{ ev.status }}">{{ ev.status }}</span>
-          <span class="when">{{ ev.created_at.strftime('%Y-%m-%d %H:%M') if ev.created_at else '' }}</span>
-        </li>
-      {% endfor %}
-    </ul>
+    <div class="table-wrap">
+      <table class="event-table event-table-sm">
+        <thead><tr><th>اللينك</th><th>النموذج</th><th>الحالة</th><th>اتعملت</th></tr></thead>
+        <tbody>
+          {% for ev in recent %}
+            <tr>
+              <td class="slug"><code dir="ltr">{{ ev.slug }}</code></td>
+              <td>{{ ar.template_name(ev.event_type) }}</td>
+              <td class="status status-{{ ev.status }}">{{ ar.status(ev.status) }}</td>
+              <td class="when">{{ ar.date(ev.created_at) }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   {% else %}
-    <p class="empty">No events yet.</p>
+    <p class="empty">لسه مفيش دعوات.</p>
   {% endif %}
 </section>
 {% endblock %}

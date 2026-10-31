@@ -55,22 +55,22 @@ def normalize(slug: str | None) -> str:
 def check_format(slug: str) -> None:
     """Raise SlugError if the slug fails purely-syntactic checks."""
     if not slug:
-        raise SlugError("empty", "Please enter a name.")
+        raise SlugError("empty", "اكتب لينك للدعوة.")
     if len(slug) < 2:
-        raise SlugError("too_short", "Name must be at least 2 characters.")
+        raise SlugError("too_short", "اللينك لازم يكون حرفين على الأقل.")
     if len(slug) > 40:
-        raise SlugError("too_long", "Name must be at most 40 characters.")
+        raise SlugError("too_long", "اللينك لازم يكون ٤٠ حرف بالكتير.")
     if not SLUG_RE.match(slug):
         raise SlugError(
             "bad_format",
-            "Use lowercase English letters, digits, or hyphens only (no spaces).",
+            "استخدم حروف إنجليزي صغيرة وأرقام وشرطة بس، من غير مسافات.",
         )
 
 
 def check_reserved(slug: str) -> None:
     """Raise SlugError if the slug is on the reserved list."""
     if slug in RESERVED_SLUGS:
-        raise SlugError("reserved", "That name is reserved. Please choose another.")
+        raise SlugError("reserved", "الاسم ده محجوز. جرب اسم تاني.")
 
 
 def is_available(slug: str, db_session) -> bool:
@@ -102,5 +102,5 @@ def validate(slug: str, db_session=None) -> str:
     check_format(s)
     check_reserved(s)
     if db_session is not None and not is_available(s, db_session):
-        raise SlugError("taken", "That name is already taken.")
+        raise SlugError("taken", "الاسم ده متاخد. جرب اسم تاني.")
     return s

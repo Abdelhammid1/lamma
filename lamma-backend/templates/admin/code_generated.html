@@ -1,32 +1,35 @@
 {% extends "base.html" %}
-{% block title %}Code generated · Admin{% endblock %}
+{% import "_ar.html" as ar %}
+{% block title %}كود التفعيل · إدارة لمّة{% endblock %}
+{% block body_attrs %} class="ticket-page"{% endblock %}
 {% block content %}
-<h1 class="page-title">Activation code</h1>
-
-<div class="card success-card">
+<div class="ticket">
+  <h1>الكود جاهز</h1>
   {% if event %}
-    <p class="hint">Send this to the customer after you've received their payment.
-      It works exactly once, for event <code>{{ event.slug }}</code>.</p>
+    <p class="ticket-lede">ابعته للعميل بعد ما توصلك الفلوس. بيشتغل مرة واحدة، على دعوة <span dir="ltr">{{ event.slug }}</span>.</p>
   {% else %}
-    <p class="hint">Send this to the customer after you've received their payment.
-      It works exactly once, on <strong>any</strong> slug they choose in <code>/create</code>.</p>
+    <p class="ticket-lede">ابعته للعميل بعد ما توصلك الفلوس. بيشتغل مرة واحدة، وعلى أي لينك يختاره.</p>
   {% endif %}
 
-  <p class="big-code" title="Click to select">{{ code.code }}</p>
+  <p class="big-code" id="copy-value" dir="ltr">{{ code.code }}</p>
 
   <dl class="meta">
+    <dt>الدعوة</dt>
     {% if event %}
-      <dt>Event</dt>     <dd><code>{{ event.slug }}</code> ({{ event.event_type }})</dd>
+      <dd><span dir="ltr">{{ event.slug }}</span> ({{ ar.template_name(event.event_type) }})</dd>
     {% else %}
-      <dt>Event</dt>     <dd>unbound — usable for any /create submission</dd>
+      <dd>لسه مش مربوط، ينفع لأي دعوة</dd>
     {% endif %}
-    <dt>Expires</dt>     <dd>{{ code.expires_at.strftime('%Y-%m-%d %H:%M UTC') if code.expires_at else 'never (single-use only)' }}</dd>
-    {% if code.notes %}<dt>Notes</dt><dd>{{ code.notes }}</dd>{% endif %}
+    <dt>ينتهي</dt>
+    <dd>{% if code.expires_at %}{{ ar.when(code.expires_at) }} بتوقيت UTC{% else %}مش بينتهي، بيتستخدم مرة واحدة{% endif %}</dd>
+    {% if code.notes %}<dt>ملاحظات</dt><dd dir="auto">{{ code.notes }}</dd>{% endif %}
   </dl>
 
-  <p>
-    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline">Dashboard</a>
-    <a href="{{ url_for('admin.events') }}" class="btn btn-outline">Events</a>
-  </p>
+  <div class="ticket-actions">
+    <button type="button" class="btn btn-light" id="copy-btn" data-done="اتنسخ ✓">انسخ الكود</button>
+    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-on-dark">الرئيسية</a>
+    <a href="{{ url_for('admin.events') }}" class="btn btn-on-dark">الدعوات</a>
+  </div>
 </div>
+{% include "_copy_script.html" %}
 {% endblock %}

@@ -313,7 +313,7 @@ def check_code():
     raw_code = normalize_code(body.get("code"))
     if not raw_code:
         return jsonify(valid=False, reason="missing_code",
-                       message="Please enter your activation code."), 200
+                       message="اكتب كود التفعيل."), 200
     code_row = db.session.get(ActivationCode, raw_code)
     try:
         # A brand-new event has no id yet; an unbound code is fine for
@@ -377,7 +377,7 @@ def _resolve_owner_user_id(body) -> tuple[str | None, str | None, tuple | None]:
         email = (body.get("host_email") or "").strip().lower()
         if not _EMAIL_RE.match(email):
             return None, None, (jsonify(error="host_email_required",
-                                  message="Enter the host's email so the invitation lands in their account."), 400)
+                                  message="اكتب إيميل صاحب الدعوة عشان الدعوة تنزل في حسابه."), 400)
         existing = db.session.query(User).filter_by(email=email).first()
         if existing:
             # Only attach to an existing account on an explicit admin
@@ -387,7 +387,7 @@ def _resolve_owner_user_id(body) -> tuple[str | None, str | None, tuple | None]:
                     error="existing_account",
                     email=email,
                     has_password=bool(existing.password_hash),
-                    message="That email is already registered. Confirm you want to attach this event to the existing account by re-submitting with host_email_confirm_existing: true.",
+                    message="الإيميل ده متسجل بالفعل. أكد إنك عايز تضيف الدعوة للحساب ده.",
                 ), 409)
             return existing.id, None, None
         raw, digest, expires = _mint_claim_token()
@@ -396,7 +396,7 @@ def _resolve_owner_user_id(body) -> tuple[str | None, str | None, tuple | None]:
         db.session.commit()
         return row.id, raw, None
     return None, None, (jsonify(error="auth_required",
-                          message="Please sign in to publish an invitation."), 401)
+                          message="ادخل على حسابك عشان تنشر الدعوة."), 401)
 
 
 @bp.post("/events")
@@ -473,7 +473,7 @@ def create_event():
         db.session.commit()
     except Exception:                # unique constraint race
         db.session.rollback()
-        return jsonify(error="taken", message="That name was just taken."), 409
+        return jsonify(error="taken", message="اللينك ده لسه متاخد حالًا. جرب لينك تاني."), 409
 
     resp = {
         "event_id":   event.id,
@@ -497,10 +497,10 @@ def upload_media(event_id):
     """
     event = db.session.get(Event, event_id)
     if event is None:
-        return jsonify(error="not_found", message="Event not found."), 404
+        return jsonify(error="not_found", message="الدعوة مش موجودة."), 404
     if event.status not in ("draft", "awaiting_code"):
         return jsonify(error="locked",
-                       message="Cannot upload to a published or expired event."), 409
+                       message="ما ينفعش ترفع ملفات لدعوة منشورة أو منتهية."), 409
 
     file_storage = request.files.get("file")
     with event_upload_lock(event_id):
@@ -530,7 +530,7 @@ def event_status(event_id):
     """Lightweight poll — used by the client's 'waiting for code' screen."""
     event = db.session.get(Event, event_id)
     if event is None:
-        return jsonify(error="not_found", message="Event not found."), 404
+        return jsonify(error="not_found", message="الدعوة مش موجودة."), 404
 
     return jsonify(
         event_id=event.id,
@@ -562,18 +562,18 @@ def activate_event(event_id):
     """
     event = db.session.get(Event, event_id)
     if event is None:
-        return jsonify(error="not_found", message="Event not found."), 404
+        return jsonify(error="not_found", message="الدعوة مش موجودة."), 404
     if event.status == "published":
         return jsonify(error="already_published",
-                       message="This page is already live."), 409
+                       message="الدعوة دي منشورة بالفعل."), 409
     if event.status not in ("draft", "awaiting_code"):
         return jsonify(error="locked",
-                       message="This event can no longer be activated."), 409
+                       message="الدعوة دي ما بقتش تتفعل."), 409
 
     body = request.get_json(silent=True) or {}
     raw_code = normalize_code(body.get("code"))
     if not raw_code:
-        return jsonify(error="missing_code", message="Please enter your activation code."), 400
+        return jsonify(error="missing_code", message="اكتب كود التفعيل."), 400
 
     code_row = db.session.get(ActivationCode, raw_code)
     try:
@@ -590,7 +590,7 @@ def activate_event(event_id):
     except OSError as e:
         current_app.logger.exception("storage commit failed")
         return jsonify(error="storage_failed",
-                       message="Could not save your invitation. Please try again."), 502
+                       message="ما عرفناش نحفظ الدعوة. جرب تاني."), 502
 
     # DB updates + code burn
     code_row.used = True

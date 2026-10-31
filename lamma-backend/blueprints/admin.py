@@ -133,7 +133,7 @@ def login():
                 next_url = url_for("admin.dashboard")
             return redirect(next_url)
 
-        error = "Invalid email or password."
+        error = "الإيميل أو كلمة السر مش صح."
 
     return render_template("login.html", email=email, error=error)
 
@@ -241,7 +241,9 @@ def event_responses(event_id):
     event = db.session.get(Event, event_id)
     if event is None:
         abort(404)
-    return render_template("responses.html", event=event)
+    from blueprints.pages import display_name
+    return render_template("responses.html", event=event,
+                           name=display_name(event.event_type, event.payload_json))
 
 
 # ---------------------------------------------------------------------------
@@ -255,7 +257,7 @@ def generate_code_for_event(event_id):
     if event is None:
         abort(404)
     if event.status == "published":
-        flash("This event is already published — no new code needed.", "warn")
+        flash("الدعوة دي منشورة بالفعل، مش محتاجة كود.", "warn")
         return redirect(url_for("admin.events"))
 
     hours = request.form.get("expires_hours", type=int)
@@ -328,7 +330,7 @@ def delete_event(event_id):
     event.status = "deleted"
     db.session.commit()
     _audit(current_user.id, "delete_event", event.id)
-    flash(f"Deleted {event.slug}.", "info")
+    flash(f"اتمسحت {event.slug}.", "info")
     return redirect(url_for("admin.events"))
 
 
@@ -362,7 +364,7 @@ def api_event_wishes(event_id):
         return jsonify(error="not_found"), 404
     if not _can_access_event(event):
         return jsonify(error="forbidden",
-                       message="You can only read responses for your own invitations."), 403
+                       message="تقدر تشوف ردود دعواتك بس."), 403
 
     rows = (db.session.query(Wish)
             .filter(Wish.event_id == event.id)
@@ -392,7 +394,7 @@ def api_event_views(event_id):
         return jsonify(error="not_found"), 404
     if not _can_access_event(event):
         return jsonify(error="forbidden",
-                       message="You can only read stats for your own invitations."), 403
+                       message="تقدر تشوف أرقام دعواتك بس."), 403
 
     from sqlalchemy import distinct, func
     now = datetime.utcnow()
@@ -431,7 +433,7 @@ def api_event_rsvps(event_id):
         return jsonify(error="not_found"), 404
     if not _can_access_event(event):
         return jsonify(error="forbidden",
-                       message="You can only read responses for your own invitations."), 403
+                       message="تقدر تشوف ردود دعواتك بس."), 403
 
     rows = (db.session.query(Rsvp)
             .filter(Rsvp.event_id == event.id)
@@ -471,7 +473,7 @@ def api_get_event(event_id):
         return jsonify(error="not_found"), 404
     if not _can_access_event(event):
         return jsonify(error="forbidden",
-                       message="You can only edit your own invitations."), 403
+                       message="تقدر تعدل دعواتك بس."), 403
     try:
         payload = json.loads(event.payload_json) if event.payload_json else {}
     except (TypeError, ValueError):
@@ -501,10 +503,10 @@ def api_update_event(event_id):
         return jsonify(error="not_found"), 404
     if not _can_access_event(event):
         return jsonify(error="forbidden",
-                       message="You can only edit your own invitations."), 403
+                       message="تقدر تعدل دعواتك بس."), 403
     if event.status == "deleted":
         return jsonify(error="deleted",
-                       message="Can't edit a deleted event."), 409
+                       message="ما ينفعش تعدل دعوة اتمسحت."), 409
 
     body = request.get_json(silent=True) or {}
     new_payload = body.get("payload_json")
@@ -517,7 +519,7 @@ def api_update_event(event_id):
     # would otherwise keep doing it).
     if _contains_blob_url(new_payload):
         return jsonify(error="blob_url",
-                       message="A photo or song wasn't uploaded. Reload the editor (Ctrl+Shift+R) and save again."), 400
+                       message="فيه صورة أو أغنية ما اترفعتش. حدّث الصفحة (Ctrl+Shift+R) واحفظ تاني."), 400
     from payload_schema import validate_payload
     problems = validate_payload(event.event_type, new_payload)
     if problems:
@@ -539,7 +541,7 @@ def api_update_event(event_id):
         except OSError:
             current_app.logger.exception("rewrite_data_json failed for %s", event.slug)
             return jsonify(error="storage_failed",
-                           message="Saved to DB but couldn't rewrite the public file."), 500
+                           message="التعديل اتحفظ بس صفحة الدعوة ما اتحدثتش. جرب تاني."), 500
 
     # Only the admin's own edits land in the admin audit log; a host
     # editing their own event doesn't need to show up there (and the
@@ -585,10 +587,10 @@ def api_upload_event_media(event_id):
         return jsonify(error="not_found"), 404
     if not _can_access_event(event):
         return jsonify(error="forbidden",
-                       message="You can only edit your own invitations."), 403
+                       message="تقدر تعدل دعواتك بس."), 403
     if event.status == "deleted":
         return jsonify(error="deleted",
-                       message="Can't edit a deleted event."), 409
+                       message="ما ينفعش تعدل دعوة اتمسحت."), 409
 
     with event_upload_lock(event.id):
         # stage_upload's quota only sees files still in staging — published
@@ -599,7 +601,7 @@ def api_upload_event_media(event_id):
         ).filter(MediaBlob.event_id == event.id).scalar() or 0
         if used + (request.content_length or 0) > MAX_EVENT_BYTES:
             return jsonify(error="event_quota",
-                           message=f"This event's media limit is {MAX_EVENT_BYTES // (1024 * 1024)} MB."), 413
+                           message=f"أقصى حجم لملفات الدعوة {MAX_EVENT_BYTES // (1024 * 1024)} ميجا."), 413
 
         try:
             meta = stage_upload(event.id, request.files.get("file"))
@@ -627,7 +629,7 @@ def api_upload_event_media(event_id):
             except OSError:
                 current_app.logger.exception("edit upload commit failed for %s", event.slug)
                 return jsonify(error="storage_failed",
-                               message="Couldn't save the file. Please try again."), 500
+                               message="ما عرفناش نحفظ الملف. جرب تاني."), 500
             try:
                 os.remove(src)
             except OSError:
@@ -657,10 +659,10 @@ def api_publish_event(event_id):
         return jsonify(error="not_found"), 404
     if event.status == "published":
         return jsonify(error="already_published",
-                       message="This event is already live."), 409
+                       message="الدعوة دي منشورة بالفعل."), 409
     if event.status == "deleted":
         return jsonify(error="deleted",
-                       message="Can't publish a deleted event."), 409
+                       message="ما ينفعش تنشر دعوة اتمسحت."), 409
 
     from storage import commit_event
     try:
@@ -669,7 +671,7 @@ def api_publish_event(event_id):
     except OSError:
         current_app.logger.exception("admin storage commit failed for %s", event.slug)
         return jsonify(error="storage_failed",
-                       message="Could not save your invitation."), 502
+                       message="ما عرفناش نحفظ الدعوة."), 502
 
     event.status = "published"
     event.activated_at = datetime.utcnow()

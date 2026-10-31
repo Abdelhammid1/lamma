@@ -1,118 +1,48 @@
 {% extends "base.html" %}
-{% block title %}Responses · {{ event.slug }} · Admin{% endblock %}
+{% block title %}الردود · {{ event.slug }} · إدارة لمّة{% endblock %}
 {% block content %}
-<div class="page-title-row" style="display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+<a href="{{ url_for('admin.events') }}" class="back">رجوع للدعوات</a>
+<div class="page-head">
   <div>
-    <h1 class="page-title" style="margin:0;">Responses · <code>{{ event.slug }}</code></h1>
-    <p class="muted" style="margin:4px 0 0;">RSVPs + guestbook wishes guests sent through the invitation page.</p>
+    <h1 class="page-title">ردود <span dir="auto">{{ name or event.slug }}</span></h1>
+    <p class="lede">تأكيدات الحضور والتهاني اللي وصلت من الدعوة.</p>
   </div>
-  <div style="display:flex; gap:8px; flex-wrap:wrap;">
-    <a href="{{ url_for('admin.events') }}" class="btn btn-ghost btn-sm">← Back to events</a>
-    <button type="button" id="copy-btn"  class="btn btn-outline">Copy as text</button>
-    <button type="button" id="print-btn" class="btn btn-primary">Print / save PDF</button>
+  <div class="head-actions">
+    <button type="button" id="copy-btn" class="btn">انسخ كنص</button>
+    <button type="button" id="print-btn" class="btn btn-primary">اطبع أو احفظ PDF</button>
   </div>
 </div>
 
-<div class="resp-grid">
+<dl class="resp-stats" id="stats">
+  <div class="stat stat-dark"><dt>جايين</dt><dd id="stat-attending">—</dd></div>
+  <div class="stat stat-dark"><dt>إجمالي الأفراد</dt><dd id="stat-guests">—</dd></div>
+  <div class="stat"><dt>مش هيقدروا</dt><dd id="stat-declined">—</dd></div>
+  <div class="stat"><dt>تهنئة</dt><dd id="stat-wishes">—</dd></div>
+  <div class="stat"><dt id="stat-views-label">زيارة</dt><dd id="stat-views">—</dd></div>
+</dl>
+<p id="load-note">بنحمّل الردود…</p>
 
-  <!-- Summary -->
-  <section class="resp-card">
-    <h2 class="resp-card-title">Summary</h2>
-    <div class="resp-stats" id="stats">
-      <div class="stat"><span class="stat-n" id="stat-attending">—</span><span class="stat-label">Attending</span></div>
-      <div class="stat"><span class="stat-n" id="stat-guests">—</span><span class="stat-label">Total guests</span></div>
-      <div class="stat"><span class="stat-n" id="stat-declined">—</span><span class="stat-label">Declined</span></div>
-      <div class="stat"><span class="stat-n" id="stat-wishes">—</span><span class="stat-label">Wishes</span></div>
-      <div class="stat" title="unique / total"><span class="stat-n" id="stat-views">—</span><span class="stat-label">Views</span></div>
-    </div>
-    <p class="muted" id="load-note" style="margin-top:10px;">Loading…</p>
-  </section>
-
-  <!-- RSVPs -->
-  <section class="resp-card">
-    <h2 class="resp-card-title">RSVPs</h2>
+<section class="card">
+  <h2>تأكيد الحضور</h2>
+  <div class="table-wrap">
     <table class="resp-table" id="rsvp-table">
       <thead>
-        <tr><th>Name</th><th>Attending</th><th>Guests</th><th>Received</th></tr>
+        <tr><th>الاسم</th><th>الرد</th><th>العدد</th><th>وصل</th></tr>
       </thead>
       <tbody id="rsvp-body"></tbody>
     </table>
-    <p class="resp-empty" id="rsvp-empty" hidden>No RSVPs yet.</p>
-  </section>
+  </div>
+  <p class="resp-empty" id="rsvp-empty" hidden>لسه مفيش ردود.</p>
+</section>
 
-  <!-- Guestbook / wishes -->
-  <section class="resp-card">
-    <h2 class="resp-card-title">Wishes</h2>
-    <ul class="resp-wishes" id="wishes-list"></ul>
-    <p class="resp-empty" id="wishes-empty" hidden>No wishes yet.</p>
-  </section>
+<!-- Guestbook / wishes -->
+<section class="card">
+  <h2>التهاني</h2>
+  <ul class="resp-wishes" id="wishes-list"></ul>
+  <p class="resp-empty" id="wishes-empty" hidden>لسه مفيش تهاني.</p>
+</section>
 
-</div>
-
-<p id="copy-ok" class="copy-toast" hidden>Copied to clipboard — ready to paste into WhatsApp or email.</p>
-
-<style>
-  .muted { color: var(--muted); }
-  .resp-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 16px;
-    margin-top: 18px;
-  }
-  .resp-card {
-    background: #fff;
-    border: 1px solid var(--rule, #e5e0d7);
-    border-radius: 10px;
-    padding: 18px 20px;
-  }
-  .resp-card-title {
-    margin: 0 0 12px;
-    font-size: 14px;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
-  .resp-stats {
-    display: grid;
-    grid-template-columns: repeat(5, minmax(0,1fr));
-    gap: 12px;
-  }
-  .stat {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    padding: 10px 14px;
-    background: #faf7f3;
-    border-radius: 8px;
-    border: 1px solid var(--rule, #e5e0d7);
-  }
-  .stat-n     { font-size: 24px; font-weight: 600; color: var(--plum, #310b1e); }
-  .stat-label { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
-  .resp-table { width: 100%; border-collapse: collapse; font-size: 14px; }
-  .resp-table th, .resp-table td { padding: 10px 12px; border-bottom: 1px solid var(--rule, #e5e0d7); text-align: start; }
-  .resp-table th { font-weight: 600; color: var(--muted); font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase; }
-  .resp-table .pill { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
-  .resp-table .pill.yes { background: #e4f3df; color: #2b662a; }
-  .resp-table .pill.no  { background: #fde6e2; color: #a0372a; }
-  .resp-table .when     { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
-  .resp-wishes { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; }
-  .resp-wishes li { background: #faf7f3; border: 1px solid var(--rule, #e5e0d7); border-radius: 8px; padding: 12px 14px; }
-  .resp-wishes .w-top { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 4px; font-size: 12px; color: var(--muted); }
-  .resp-wishes .w-name { font-weight: 600; color: var(--plum, #310b1e); }
-  .resp-wishes .w-msg  { font-size: 15px; line-height: 1.55; white-space: pre-wrap; }
-  .resp-empty { color: var(--muted); font-style: italic; margin: 6px 0 0; }
-  .copy-toast {
-    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-    background: #310b1e; color: #ffdea4;
-    padding: 10px 18px; border-radius: 8px; font-size: 13px;
-    box-shadow: 0 10px 30px -10px rgba(0,0,0,0.35);
-  }
-  @media print {
-    header.topbar, .page-title-row > div:last-child { display: none !important; }
-    .resp-card { border-color: #ccc; box-shadow: none; }
-  }
-</style>
+<p id="copy-ok" class="copy-toast" role="status" hidden>اتنسخ، تقدر تلزقه في واتساب أو الإيميل.</p>
 
 <!-- Firebase modular SDK + the project config shared with every public
      template. The admin reads invitations/<slug>/{rsvps,guestbook}
@@ -129,6 +59,8 @@ const EVENT_ID = {{ event.id   | tojson }};
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[<>&]/g, (c) => ({ "<":"&lt;",">":"&gt;","&":"&amp;" }[c]));
+const AR = new Intl.NumberFormat("ar-EG");
+const ANON = "من غير اسم";
 
 function parseWhen(v) {
   if (!v) return null;
@@ -140,7 +72,7 @@ function parseWhen(v) {
 function fmtTime(v) {
   const d = parseWhen(v);
   if (!d) return "—";
-  return d.toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  return d.toLocaleString("ar-EG", { day: "numeric", month: "long", hour: "numeric", minute: "2-digit" });
 }
 
 async function fetchJson(url) {
@@ -161,44 +93,40 @@ let STATE = { rsvps: [], wishes: [], views: null };
   STATE = { rsvps, wishes, views: viewR };
 
   const summary = rsvpR.summary || { attending: 0, declined: 0, guests: 0 };
-  $("stat-attending").textContent = summary.attending;
-  $("stat-guests").textContent    = summary.guests;
-  $("stat-declined").textContent  = summary.declined;
-  $("stat-wishes").textContent    = wishes.length;
-  const viewsEl = $("stat-views");
-  if (viewsEl && viewR) viewsEl.textContent = `${viewR.unique_lifetime} / ${viewR.total}`;
+  $("stat-attending").textContent = AR.format(summary.attending);
+  $("stat-guests").textContent    = AR.format(summary.guests);
+  $("stat-declined").textContent  = AR.format(summary.declined);
+  $("stat-wishes").textContent    = AR.format(wishes.length);
+  if (viewR) {
+    $("stat-views").textContent = AR.format(viewR.total);
+    $("stat-views-label").textContent = `زيارة، ${AR.format(viewR.unique_lifetime)} شخص`;
+  }
 
   // Diagnostic: distinguish "no activity yet" from "activity CAN'T happen yet".
   const status = rsvpR.event_status || wishR.event_status || viewR.event_status;
   const anyActivity = rsvps.length + wishes.length + (viewR?.total || 0) > 0;
   if (!anyActivity && status && status !== "published") {
-    const label = status === "awaiting_code" ? "Awaiting activation"
-                : status === "draft"         ? "Still a draft"
-                : status;
-    const note = $("load-note");
-    if (note) note.innerHTML =
-      `<strong style="color:#7a5222;">${esc(label)}</strong> — this invitation isn't live yet, so guests can't RSVP or leave wishes.`;
+    $("load-note").textContent = "الدعوة لسه مش منشورة، فالضيوف مش هيقدروا يردوا.";
     return;
   }
-  $("load-note").textContent =
-    rsvps.length + wishes.length === 0
-      ? "No responses yet — share the invitation link with guests."
-      : `${rsvps.length} RSVP${rsvps.length === 1 ? "" : "s"} and ${wishes.length} wish${wishes.length === 1 ? "" : "es"} so far.`;
+  $("load-note").textContent = "لسه مفيش ردود. ابعت لينك الدعوة للضيوف.";
+  $("load-note").hidden = rsvps.length + wishes.length > 0;
 
   const body = $("rsvp-body");
   if (!rsvps.length) {
     $("rsvp-empty").hidden = false;
+    $("rsvp-table").hidden = true;
   } else {
     body.innerHTML = rsvps.map((r) => {
       const att = (r.attending || "").toString().toLowerCase();
-      const pill = att === "yes" ? `<span class="pill yes">Yes</span>`
-                  : att === "no" ? `<span class="pill no">No</span>`
-                  : `<span class="pill">—</span>`;
+      const pill = att === "yes" ? `<span class="said-yes">جاي</span>`
+                  : att === "no" ? `<span class="said-no">مش هيقدر</span>`
+                  : `<span>—</span>`;
       const g = Math.max(1, Number(r.guest_count) || 1);
       return `<tr>
-        <td>${esc(r.name) || "<em>Anonymous</em>"}</td>
+        <td class="who-col" dir="auto">${esc(r.name) || ANON}</td>
         <td>${pill}</td>
-        <td>${att === "yes" ? g : "—"}</td>
+        <td>${att === "yes" ? AR.format(g) : "—"}</td>
         <td class="when">${esc(fmtTime(r.created_at))}</td>
       </tr>`;
     }).join("");
@@ -211,17 +139,14 @@ let STATE = { rsvps: [], wishes: [], views: null };
   } else {
     list.innerHTML = wishes.map((w) => `
       <li>
-        <div class="w-top">
-          <span class="w-name">${esc(w.name) || "Anonymous"}</span>
-          <span>${esc(fmtTime(w.created_at))}</span>
-        </div>
         <div class="w-msg" dir="auto">${esc(w.message)}</div>
+        <div class="w-by"><span dir="auto">${esc(w.name) || ANON}</span> · ${esc(fmtTime(w.created_at))}</div>
       </li>
     `).join("");
   }
 })().catch((e) => {
   console.error("[responses]", e);
-  $("load-note").textContent = "Couldn't load responses: " + (e?.message || e);
+  $("load-note").textContent = "ما عرفناش نحمّل الردود: " + (e?.message || e);
 });
 
 // --- "Copy as text" — formatted for pasting into WhatsApp / email ---
@@ -232,29 +157,29 @@ $("copy-btn").addEventListener("click", async () => {
   const guests = yes.reduce((n, r) => n + Math.max(1, Number(r.guest_count) || 1), 0);
 
   const lines = [];
-  lines.push(`Responses for ${SLUG}`);
+  lines.push(`ردود ${SLUG}`);
   lines.push("");
-  lines.push(`✅ Attending: ${yes.length} (${guests} guest${guests === 1 ? "" : "s"} total)`);
-  lines.push(`❌ Declined:  ${no.length}`);
-  lines.push(`💌 Wishes:    ${wishes.length}`);
+  lines.push(`✅ جايين: ${yes.length} (${guests} فرد)`);
+  lines.push(`❌ مش هيقدروا: ${no.length}`);
+  lines.push(`💌 تهاني: ${wishes.length}`);
   lines.push("");
   if (yes.length) {
-    lines.push("— Attending —");
+    lines.push("— جايين —");
     for (const r of yes) {
       const g = Math.max(1, Number(r.guest_count) || 1);
-      lines.push(`• ${r.name || "Anonymous"}${g > 1 ? ` (+${g - 1})` : ""}`);
+      lines.push(`• ${r.name || ANON}${g > 1 ? ` (+${g - 1})` : ""}`);
     }
     lines.push("");
   }
   if (no.length) {
-    lines.push("— Declined —");
-    for (const r of no) lines.push(`• ${r.name || "Anonymous"}`);
+    lines.push("— مش هيقدروا —");
+    for (const r of no) lines.push(`• ${r.name || ANON}`);
     lines.push("");
   }
   if (wishes.length) {
-    lines.push("— Wishes —");
+    lines.push("— التهاني —");
     for (const w of wishes) {
-      lines.push(`${w.name || "Anonymous"}:`);
+      lines.push(`${w.name || ANON}:`);
       lines.push(`  ${w.message || ""}`);
       lines.push("");
     }

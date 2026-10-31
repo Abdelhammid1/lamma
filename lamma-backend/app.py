@@ -108,7 +108,7 @@ def create_app(config_object: type = Config) -> Flask:
     @app.errorhandler(429)
     def _rate_limited(e):
         return jsonify(error="rate_limited",
-                       message="Too many requests. Please slow down and try again in a minute."), 429
+                       message="طلبات كتير. استنى دقيقة وجرب تاني. / Too many requests. Please try again in a minute."), 429
 
     @app.get("/api/health")
     def health():

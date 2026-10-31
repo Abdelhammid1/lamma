@@ -1,34 +1,36 @@
 <!doctype html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{% block title %}Admin · لمة · LAMMA{% endblock %}</title>
+<title>{% block title %}إدارة لمّة{% endblock %}</title>
+<link rel="icon" href="/logo.jpg" type="image/jpeg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{{ url_for('admin.static', filename='admin.css') }}">
 </head>
-<body>
+<body{% block body_attrs %}{% endblock %}>
 {% if current_user.is_authenticated %}
 <header class="topbar">
-  <div class="brand">
-    <span class="brand-mark">🌸</span>
-    <span class="brand-name">لمة · LAMMA</span>
-    <span class="brand-sub">Admin</span>
-  </div>
-  <nav>
-    <a href="{{ url_for('admin.dashboard') }}" {% if request.endpoint == 'admin.dashboard' %}class="on"{% endif %}>Dashboard</a>
-    <a href="{{ url_for('admin.events') }}" {% if request.endpoint == 'admin.events' %}class="on"{% endif %}>Events</a>
-    <a href="{{ url_for('admin.leads') }}"  {% if request.endpoint == 'admin.leads'  %}class="on"{% endif %}>Leads</a>
-  </nav>
-  <div class="who">
-    <span>{{ current_user.email }}</span>
-    <form action="{{ url_for('admin.logout') }}" method="post" style="display:inline">
-      <button type="submit" class="btn btn-ghost">Sign out</button>
-    </form>
+  <div class="topbar-in">
+    <nav aria-label="الإدارة">
+      <img src="/logo.jpg" alt="لمّة">
+      <a href="{{ url_for('admin.dashboard') }}" {% if request.endpoint == 'admin.dashboard' %}aria-current="page"{% endif %}>الرئيسية</a>
+      <a href="{{ url_for('admin.events') }}" {% if request.endpoint == 'admin.events' %}aria-current="page"{% endif %}>الدعوات</a>
+      <a href="{{ url_for('admin.leads') }}" {% if request.endpoint == 'admin.leads' %}aria-current="page"{% endif %}>الزوار</a>
+    </nav>
+    <div class="who">
+      <span dir="ltr">{{ current_user.email }}</span>
+      <form action="{{ url_for('admin.logout') }}" method="post">
+        <button type="submit" class="signout">خروج</button>
+      </form>
+    </div>
   </div>
 </header>
 {% endif %}
 
-<main class="shell">
+<main class="shell{% block shell_class %}{% endblock %}">
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% for cat, msg in messages %}
       <div class="flash flash-{{ cat }}">{{ msg }}</div>

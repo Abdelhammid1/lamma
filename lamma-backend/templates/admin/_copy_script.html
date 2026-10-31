@@ -1,0 +1,12 @@
+<script>
+  (function () {
+    var btn = document.getElementById("copy-btn");
+    var label = btn.textContent;
+    btn.addEventListener("click", function () {
+      navigator.clipboard.writeText(document.getElementById("copy-value").textContent.trim()).then(function () {
+        btn.textContent = btn.dataset.done;
+        setTimeout(function () { btn.textContent = label; }, 1500);
+      }).catch(function () { /* clipboard blocked — the text stays selectable */ });
+    });
+  })();
+</script>

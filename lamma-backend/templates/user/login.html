@@ -1,35 +1,28 @@
 {% extends "user/base.html" %}
-{% block title %}Sign in · لمة · LAMMA{% endblock %}
+{% block title %}تسجيل الدخول · لمّة{% endblock %}
+{% block body_attrs %} class="auth-page"{% endblock %}
 {% block content %}
-<div class="center">
-  <div class="card">
-    <h1 class="page-title" style="margin-bottom: 4px;">Welcome back</h1>
-    <p class="muted" style="margin-top: 0; margin-bottom: 20px; font-size: 14px;">
-      Sign in to see your invitations, edit them, and track RSVPs.
-    </p>
+{% include "user/_leaf.html" %}
+<div class="auth">
+  <img class="auth-logo" src="/logo.jpg" alt="لمّة">
+  <h1>أهلًا بيك تاني</h1>
+  <p class="auth-lede">ادخل عشان تشوف دعواتك وتعدلها وتتابع الردود.</p>
 
-    <form method="post" novalidate>
-      {% if next_url %}<input type="hidden" name="next" value="{{ next_url }}">{% endif %}
-      <div class="field">
-        <label for="email">Email</label>
-        <input id="email" name="email" type="email" autocomplete="email" required value="{{ email or '' }}">
-      </div>
-      <div class="field">
-        <label for="password">Password</label>
-        <input id="password" name="password" type="password" autocomplete="current-password" required>
-      </div>
-      {% if error %}<div class="error">{{ error }}</div>{% endif %}
-      <button type="submit" class="btn btn-primary" style="width:100%; margin-top: 8px;">Continue</button>
-    </form>
+  <form method="post" novalidate>
+    {% if next_url %}<input type="hidden" name="next" value="{{ next_url }}">{% endif %}
+    <div class="field">
+      <label for="email">الإيميل</label>
+      <input id="email" name="email" type="email" dir="ltr" autocomplete="email" required value="{{ email or '' }}">
+    </div>
+    <div class="field">
+      <label for="password">كلمة السر</label>
+      <input id="password" name="password" type="password" dir="ltr" autocomplete="current-password" required>
+    </div>
+    {% if error %}<div class="error" role="alert">{{ error }}</div>{% endif %}
+    <button type="submit" class="btn btn-primary btn-block">دخول</button>
+  </form>
 
-    <p class="muted" style="text-align: center; margin: 18px 0 0; font-size: 13px;">
-      New here?
-      <a href="{{ url_for('user.signup', next=next_url) }}" style="font-weight: 600;">Create an account</a>
-    </p>
-    <p class="muted" style="text-align: center; margin: 8px 0 0; font-size: 12px;">
-      Forgot your password, or the team set up your account for you?
-      Message the Lamma team and we'll send you a link to set a new one.
-    </p>
-  </div>
+  <p class="auth-note">جديد هنا؟ <a href="{{ url_for('user.signup', next=next_url) }}">اعمل حساب</a></p>
+  <p class="auth-small">نسيت كلمة السر، أو الفريق عملك الحساب؟ كلمنا ونبعتلك لينك تحط منه كلمة سر جديدة.</p>
 </div>
 {% endblock %}
