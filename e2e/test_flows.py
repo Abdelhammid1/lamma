@@ -478,6 +478,34 @@ def test_blue_blooms_arabic_end_to_end(page, site):
     assert page.is_hidden("#verse")
     assert page.js_errors == []
 
+def test_home_page(page, site):
+    base = site["base"]
+    allowed = (base, "https://fonts.googleapis.com/", "https://fonts.gstatic.com/")
+    outside, broken = [], []
+    page.on("request", lambda r: outside.append(r.url)
+            if not r.url.startswith(allowed) and not r.url.startswith(("data:", "blob:")) else None)
+    page.on("response", lambda r: broken.append(r.url) if r.status >= 400 else None)
+    page.goto(base + "/")
+    assert page.get_attribute("html", "dir") == "rtl"
+    assert page.locator(".tpl").count() == 10                  # every template, the classic birthday too
+    assert page.get_attribute("a.nav-account", "href") == "/user/"
+    assert page.is_hidden("#price")                            # no price section until SALES is filled
+
+    page.click("#filters button[data-occasion='birthday']")
+    assert sorted(page.eval_on_selector_all(".tpl", "els => els.map(e => e.dataset.template)")) == [
+        "birthday", "birthday-elegant"]
+    assert page.get_attribute("#filters button[data-occasion='birthday']", "aria-pressed") == "true"
+
+    page.click("#filters button[data-occasion='wedding']")
+    assert page.locator(".tpl").count() == 5
+    blue = page.locator(".tpl[data-template='wedding-blue']")
+    assert blue.locator("a").first.get_attribute("href") == "/wedding-blue/"
+    blue.locator("a.tpl-create").click()
+    page.wait_for_selector("#verse-field:not([hidden])")       # lands on the create form, this template
+    assert outside == [], outside
+    assert broken == [], broken
+    assert page.js_errors == []
+
 # --- preview links can't be forged -------------------------------------------
 
 def test_hand_made_preview_link_is_ignored_but_create_preview_works(page, site):

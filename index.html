@@ -1,544 +1,253 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>لمّة · LAMMA — Digital Invitations</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#f3e9dc" />
+<title>لمّة · دعوات رقمية لأجمل مناسباتك</title>
+<meta name="description" content="اعمل دعوة رقمية لفرحك أو خطوبتك أو سبوع ابنك في دقايق، وابعت لينك واحد لكل حبايبك على واتساب." />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="لمّة · LAMMA" />
+<meta property="og:title" content="لمّة · دعوات رقمية لأجمل مناسباتك" />
+<meta property="og:description" content="اعمل دعوتك في دقايق وابعت لينك واحد لكل حبايبك." />
+<meta property="og:image" content="https://lamma.manasety.ai/logo.jpg" />
 <link rel="icon" href="logo.jpg" type="image/jpeg" />
-<link rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Manrope:wght@400;500;600;700&family=Newsreader:ital,wght@0,400;1,400&family=Cairo:wght@400;600;700&display=swap" />
-<link rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,300,0,0" />
-<script src="https://cdn.tailwindcss.com"></script>
-<script>
-  tailwind.config = { theme: { extend: {
-    colors: {
-      "primary":            "#310b1e",
-      "primary-container":  "#4a2033",
-      "secondary":          "#755a24",
-      "secondary-fixed":    "#ffdea4",
-      "primary-container-light": "#67384c",
-      "on-surface":         "#1b1c1a",
-      "on-surface-variant": "#504347",
-      "outline":            "#827378",
-      "surface":            "#fbf9f6",
-      "surface-container-lowest": "#ffffff",
-      "surface-container-low":    "#f5f3f0",
-      "surface-container":        "#efeeeb",
-    },
-    fontFamily: {
-      display: ["Playfair Display", "serif"],
-      body:    ["Newsreader", "serif"],
-      label:   ["Manrope", "sans-serif"],
-      arabic:  ["Cairo", "sans-serif"],
-    },
-  } } };
-</script>
-<style>
-  body { background: #fbf9f6; }
-  ::-webkit-scrollbar { display: none; }
-</style>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="css/home.css?v=d4736ac7" />
 </head>
-<body class="min-h-screen text-on-surface font-body">
+<body>
 
-<main class="max-w-md mx-auto px-4 pb-16 flex flex-col">
+<div class="hero-wrap" id="top">
+  <!-- The palm shadow from the logo, falling across the top of the page. -->
+  <svg class="palm" aria-hidden="true" viewBox="0 0 900 900">
+    <defs>
+      <g id="frond">
+        <path d="M450 880 C 440 620 430 340 470 40" fill="none" stroke="currentColor" stroke-width="7"/>
+        <path d="M466 90 C 400 70 330 80 270 130 C 340 130 410 125 464 118 Z"/>
+        <path d="M466 90 C 530 60 600 62 670 100 C 600 112 530 118 468 118 Z"/>
+        <path d="M458 180 C 380 160 290 180 210 250 C 300 240 390 225 456 212 Z"/>
+        <path d="M458 180 C 540 150 630 160 720 210 C 630 225 540 225 460 212 Z"/>
+        <path d="M450 280 C 360 270 260 300 170 390 C 270 365 370 335 448 314 Z"/>
+        <path d="M450 280 C 540 255 650 270 750 340 C 650 345 540 330 450 314 Z"/>
+        <path d="M444 390 C 350 390 250 430 170 520 C 270 480 370 445 444 424 Z"/>
+        <path d="M444 390 C 540 370 650 400 740 480 C 640 465 530 440 446 424 Z"/>
+        <path d="M442 500 C 360 510 280 560 220 640 C 300 595 380 560 442 534 Z"/>
+        <path d="M442 500 C 530 490 620 530 690 610 C 610 580 520 550 444 534 Z"/>
+      </g>
+    </defs>
+    <use href="#frond"/>
+    <use href="#frond" transform="translate(-260 150) rotate(-24 450 450) scale(0.8)"/>
+  </svg>
 
-  <!-- Top bar: returning hosts get back to their invitations. (Was a
-       language toggle that did nothing.) -->
-  <div class="w-full flex justify-end pt-3 pb-2">
-    <a href="/user/"
-       class="flex items-center gap-1.5 px-3 py-1 bg-surface-container-low rounded-full shadow-sm">
-      <span class="material-symbols-outlined text-secondary text-[16px]" aria-hidden="true">person</span>
-      <span class="font-label text-[11px] font-semibold tracking-wide text-primary">My invitations · دعواتي</span>
-    </a>
+  <div class="wrap">
+    <header class="top-bar">
+      <a href="/" class="brand"><img src="logo.jpg" alt="لمّة · LAMMA" width="54" height="54" /></a>
+      <nav aria-label="الصفحة">
+        <a href="#templates">النماذج</a>
+        <a href="#how">إزاي بتشتغل</a>
+        <a href="#price" data-sales hidden>السعر</a>
+        <a href="/user/" class="nav-account">دعواتي</a>
+      </nav>
+    </header>
+
+    <section class="hero">
+      <div class="hero-text">
+        <h1>كل لمّة حلوة<br />بتبدأ بدعوة</h1>
+        <p class="hero-lead">اعمل دعوة رقمية لفرحك أو خطوبتك أو سبوع ابنك في دقايق، وابعت لينك واحد لكل حبايبك على واتساب.</p>
+        <div class="hero-actions">
+          <a href="/create.html" class="btn">اعمل دعوتك</a>
+          <a href="#templates" class="text-link">شوف النماذج</a>
+        </div>
+      </div>
+      <div class="hero-phones" aria-hidden="true">
+        <img class="phone phone-r" src="images/landing/burgundy.webp" alt="" width="600" height="1298" />
+        <img class="phone phone-l" src="images/landing/wizard.webp" alt="" width="600" height="1298" />
+        <img class="phone phone-c" src="images/landing/blue.webp" alt="" width="600" height="1298" />
+      </div>
+    </section>
   </div>
+</div>
 
-  <!-- Hero -->
-  <header class="flex flex-col items-center text-center mt-2 mb-8">
-    <div class="relative w-24 h-24 mb-4 flex items-center justify-center">
-      <div class="absolute inset-0 rounded-full bg-secondary-fixed/40 blur-md scale-95"></div>
-      <img src="logo.jpg" alt="LAMMA logo"
-           class="relative w-24 h-24 object-contain rounded-full drop-shadow-md transition-transform duration-700 hover:scale-105" />
+<main>
+  <section id="templates" class="band band-paper">
+    <div class="wrap">
+      <h2>لكل مناسبة شكلها</h2>
+      <p class="muted">افتح أي نموذج وجرّبه زي ما الضيف هيشوفه بالظبط.</p>
+      <div class="filters" id="filters" role="group" aria-label="اختار المناسبة"></div>
+      <div class="gallery" id="gallery"></div>
     </div>
+  </section>
 
-    <h1 class="font-display text-[28px] leading-9 text-primary tracking-wide flex items-center gap-3">
-      <span>LAMMA</span>
-      <span class="text-secondary text-sm opacity-60">·</span>
-      <span class="font-arabic" dir="rtl">لمّة</span>
-    </h1>
+  <section id="how" class="band">
+    <div class="wrap">
+      <h2>تلات خطوات وتبعتها</h2>
+      <ol class="steps">
+        <li><span class="num" aria-hidden="true">١</span><div><h3>اختار الشكل</h3><p class="muted">اختار المناسبة والنموذج اللي يشبهكم.</p></div></li>
+        <li><span class="num" aria-hidden="true">٢</span><div><h3>اكتب بياناتك</h3><p class="muted">الأسامي والميعاد والمكان والصور والأغنية، وشوف الدعوة بتتغير قدامك وانت بتكتب.</p></div></li>
+        <li><span class="num" aria-hidden="true">٣</span><div><h3>فعّلها وابعت اللينك</h3><p class="muted">حط كود التفعيل، وخد لينك باسمكم تبعته على واتساب.</p></div></li>
+      </ol>
+    </div>
+  </section>
 
-    <img src="images/divider.png" alt=""
-         class="w-36 h-6 my-1.5 object-contain opacity-85" />
-
-    <p class="italic text-[16px] leading-snug text-primary-container-light max-w-xs px-2">
-      Create beautiful invitations for the moments that matter
-    </p>
-    <p class="font-arabic text-[13px] tracking-widest text-secondary mt-1" dir="rtl">
-      دعوات رقمية فاخرة لأجمل لحظات العمر
-    </p>
-  </header>
-
-  <!-- ========================================================
-       Occasion picker — two-step, in-page.
-       Step 1 (#picker-occasions): one card per event type the
-         product supports. Each card is a button that either
-         navigates straight to /create.html?type=<id> (for types
-         with only one style — engagement, قراية, سبوع) or
-         switches to the inline style picker (wedding, birthday).
-       Step 2 (#picker-styles)   : a 2-tile grid of the styles
-         available for the occasion that was clicked, each with a
-         Preview link (opens the demo in a new tab) and a Create
-         button that goes to /create.html?type=<style-id>. A back
-         button returns to step 1.
-       Both steps share one data-driven JS block at the bottom so
-       adding a new occasion / style is one array edit.
-       ======================================================== -->
-  <div id="picker" class="w-full">
-
-    <!-- Step 1 — occasions -->
-    <section id="picker-occasions" class="flex flex-col items-center text-center">
-      <span class="font-label text-[10px] font-semibold uppercase tracking-widest text-secondary">
-        Pick an occasion
-      </span>
-      <h2 class="font-display text-[22px] text-primary mt-1">What are you celebrating?</h2>
-      <p class="font-arabic text-[13px] text-on-surface-variant mt-0.5" dir="rtl">
-        اختر المناسبة
-      </p>
-
-      <div class="grid grid-cols-2 gap-3 w-full mt-5">
-        <!-- Wedding (multi-style → opens style picker) -->
-        <button type="button" data-occasion="wedding"
-                class="occ-card">
-          <div class="occ-swatch" style="background:linear-gradient(135deg,#f7d9e1,#a13b58);">
-            <span class="font-display italic text-white text-[20px] drop-shadow">A &amp; S</span>
-          </div>
-          <div class="occ-title">Wedding</div>
-          <div class="occ-ar font-arabic" dir="rtl">زفاف</div>
-          <div class="occ-chevron">2 styles →</div>
-        </button>
-
-        <!-- Engagement — single style but goes through step 2 for a
-             consistent "see the preview before you commit" flow. -->
-        <button type="button" data-occasion="engagement" class="occ-card">
-          <div class="occ-swatch" style="background:linear-gradient(135deg,#f5ead6,#efd8a8);">
-            <span class="font-display italic text-[22px]" style="color:#7a5a2a;">Engagement</span>
-          </div>
-          <div class="occ-title">Engagement</div>
-          <div class="occ-ar font-arabic" dir="rtl">خطوبة</div>
-          <div class="occ-chevron">Preview →</div>
-        </button>
-
-        <!-- Birthday (multi-style → opens style picker) -->
-        <button type="button" data-occasion="birthday"
-                class="occ-card">
-          <div class="occ-swatch" style="background:linear-gradient(135deg,#fce4e4,#f5c4c9);">
-            <span class="text-[32px]">🎂</span>
-          </div>
-          <div class="occ-title">Birthday</div>
-          <div class="occ-ar font-arabic" dir="rtl">عيد ميلاد</div>
-          <div class="occ-chevron">2 styles →</div>
-        </button>
-
-        <!-- قراية فاتحة — single style, routed through step 2 -->
-        <button type="button" data-occasion="qiraya" class="occ-card">
-          <div class="occ-swatch" style="background:#fbf7ee; border:1px solid #d7cfb8;" dir="rtl">
-            <span class="font-arabic font-semibold text-[20px]" style="color:#1e3f30;">قراية فاتحة</span>
-          </div>
-          <div class="occ-title font-arabic" dir="rtl">قراية فاتحة</div>
-          <div class="occ-ar">Qiraya Fatiha</div>
-          <div class="occ-chevron">Preview →</div>
-        </button>
-
-        <!-- سبوع — single style, routed through step 2 -->
-        <button type="button" data-occasion="sobou" class="occ-card">
-          <div class="occ-swatch" style="background:linear-gradient(135deg,#fff6e3,#fde4b8);" dir="rtl">
-            <span class="font-arabic font-semibold text-[22px]" style="color:#8a5a1a;">سبوع</span>
-          </div>
-          <div class="occ-title font-arabic" dir="rtl">سبوع</div>
-          <div class="occ-ar">Sobou</div>
-          <div class="occ-chevron">Preview →</div>
-        </button>
+  <section class="band band-plum">
+    <div class="wrap features">
+      <img class="phone feature-phone" src="images/landing/details.webp" alt="دعوة خطوبة فيها الميعاد والعد التنازلي" width="600" height="1298" loading="lazy" />
+      <div class="features-text">
+        <h2>أكتر من كارت حلو</h2>
+        <dl>
+          <div><dt>تأكيد الحضور</dt><dd>الضيف يرد من الدعوة، والأسامي وعدد الأفراد يوصلوك في لوحة التحكم.</dd></div>
+          <div><dt>الخريطة والميعاد</dt><dd>اتجاهات المكان بضغطة، وعد تنازلي، وإضافة للتقويم.</dd></div>
+          <div><dt>صوركم وأغنيتكم</dt><dd>ألبوم صور وأغنية تشتغل أول ما الضيف يفتح الدعوة.</dd></div>
+          <div><dt>دفتر التهاني</dt><dd>الحبايب يكتبوا تهانيهم وتفضل معاكم.</dd></div>
+          <div><dt>برنامج اليوم واللبس</dt><dd>كل واحد يعرف هيحصل إيه وإمتى، وألوان اللبس المناسبة.</dd></div>
+          <div><dt>تعديل بعد النشر</dt><dd>الميعاد اتغير؟ عدّل من لوحة التحكم، واللينك زي ما هو.</dd></div>
+        </dl>
+        <p class="features-note">الأقسام بتختلف حسب النموذج.</p>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <!-- Step 2 — styles for the picked occasion (hidden by default) -->
-    <section id="picker-styles" class="flex flex-col items-center text-center" hidden>
-      <button type="button" id="picker-back" class="back-pill">
-        <span class="back-arrow" aria-hidden="true">←</span>
-        <span>Back</span>
-      </button>
-      <span class="font-label text-[10px] font-semibold uppercase tracking-widest text-secondary">
-        Pick a style
-      </span>
-      <h2 id="styles-title" class="font-display text-[22px] text-primary mt-1">—</h2>
-      <p id="styles-sub" class="font-arabic text-[13px] text-on-surface-variant mt-0.5" dir="rtl">—</p>
-
-      <div id="styles-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full mt-5">
-        <!-- Tiles injected by the JS below from the OCCASIONS table. -->
+  <!-- Shown only once SALES below holds a price and a WhatsApp number. -->
+  <section id="price" class="band" data-sales hidden>
+    <div class="wrap price">
+      <div class="price-text">
+        <h2>دعوة واحدة، سعر واحد</h2>
+        <p class="muted">اطلب كود التفعيل على واتساب، وجرّب الدعوة براحتك قبل ما تنشرها.</p>
       </div>
-    </section>
-  </div>
+      <div>
+        <p class="price-amount" id="price-amount"></p>
+        <a class="btn" id="price-whatsapp" href="#" target="_blank" rel="noopener noreferrer">اطلب الكود على واتساب</a>
+      </div>
+    </div>
+  </section>
 
-<style>
-  /* Tailwind's .flex sets display:flex which overrides the user-agent
-     [hidden]{display:none} rule, so the step-2 panel would otherwise
-     show through on initial load. Keep the attribute authoritative. */
-  #picker-occasions[hidden], #picker-styles[hidden] { display: none !important; }
+  <section class="band band-paper">
+    <div class="wrap faq">
+      <h2>أسئلة بتتكرر</h2>
+      <details>
+        <summary>الضيوف محتاجين يحمّلوا تطبيق؟</summary>
+        <p class="muted">لأ. الدعوة لينك بيفتح على أي موبايل أو كمبيوتر.</p>
+      </details>
+      <details>
+        <summary>أقدر أعدّل بعد ما أنشر؟</summary>
+        <p class="muted">أيوه، من لوحة التحكم، واللينك مش بيتغير.</p>
+      </details>
+      <details>
+        <summary>النماذج بالعربي؟</summary>
+        <p class="muted">زهور زرقاء وقراية فاتحة وسبوع بالعربي بالكامل. باقي النماذج مكتوبة بالإنجليزي، وتقدر تكتب الأسامي والتفاصيل بالعربي.</p>
+      </details>
+      <details>
+        <summary>الأغنية بتشتغل لوحدها؟</summary>
+        <p class="muted">بتشتغل مع أول ضغطة من الضيف على الدعوة، لأن الموبايلات بتمنع الصوت قبلها.</p>
+      </details>
+    </div>
+  </section>
 
-  /* Occasion + style cards share a card look. Buttons strip default
-     styling so <button> and <a> read identically. */
-  .occ-card {
-    appearance: none;
-    background: #ffffff;
-    border: 1px solid rgba(74, 32, 51, 0.12);
-    border-radius: 12px;
-    padding: 10px 10px 12px;
-    text-align: center;
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 4px;
-    box-shadow: 0 8px 20px -14px rgba(0,0,0,0.12);
-    transition: transform 0.15s ease, border-color 0.15s ease;
-    color: #310b1e;
-    text-decoration: none;
-  }
-  .occ-card:hover {
-    transform: translateY(-2px);
-    border-color: rgba(74, 32, 51, 0.28);
-  }
-  .occ-card:active { transform: translateY(0); }
-  .occ-swatch {
-    width: 100%;
-    aspect-ratio: 3 / 2;
-    border-radius: 8px;
-    display: grid;
-    place-items: center;
-    margin-bottom: 6px;
-  }
-  .occ-title {
-    font-family: "Playfair Display", serif;
-    font-size: 16px;
-    font-weight: 600;
-    color: #310b1e;
-    line-height: 1.15;
-  }
-  .occ-ar {
-    font-size: 12px;
-    color: #504347;
-  }
-  .occ-chevron {
-    margin-top: 4px;
-    font-family: "Manrope", sans-serif;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    color: #67384c;
-  }
-
-  /* Style-picker tile (step 2). Larger preview area, two actions. */
-  .style-card {
-    background: #ffffff;
-    border: 1px solid rgba(74, 32, 51, 0.12);
-    border-radius: 12px;
-    padding: 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    text-align: center;
-    box-shadow: 0 8px 20px -14px rgba(0,0,0,0.12);
-  }
-  .style-swatch {
-    width: 100%;
-    aspect-ratio: 4 / 3;
-    border-radius: 8px;
-    display: grid;
-    place-items: center;
-  }
-  .style-title {
-    font-family: "Playfair Display", serif;
-    font-size: 16px;
-    font-weight: 600;
-    color: #310b1e;
-  }
-  .style-hint { font-size: 12px; color: #504347; margin-top: -2px; }
-  .style-actions { display: flex; gap: 8px; margin-top: 8px; }
-  .style-actions > a {
-    flex: 1;
-    padding: 10px 8px;
-    border-radius: 8px;
-    font-family: "Manrope", sans-serif;
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    text-decoration: none;
-  }
-  .style-actions .preview { border: 1px solid rgba(74, 32, 51, 0.3); color: #4a2033; background: #fff; }
-  .style-actions .create  { background: #4a2033; color: #ffdea4; }
-  .style-actions .preview:hover { background: rgba(74, 32, 51, 0.06); }
-  .style-actions .create:hover  { background: #310b1e; }
-
-  /* Step-2 Back button — a proper pill-shaped control instead of a
-     bare text link. Sits top-left, subtle until hovered. */
-  .back-pill {
-    appearance: none;
-    align-self: flex-start;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 16px 8px 12px;
-    margin-bottom: 20px;
-    border: 1px solid rgba(74, 32, 51, 0.18);
-    border-radius: 999px;
-    background: #fff;
-    color: #4a2033;
-    font-family: "Manrope", sans-serif;
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    box-shadow: 0 2px 8px -4px rgba(0, 0, 0, 0.08);
-    transition: background 0.18s ease, border-color 0.18s ease, transform 0.1s ease;
-  }
-  .back-pill .back-arrow {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    background: rgba(74, 32, 51, 0.08);
-    font-size: 14px;
-    line-height: 1;
-    transition: background 0.18s ease, transform 0.18s ease;
-  }
-  .back-pill:hover {
-    background: #faf7f3;
-    border-color: rgba(74, 32, 51, 0.32);
-  }
-  .back-pill:hover .back-arrow {
-    background: #4a2033;
-    color: #ffdea4;
-    transform: translateX(-2px);
-  }
-  .back-pill:active { transform: translateY(1px); }
-  .back-pill:focus-visible {
-    outline: 2px solid #4a2033;
-    outline-offset: 3px;
-  }
-</style>
+  <section class="band band-plum closing">
+    <h2>يلا نلمّ الحبايب</h2>
+    <a href="/create.html" class="btn btn-light">اعمل دعوتك</a>
+    <footer>
+      <a href="/user/">دعواتي</a>
+      <span dir="ltr">لمّة · lamma.manasety.ai</span>
+    </footer>
+  </section>
+</main>
 
 <script>
-  // One source of truth for the picker. New template? Add an entry
-  // under styles[] — the step-2 grid builds from this.
-  const OCCASIONS = {
-    wedding: {
-      titleEn: "Wedding",
-      titleAr: "زفاف",
-      styles: [
-        {
-          id: "wedding",
-          name: "Classic",
-          hint: "Pink & gold, floral",
-          preview: "/wedding/",
-          swatch: `<div style="background:linear-gradient(135deg,#f7d9e1,#efc8d2 60%,#a13b58);width:100%;height:100%;border-radius:inherit;display:grid;place-items:center;">
-                     <span style="font-family:'Playfair Display',serif;font-style:italic;color:#fff;font-size:28px;text-shadow:0 1px 4px rgba(0,0,0,0.15);">A &amp; S</span>
-                   </div>`,
-        },
-        {
-          id: "wedding-noir",
-          name: "Noir",
-          hint: "Minimalist cream & black",
-          preview: "/wedding-noir/",
-          swatch: `<div style="background:#f5f1ea;border:1px solid #d8d2c4;width:100%;height:100%;border-radius:inherit;display:grid;place-items:center;">
-                     <span style="font-family:'Playfair Display',serif;font-style:italic;color:#1a1a1a;font-size:26px;">A <span style="color:#a84a3a;">&amp;</span> S</span>
-                   </div>`,
-        },
-        {
-          id: "wedding-burgundy",
-          name: "Burgundy",
-          hint: "Deep wine & cream, envelope",
-          preview: "/wedding-burgundy/",
-          swatch: `<div style="background:linear-gradient(160deg,#6b1a22,#3d0d12);width:100%;height:100%;border-radius:inherit;display:grid;place-items:center;">
-                     <span style="font-family:'Playfair Display',serif;font-style:italic;color:#f3e8de;font-size:26px;">A <span style="color:#c9a24a;">&amp;</span> S</span>
-                   </div>`,
-        },
-        {
-          id: "wedding-wizard",
-          name: "Wizard",
-          hint: "Candle-lit castle, parchment & wax seal",
-          preview: "/wedding-wizard/",
-          swatch: `<div style="background:radial-gradient(circle at 50% 40%,#3a2614,#0b0806 75%);width:100%;height:100%;border-radius:inherit;display:grid;place-items:center;">
-                     <span style="width:62px;height:62px;border-radius:50%;background:radial-gradient(circle at 38% 32%,#c33a35,#8e1b1b 60%,#5e0f10);display:grid;place-items:center;font-family:'Playfair Display',serif;font-style:italic;color:#e6b766;font-size:20px;box-shadow:0 4px 12px rgba(0,0,0,.6);">A&amp;S</span>
-                   </div>`,
-        },
-        {
-          id: "wedding-blue",
-          name: "زهور زرقاء",
-          hint: "عربي · ورود مجففة وأزرق",
-          preview: "/wedding-blue/",
-          swatch: `<div style="background:#fdf9f0;border:1px solid #d9d3c4;width:100%;height:100%;border-radius:inherit;display:grid;place-items:center;">
-                     <span style="font-family:'Amiri',serif;color:#3d4a7a;font-size:26px;" dir="rtl">عمر &amp; ليلى</span>
-                   </div>`,
-        },
-      ],
-    },
-    birthday: {
-      titleEn: "Birthday",
-      titleAr: "عيد ميلاد",
-      styles: [
-        {
-          id: "birthday",
-          name: "Classic",
-          hint: "Playful, with quiz & letter",
-          preview: "/birthday.html",
-          swatch: `<div style="background:linear-gradient(135deg,#fce4e4,#f5c4c9);width:100%;height:100%;border-radius:inherit;display:grid;place-items:center;font-size:40px;">🎂</div>`,
-        },
-        {
-          id: "birthday-elegant",
-          name: "Elegant",
-          hint: "Formal, bone & brass",
-          preview: "/birthday-elegant/",
-          swatch: `<div style="background:#f3eee6;border:1px solid #d4ccbe;width:100%;height:100%;border-radius:inherit;display:grid;place-items:center;">
-                     <span style="font-family:'Playfair Display',serif;font-style:italic;color:#1c1a17;font-size:28px;">Layla</span>
-                   </div>`,
-        },
-      ],
-    },
-    // Single-style occasions — step 2 still opens so the host sees
-    // the design + has a Preview link before committing.
-    engagement: {
-      titleEn: "Engagement",
-      titleAr: "خطوبة",
-      styles: [
-        {
-          id: "engagement",
-          name: "Classic",
-          hint: "Ivory & rose gold",
-          preview: "/engagement/",
-          swatch: `<div style="background:linear-gradient(135deg,#f5ead6,#efd8a8);width:100%;height:100%;border-radius:inherit;display:grid;place-items:center;">
-                     <span style="font-family:'Playfair Display',serif;font-style:italic;color:#7a5a2a;font-size:26px;">Engagement</span>
-                   </div>`,
-        },
-      ],
-    },
-    qiraya: {
-      titleEn: "قراية فاتحة",
-      titleAr: "Qiraya Fatiha",
-      styles: [
-        {
-          id: "qiraya",
-          name: "Classic",
-          hint: "Ivory & forest green",
-          preview: "/qiraya/",
-          swatch: `<div style="background:#fbf7ee;border:1px solid #d7cfb8;width:100%;height:100%;border-radius:inherit;display:grid;place-items:center;" dir="rtl">
-                     <span style="font-family:'Cairo',sans-serif;font-weight:600;color:#1e3f30;font-size:24px;">قراية فاتحة</span>
-                   </div>`,
-        },
-      ],
-    },
-    sobou: {
-      titleEn: "سبوع",
-      titleAr: "Sobou",
-      styles: [
-        {
-          id: "sobou",
-          name: "Classic",
-          hint: "Cream & candle yellow",
-          preview: "/sobou/",
-          swatch: `<div style="background:linear-gradient(135deg,#fff6e3,#fde4b8);width:100%;height:100%;border-radius:inherit;display:grid;place-items:center;" dir="rtl">
-                     <span style="font-family:'Cairo',sans-serif;font-weight:600;color:#8a5a1a;font-size:28px;">سبوع</span>
-                   </div>`,
-        },
-      ],
-    },
-  };
+  // Fill these two to show the price section. Empty: it stays hidden.
+  const SALES = { price: "", whatsapp: "" };   // price: "500", whatsapp: "2010xxxxxxxx"
 
-  const esc = (s) => String(s).replace(/[<>&"]/g, (c) => ({ "<":"&lt;",">":"&gt;","&":"&amp;",'"':"&quot;" }[c]));
-
-  function openStyles(key) {
-    const occ = OCCASIONS[key];
-    if (!occ) return;
-    document.getElementById("styles-title").textContent = occ.titleEn;
-    const sub = document.getElementById("styles-sub");
-    sub.textContent = occ.titleAr;
-    sub.setAttribute("dir", "rtl");
-    const grid = document.getElementById("styles-grid");
-    // Single-style occasions already have the occasion name in the
-    // header above — drop the "Classic" label on the tile so the host
-    // isn't reading "Engagement / Engagement / Classic" vertically.
-    const showStyleName = occ.styles.length > 1;
-    grid.innerHTML = occ.styles.map((s) => `
-      <div class="style-card">
-        <div class="style-swatch">${s.swatch}</div>
-        ${showStyleName ? `<div class="style-title">${esc(s.name)}</div>` : ""}
-        <div class="style-hint">${esc(s.hint)}</div>
-        <div class="style-actions">
-          <a class="preview" href="${esc(s.preview)}" target="_blank" rel="noopener">Preview</a>
-          <a class="create"  href="/create.html?type=${esc(s.id)}">Create</a>
-        </div>
-      </div>
-    `).join("");
-    // Also tune the eyebrow label to match the content (one style
-    // doesn't ask the host to "pick" anything, they're just confirming).
-    const eyebrow = document.querySelector("#picker-styles .font-label");
-    if (eyebrow) eyebrow.textContent = showStyleName ? "Pick a style" : "Preview";
-    document.getElementById("picker-occasions").hidden = true;
-    document.getElementById("picker-styles").hidden    = false;
-    window.scrollTo({ top: 0, behavior: "smooth" });
+  if (SALES.price && SALES.whatsapp) {
+    document.getElementById("price-amount").textContent = `${SALES.price} جنيه`;
+    document.getElementById("price-whatsapp").href = `https://wa.me/${SALES.whatsapp.replace(/\D/g, "")}`;
+    document.querySelectorAll("[data-sales]").forEach((el) => { el.hidden = false; });
   }
 
-  function backToOccasions() {
-    document.getElementById("picker-styles").hidden    = true;
-    document.getElementById("picker-occasions").hidden = false;
-  }
+  // One source of truth for the gallery. New template? Add an entry here.
+  const OCCASIONS = [
+    ["all", "الكل"], ["wedding", "فرح"], ["engagement", "خطوبة"],
+    ["qiraya", "قراية فاتحة"], ["sobou", "سبوع"], ["birthday", "عيد ميلاد"],
+  ];
+  const TEMPLATES = [
+    { id: "wedding-blue",     occasion: "wedding",    name: "زهور زرقاء",    hint: "فرح · ورد مجفف وأزرق · عربي",     image: "blue" },
+    { id: "wedding-burgundy", occasion: "wedding",    name: "عنّابي",         hint: "فرح · نبيذي ومظروف · إنجليزي",   image: "burgundy" },
+    { id: "wedding-wizard",   occasion: "wedding",    name: "الساحر",        hint: "فرح · قلعة وختم شمع · إنجليزي",  image: "wizard" },
+    { id: "wedding",          occasion: "wedding",    name: "كلاسيك",        hint: "فرح · وردي وذهبي · إنجليزي",     image: "wedding" },
+    { id: "wedding-noir",     occasion: "wedding",    name: "نوار",          hint: "فرح · كريمي وأسود · إنجليزي",    image: "noir" },
+    { id: "engagement",       occasion: "engagement", name: "خطوبة",         hint: "عاجي وذهبي وردي · إنجليزي",      image: "engagement" },
+    { id: "qiraya",           occasion: "qiraya",     name: "قراية فاتحة",   hint: "عاجي وأخضر · عربي",              image: "qiraya" },
+    { id: "sobou",            occasion: "sobou",      name: "سبوع",          hint: "كريمي وأصفر · عربي",             image: "sobou" },
+    { id: "birthday-elegant", occasion: "birthday",   name: "عيد ميلاد أنيق", hint: "عاجي ونحاسي · إنجليزي",          image: "birthday" },
+    // No sample page: its demo needs a real invitation, so no screen or preview.
+    { id: "birthday",         occasion: "birthday",   name: "عيد ميلاد كلاسيك", hint: "مرح، فيه مسابقة وجواب · إنجليزي" },
+  ];
 
-  document.querySelectorAll("[data-occasion]").forEach((el) => {
-    el.addEventListener("click", (e) => {
-      e.preventDefault();
-      openStyles(el.dataset.occasion);
+  const filters = document.getElementById("filters");
+  const gallery = document.getElementById("gallery");
+
+  function render(picked) {
+    filters.querySelectorAll("button").forEach((b) => {
+      b.setAttribute("aria-pressed", String(b.dataset.occasion === picked));
     });
-  });
-  document.getElementById("picker-back").addEventListener("click", backToOccasions);
+    gallery.replaceChildren(...TEMPLATES
+      .filter((t) => picked === "all" || t.occasion === picked)
+      .map(card));
+  }
+
+  function card(t) {
+    const el = document.createElement("article");
+    el.className = "tpl";
+    el.dataset.template = t.id;
+    if (t.image) {
+      const img = document.createElement("img");
+      img.className = "phone";
+      img.src = `images/landing/${t.image}.webp`;
+      img.alt = `نموذج دعوة ${t.name}`;
+      img.width = 600;
+      img.height = 1298;
+      img.loading = "lazy";
+      el.appendChild(img);
+    } else {
+      const blank = document.createElement("div");
+      blank.className = "phone tpl-blank";
+      blank.textContent = t.name;
+      el.appendChild(blank);
+    }
+    const name = document.createElement("h3");
+    name.textContent = t.name;
+    const hint = document.createElement("p");
+    hint.className = "muted";
+    hint.textContent = t.hint;
+    const actions = document.createElement("div");
+    actions.className = "tpl-actions";
+    if (t.image) {
+      const preview = document.createElement("a");
+      preview.href = `/${t.id}/`;
+      preview.target = "_blank";
+      preview.rel = "noopener";
+      preview.textContent = "شوف النموذج";
+      actions.appendChild(preview);
+    }
+    const create = document.createElement("a");
+    create.href = `/create.html?type=${t.id}`;
+    create.className = "tpl-create";
+    create.textContent = "ابدأ بيه";
+    actions.appendChild(create);
+    el.append(name, hint, actions);
+    return el;
+  }
+
+  for (const [id, label] of OCCASIONS) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.dataset.occasion = id;
+    b.textContent = label;
+    b.addEventListener("click", () => render(id));
+    filters.appendChild(b);
+  }
+  render("all");
 </script>
-
-  <!-- Trust footer -->
-  <footer class="max-w-md mt-10 mb-2 flex flex-col items-center">
-    <div class="relative w-full bg-surface-container-low rounded-xl p-5 flex flex-col items-center text-center shadow-sm">
-      <img src="images/calendar-frame.png" alt=""
-           class="w-20 h-16 mb-2 object-contain opacity-90 drop-shadow-sm" />
-
-      <p class="font-label text-[12px] font-semibold uppercase tracking-widest text-secondary">
-        A Legacy of Ceremonial Excellence
-      </p>
-      <p class="text-[19px] leading-8 font-medium text-primary mt-1">
-        Over 50,000 Memorable Gatherings Crafted
-      </p>
-      <p class="font-arabic text-[14px] text-on-surface-variant mt-0.5" dir="rtl">
-        صُنعت بشغف لأرقى الاحتفالات حول العالم
-      </p>
-
-      <div class="grid grid-cols-3 gap-2 w-full mt-4 pt-3">
-        <div class="flex flex-col items-center">
-          <span class="material-symbols-outlined text-secondary text-[20px]">drafts</span>
-          <span class="font-label text-[10px] mt-1">Instant RSVP</span>
-        </div>
-        <div class="flex flex-col items-center">
-          <span class="material-symbols-outlined text-secondary text-[20px]">verified</span>
-          <span class="font-label text-[10px] mt-1">Custom Seals</span>
-        </div>
-        <div class="flex flex-col items-center">
-          <span class="material-symbols-outlined text-secondary text-[20px]">translate</span>
-          <span class="font-label text-[10px] mt-1">Dual Script</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="mt-6 flex flex-col items-center text-center">
-      <span class="text-[14px] italic text-outline">LAMMA Invitation Atelier · Paris &amp; Riyadh</span>
-    </div>
-  </footer>
-
-</main>
 </body>
 </html>

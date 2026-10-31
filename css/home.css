@@ -1,0 +1,186 @@
+/* ============================================================================
+   The Lamma home page. The look comes from the logo: sand and bronze, its
+   calligraphy, its palm shadow; plum from the rest of the site for contrast.
+   Arabic, right to left.
+   ========================================================================== */
+
+:root {
+  --sand:   #f3e9dc;
+  --paper:  #faf4ec;
+  --ink:    #2c1a12;
+  --brown:  #4a2c19;
+  --bronze: #7c4f2e;
+  --muted:  #5c4537;
+  --plum:   #2b0e1b;
+  --cream:  #f6ecdf;
+  --gold:   #e3bd84;
+  --bezel:  #1d1210;
+
+  --font-display: "Aref Ruqaa", "Times New Roman", serif;
+  --font-body:    "IBM Plex Sans Arabic", Tahoma, sans-serif;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--sand);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 18px;
+  line-height: 1.7;
+  overflow-x: clip;
+  -webkit-font-smoothing: antialiased;
+}
+img { display: block; max-width: 100%; height: auto; }
+[hidden] { display: none !important; }
+a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid var(--bronze); outline-offset: 3px; }
+
+h1, h2 { margin: 0; font-family: var(--font-display); font-weight: 700; line-height: 1.3; color: var(--brown); }
+h2 { font-size: clamp(38px, 4.6vw, 60px); }
+.muted { margin: 0; color: var(--muted); }
+.wrap { max-width: 1240px; margin: 0 auto; padding: 0 24px; }
+.band { padding: 80px 0; }
+.band-paper { background: var(--paper); }
+.band-plum { background: var(--plum); color: var(--cream); }
+.band-plum h2 { color: var(--gold); }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 54px;
+  padding: 0 34px;
+  border-radius: 999px;
+  background: var(--plum);
+  color: var(--cream);
+  font-weight: 600;
+  font-size: 19px;
+  text-decoration: none;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+.btn:hover { background: #47182d; }
+.btn:active { transform: scale(0.98); }
+.btn-light { background: var(--cream); color: var(--plum); }
+.btn-light:hover { background: #fff; }
+.text-link { display: inline-flex; align-items: center; min-height: 54px; color: var(--brown); font-weight: 600; text-underline-offset: 6px; }
+
+/* A phone-shaped frame round a real invitation screen. */
+.phone {
+  width: 100%;
+  aspect-ratio: 390 / 844;
+  object-fit: cover;
+  border: 5px solid var(--bezel);
+  border-radius: 24px;
+}
+
+/* ---------------------------------------------------------------- Hero */
+.hero-wrap { position: relative; overflow: hidden; }
+.palm {
+  position: absolute;
+  top: -160px;
+  left: -140px;
+  width: min(900px, 130vw);
+  height: auto;
+  color: #5b3a22;
+  fill: currentColor;
+  opacity: 0.16;
+  filter: blur(5px);
+  pointer-events: none;
+}
+.hero-wrap .wrap { position: relative; padding-top: 22px; }
+.top-bar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 16px; }
+.brand img { width: 54px; height: 54px; border-radius: 50%; object-fit: cover; }
+.top-bar nav { display: flex; align-items: center; flex-wrap: wrap; gap: 0 22px; font-weight: 500; }
+.top-bar nav a { display: inline-flex; align-items: center; min-height: 44px; color: var(--ink); text-decoration: none; }
+.top-bar nav a:hover { color: var(--bronze); }
+
+.hero { display: flex; flex-wrap: wrap; align-items: center; gap: 24px 48px; padding: 40px 0 72px; }
+.hero-text { flex: 1 1 440px; min-width: 0; }
+h1 { font-size: clamp(54px, 7.6vw, 104px); line-height: 1.22; }
+.hero-lead { margin: 22px 0 0; max-width: 34ch; font-size: clamp(19px, 1.8vw, 22px); line-height: 1.75; }
+.hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; margin-top: 32px; }
+
+.hero-phones { flex: 1 1 460px; min-width: 0; position: relative; aspect-ratio: 1 / 0.98; }   /* as tall as the centre phone */
+.hero-phones .phone { position: absolute; border-width: 6px; box-shadow: 0 24px 50px -18px rgba(44, 26, 18, 0.55); }
+.phone-r { right: 2%; top: 9%; width: 38%; transform: rotate(5deg); }
+.phone-l { left: 2%; top: 9%; width: 38%; transform: rotate(-5deg); }
+.phone-c { left: 29%; top: 0; width: 42%; box-shadow: 0 34px 60px -18px rgba(44, 26, 18, 0.7); }
+
+/* ---------------------------------------------------------------- Templates */
+.filters { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px; }
+.filters button {
+  min-height: 44px;
+  padding: 0 20px;
+  border: 1px solid var(--bronze);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--brown);
+  font: 500 17px var(--font-body);
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.filters button:hover { background: rgba(124, 79, 46, 0.1); }
+.filters button[aria-pressed="true"] { background: var(--bronze); color: #fffaf3; }
+
+.gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(158px, 44%), 1fr)); gap: 40px 22px; margin-top: 40px; }
+.tpl { min-width: 0; }
+.tpl h3 { margin: 14px 0 0; font-size: 19px; font-weight: 600; line-height: 1.4; }
+.tpl .muted { margin-top: 2px; font-size: 15px; line-height: 1.5; }
+.tpl-blank {
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: #f8dfe1;
+  font-family: var(--font-display);
+  font-size: 26px;
+  line-height: 1.4;
+  text-align: center;
+  color: #7a3346;
+}
+.tpl-actions { display: flex; flex-wrap: wrap; gap: 0 16px; margin-top: 4px; font-size: 16px; font-weight: 600; }
+.tpl-actions a { display: inline-flex; align-items: center; min-height: 44px; color: var(--ink); text-underline-offset: 4px; }
+.tpl-actions .tpl-create { color: var(--bronze); }
+
+/* ---------------------------------------------------------------- Steps */
+.steps { list-style: none; margin: 34px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr)); gap: 36px 56px; }
+.steps li { display: flex; align-items: flex-start; gap: 18px; }
+.num { flex: none; font-family: var(--font-display); font-size: 72px; line-height: 1; color: var(--bronze); }
+.steps h3 { margin: 4px 0 0; font-size: 22px; font-weight: 600; }
+.steps .muted { margin-top: 6px; }
+
+/* ---------------------------------------------------------------- Features */
+.features { display: flex; flex-wrap: wrap; align-items: center; gap: 44px 72px; }
+.feature-phone { flex: 0 1 300px; width: 300px; max-width: 74%; margin: 0 auto; border-color: #0f060a; }
+.features-text { flex: 1 1 460px; min-width: 0; }
+.features dl { margin: 26px 0 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr)); gap: 0 44px; }
+.features dl > div { padding: 16px 0; border-top: 1px solid rgba(246, 236, 223, 0.25); }
+.features dt { font-weight: 600; font-size: 20px; }
+.features dd { margin: 2px 0 0; color: #e0d2c2; }
+.features-note { margin: 14px 0 0; font-size: 15px; color: #d6c6b4; }
+
+/* ---------------------------------------------------------------- Price */
+.price { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 28px 64px; }
+.price-text { flex: 1 1 420px; min-width: 0; }
+.price-text .muted { margin-top: 8px; max-width: 38ch; }
+.price-amount { margin: 0 0 16px; font-family: var(--font-display); font-size: clamp(46px, 5vw, 64px); line-height: 1.2; color: var(--plum); }
+
+/* ---------------------------------------------------------------- Questions */
+.faq { max-width: 860px; }
+.faq h2 { margin-bottom: 22px; }
+.faq details { border-top: 1px solid #d8c7b1; padding: 14px 0; }
+.faq details:last-child { border-bottom: 1px solid #d8c7b1; }
+.faq summary { min-height: 32px; font-weight: 600; font-size: 20px; cursor: pointer; }
+.faq .muted { margin-top: 8px; }
+
+/* ---------------------------------------------------------------- Closing */
+.closing { padding: 76px 24px 30px; text-align: center; }
+.closing h2 { font-size: clamp(42px, 6vw, 80px); }
+.closing .btn { margin-top: 24px; }
+.closing footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0 24px; margin-top: 56px; font-size: 15px; color: #d6c6b4; }
+.closing footer a { display: inline-flex; align-items: center; min-height: 44px; color: inherit; text-underline-offset: 4px; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  * { transition: none !important; }
+}
