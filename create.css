@@ -477,3 +477,6 @@ body.is-published .cx-topbar { display: none; }
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
 }
+
+.cx-credit { text-align: center; padding: 24px 16px 32px; font-size: 14px; }
+.cx-credit a { display: inline-flex; align-items: center; min-height: 44px; color: inherit; opacity: .75; text-underline-offset: 4px; }

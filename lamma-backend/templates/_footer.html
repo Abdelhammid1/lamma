@@ -1,6 +1,6 @@
 {% if brand and brand.show %}
-<footer class="site-footer" dir="ltr">
-  <span>&copy; {{ now().year }} {{ app_name }} &mdash; {{ brand.text }}</span>
-  <a href="{{ brand.url }}" target="_blank" rel="noopener noreferrer">{{ brand.name }}</a>
+<footer class="site-footer" dir="rtl">
+  <span>&copy; {{ now().year }} {{ app_name }}</span>
+  <a href="{{ brand.url.rstrip('/') }}/?utm_source=lamma&amp;utm_medium=footer&amp;utm_campaign=powered_by&amp;utm_content=backend" target="_blank" rel="noopener noreferrer">تطوير منصتي</a>
 </footer>
 {% endif %}
