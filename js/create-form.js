@@ -51,7 +51,7 @@ const ADMIN_EDIT_ID = ADMIN_PARAMS.get("admin_edit") || null;
 const MAX_MB       = 300;    // per video / photo — matches uploads.py MAX_FILE_BYTES
 const WARN_MB      = 250;
 const MAX_TOTAL_MB = 1024;
-const MAX_AUDIO_MB = 50;
+const MAX_AUDIO_MB = 300;
 
 function guardFileSize(input, maxMb, label) {
   const f = input.files?.[0];
